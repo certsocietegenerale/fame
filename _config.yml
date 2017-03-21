@@ -1,0 +1,46 @@
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+paginate: 5
+language: 'en-uk'
+
+# Website info
+name: 'FAME'
+description: "FAME Automates Malware Evaluation"
+
+# Authors
+authors:
+    cert:
+        name: CERT Société Générale
+        bio: Société Générale Group's CSIRT Security Incident & Cybercrime handling.
+        location: Les Dunes, France
+        url: https://cert.societegenerale.com
+        image: assets/images/avatar_cert.jpg
+        twitter: CertSG
+
+google_analytics: UA-94099950-1
+
+# edit baseurl to simply '/' if using as your personal page (instead of a project page)
+baseurl: /fame/
+
+# Permalinks
+permalink: /:title
+
+
+# gems and other configs
+gems: [jekyll-paginate]
+exclude: [vendor]
+
+exclude:
+  - README.md
+  - Rakefile
+  - Gemfile
+  - Gemfile.lock
+  - changelog.md
+  - "*.Rmd"
+  - vendor
+  - .travis.yml
+
+excerpt_separator: <!--more-->

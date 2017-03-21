@@ -1,0 +1,22 @@
+---
+layout: default
+disqus: false
+---
+
+<header class="main-header post-head {% if page.cover %}" style="background-image: url({{ site.baseurl }}{{ page.cover }}) {% else %}no-cover{% endif %}">
+    <nav class="main-nav {% if page.cover %} overlay {% endif %} clearfix">
+        <div class="inner">
+          <header class="post-header">
+              <h1 class="post-title">{{ page.title }}</h1>
+            </header>
+        </div>
+    </nav>
+</header>
+{% include menu.html %}
+<main class="content" role="main">
+    <article class="post">
+        <section class="post-content">
+            {{ content }}
+        </section>
+    </article>
+</main>

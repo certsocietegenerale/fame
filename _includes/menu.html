@@ -1,0 +1,9 @@
+<div class="menu">
+  <ul>
+      <li class="menu-home {% if page.current == 'home' %} menu-current{% endif %}" role="presentation"><a href="{{ site.baseurl }}">Home</a></li>
+      <li class="menu-blog {% if page.current == 'blog' %} menu-current{% endif %}" role="presentation"><a href="{{ site.baseurl }}#blog">Blog</a></li>
+      <li class="menu-code" role="presentation"><a href="https://github.com/certsocietegenerale/fame">Code</a></li>
+      <li class="menu-doc" role="presentation"><a href="#">Doc</a></li>
+      <li class="menu-community {% if page.url contains 'community' %} menu-current{% endif %}" role="presentation"><a href="{{ site.baseurl }}community">Community</a></li>
+  </ul>
+</div>

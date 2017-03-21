@@ -1,0 +1,105 @@
+---
+layout: default
+title: FAME
+cover: 'assets/images/coverfame2.png'
+class: 'home-template'
+current: home
+---
+<!-- < default -->
+<!-- The tag above means - insert everything in this file into the [body] of the default.hbs template -->
+
+{% if paginator.page == 1 %}
+<!-- The big featured header  -->
+<header class="full-header main-header {% if page.cover %}"
+        style="background-image: url({{ site.baseurl }}{{ page.cover }}) {% else %}no-cover{% endif %}">
+    <nav class="main-nav overlay clearfix">
+        {% if page.logo %}<a class="blog-logo" href="{{ site.baseurl }}"><img src="{{ site.baseurl }}{{ page.logo }}" alt="Blog Logo" /></a>{% endif %}
+        {% if page.navigation %}
+            <a class="menu-button icon-menu" href="#"><span class="word">Menu</span></a>
+        {% endif %}
+    </nav>
+    <div class="vertical overlay">
+        <div class="main-header-content inner">
+            <h1 class="page-title">{{ site.name }}</h1>
+            <h2 class="page-description tagline">{{ site.description }}</h2>
+            <br>
+            <h2 class="page-description ">
+              Meet the <strong>open-source</strong> malware analysis <strong>framework</strong> and its <strong>user-friendly</strong> web interface. Made by and for incident responders.
+            </h2>
+        </div>
+    </div>
+    <a class="scroll-down icon-arrow-left" href="#content" data-offset="-45"><span class="hidden">Scroll Down</span></a>
+</header>
+
+
+
+<!-- The main content area on the homepage -->
+<main id="content" class="content" role="main">
+
+  {% include menu.html %}
+
+    <article class="post">
+
+        <section class="post-content">
+            <p>FAME is an <strong>open source</strong> malware analysis platform that is meant to facilitate analysis of malware-related files, leveraging as much <strong>knownledge</strong> as possible in order to speed up and <strong>automate</strong> end-to-end analysis.</p>
+
+            <p>FAME should be seen as a malware analysis <strong>framework</strong>. Instead of developing several scripts for different tasks related to malware analysis, develop <strong>FAME modules</strong> that will be able to <strong>collaborate</strong> with each other.</p>
+
+            <p style="text-align:center;">Get started now ! You can get the code on <a href="https://github.com/certsocietegenerale/fame">GitHub</a> and <a href="#">read the docs.</a></p>
+
+            <p style="text-align:center;">Learn more about FAME in our <a href="{{site.baseurl}}introducing-fame">introductory blogpost</a></p>
+
+          <div class="screenshot">
+            <img src="{{site.baseurl}}assets/images/screenshots/fame_detailed_results.png" alt="Detailed Results">
+            <div class="caption">
+              Get detailed analysis from your modules.
+            </div>
+          </div>
+
+          <div class="screenshot">
+            <img src="{{site.baseurl}}assets/images/screenshots/fame_observables.png" alt="Threat Intelligence">
+            <div class="caption">
+              Leverage your Threat Intelligence.
+            </div>
+          </div>
+
+          <div class="screenshot">
+            <img src="{{site.baseurl}}assets/images/screenshots/fame_extraction.png" alt="Extracted Malware Configuration">
+            <div class="caption">
+              Extract malware configuration from analyzed samples.
+            </div>
+          </div>
+
+          <div class="screenshot">
+            <img src="{{site.baseurl}}assets/images/screenshots/fame_config_tracking.png" alt="Botnet tracking">
+            <div class="caption">
+              Track how botnets are targeting your organization.
+            </div>
+          </div>
+
+          <div class="screenshot">
+            <img src="{{site.baseurl}}assets/images/screenshots/fame_modules.png" alt="Module Management">
+            <div class="caption">
+              Easily manage your processing, reporting, antivirus and threat intelligence modules. Use public and/or private modules.
+            </div>
+          </div>
+
+          <div class="screenshot">
+            <img src="{{site.baseurl}}assets/images/screenshots/fame_users.png" alt="Users Management">
+            <div class="caption">
+              Make it available to several users in different teams with built-in access control.
+            </div>
+          </div>
+
+        </section>
+    </article>
+
+{% else %}
+<main id="content" class="content" role="main">
+{% endif %}
+  <div class="section-header">
+    <h1 id="blog">The Blog</h1>
+  </div>
+    <!-- The tag below includes the post loop - partials/loop.hbs -->
+    {% include loop.html %}
+</main>

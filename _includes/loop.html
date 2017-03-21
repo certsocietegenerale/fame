@@ -1,0 +1,61 @@
+    <!-- Previous/next page links - only displayed on page 2+ -->
+    <div class="extra-pagination inner">
+        {% if page.class == 'home-template' %}
+            {% include post_pagination.html %}
+        {% elsif page.class == 'page-template' %}
+            {% include post_pagination.html %}
+        {% elsif page.class == 'author-template' %}
+            {% include author_pagination.html %}
+        {% elsif page.class == 'tag-template' %}
+            {% include tag_pagination.html %}
+        {% else %}
+            {% include post_pagination.html %}
+        {% endif %}
+    </div>
+
+    <!-- This is the post loop - each post will be output using this markup -->
+    {% for post in paginator.posts %}
+    <article class="post">
+        <header class="post-header">
+            <h2 class="post-title"><a href="{{ site.baseurl }}{{ post.url | remove: '/' }}">{{ post.title }}</a></h2>
+        </header>
+        <section class="post-excerpt">
+          {% if post.excerpt %}
+            <p class="excerpt">{{post.excerpt}}</p>
+          {% else%}
+            <p class="excerpt">{{ post.content | strip_html | truncatewords: 30 }}</p>
+          {% endif %}
+            <a class="read-more" href="{{ site.baseurl }}{{ post.url | remove: '/' }}">read more</a>
+        </section>
+        <footer class="post-meta">
+            {% if site.image %}<img class="author-thumb" src="{{ site.baseurl }}{{ site.image }}" alt="Author image" nopin="nopin" />{% endif %}
+            <!-- author -->
+            <a href='{{ site.baseurl }}author/{{ site.nickname }}'>{{ site.author }}</a>
+            <!-- [[tags prefix=" on "]] -->
+            <time class="post-date" datetime="{{ post.date | date:'%Y-%m-%d' }}">{{ post.date | date_to_string }}</time>
+            {% if post.tags.size > 0 %}
+                posted in
+                {% for tag in post.tags %}
+                    {% if forloop.index == post.tags.size %}
+                       <a href='{{ site.baseurl }}tag/{{ tag }}'>{{ tag | capitalize }}</a>
+                    {% else %}
+                       <a href='{{ site.baseurl }}tag/{{ tag }}'>{{ tag | capitalize }}</a>,
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </footer>
+    </article>
+    {% endfor %}
+
+    <!-- Previous/next page links - displayed on every page -->
+    {% if page.class == 'home-template' %}
+        {% include post_pagination.html %}
+    {% elsif page.class == 'page-template' %}
+        {% include post_pagination.html %}
+    {% elsif page.class == 'author-template' %}
+        {% include author_pagination.html %}
+    {% elsif page.class == 'tag-template' %}
+        {% include tag_pagination.html %}
+    {% else %}
+        {% include post_pagination.html %}
+    {% endif %}
