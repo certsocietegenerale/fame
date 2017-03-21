@@ -1,0 +1,15 @@
+Flask
+Flask-Classy
+Flask-Negotiation
+flask-paginate
+Sphinx
+sphinx_rtd_theme
+sphinxcontrib-httpdomain
+celery
+pymongo
+python-magic
+requests
+Flask-Login==0.3.2
+zxcvbn
+GitPython
+markdown2
