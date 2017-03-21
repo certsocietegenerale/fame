@@ -49,13 +49,13 @@ Still, FAME comes with some useful modules out of the box, see the [fame_modules
 
 An example of available module is office_macros, which leverages [oletools](https://github.com/decalage2/oletools) to analyze Office macros.
 
-![alt text](/assets/images/screenshots/fame_detailed_results.png "Office Macros")
+![detailed results](assets/images/screenshots/fame_detailed_results.png "Office Macros")
 
 ### Leverage your Threat Intelligence
 
 Threat Intelligence modules are automatically used by FAME to enrich your analysis with tags and indicators from your Threat Intelligence platforms.
 
-![alt text](/assets/images/screenshots/fame_ti.png "TI is awesome")
+![ti](assets/images/screenshots/fame_ti.png "TI is awesome")
 
 You can also add observables to your Threat Intelligence Platform directly from FAME. At this point, FAME comes with support for [Yeti](https://yeti-platform.github.io/).
 
