@@ -38,4 +38,15 @@ class ConfigObject:
             return None
 
 
-fame_config = ConfigObject(filename="fame").get('fame')
+def get_fame_config():
+    fame_config = ConfigObject(filename="fame").get('fame')
+    if fame_config is None:
+        fame_config = Dictionary()
+        fame_config['mongo_host'] = 'localhost'
+        fame_config['mongo_port'] = 27017
+        fame_config['mongo_db'] = 'fame'
+        fame_config['auth'] = 'user_password'
+
+    return fame_config
+
+fame_config = get_fame_config()

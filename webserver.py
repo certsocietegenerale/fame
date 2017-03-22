@@ -20,7 +20,10 @@ from web.views.configs import ConfigsView
 from web.views.users import UsersView
 from web.views.helpers import user_if_enabled
 
-fame_init()
+try:
+    fame_init()
+except:
+    print "/!\\ Could not connect to MongoDB database."
 
 app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
 app.secret_key = fame_config.secret_key
