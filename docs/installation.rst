@@ -244,3 +244,15 @@ You can then follow the same installation instructions::
     > utils\run.cmd utils\install.py
 
 Before starting FAME, make sure to follow the specific installation instructions for `python-magic` on Windows (https://github.com/ahupp/python-magic#dependencies). The three DLLs should be on your PATH (you can directly put them in the `fame` directory if you want).
+
+Updating FAME
+=============
+
+When you want to update your instance, you can use the following command::
+
+    $ utils/run.sh utils/update.py
+
+Then, do not forget to restart the webserver and worker for changes to be effective. On a production environment, this would be done with the following commands::
+
+    $ sudo systemctl restart fame_web
+    $ sudo systemctl restart fame_worker
