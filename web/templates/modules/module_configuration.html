@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <h4 class="title">{{data.module.name}}</h4>
+                    <p class="category">Configuration</p>
+                </div>
+                <div class="content admin-form">
+                    {% if data.module.description %}
+                        <p>{{data.module.description}}</p>
+                    {% endif %}
+
+                    <form class="form-horizontal" method="post" action="{{url_for('ModulesView:configure', id=data.module._id)}}">
+                    {% if data.module.type == "Processing" %}
+                        <hr />
+
+                        <div class="form-group">
+                            <label for="acts_on" class="col-sm-2 control-label">Acts On</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="acts_on" value="{{data.module.acts_on|smart_join}}">
+                                <p class="help-block">Comma-delimited list of types that this module is able to handle (ex: word,excel).</p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="triggered_by" class="col-sm-2 control-label">Triggered By</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="triggered_by" value="{{data.module.triggered_by|smart_join}}">
+                                <p class="help-block">Comma-delimited list of expressions defining when the module should be executed. Expressions will be matched against analyses tags and can use the <a href="https://docs.python.org/2/library/fnmatch.html" target="_blank">fnmatch syntax.</a></p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="queue" class="col-sm-2 control-label">Queue</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="queue" value="{{data.module.queue}}">
+                                <p class="help-block">The queue defines which workers will be executing this module. "unix" is the default queue.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if data.module.config %}
+                        {% with settings=data.module.config, option=(data.module.type == 'Processing') %}
+                            {% include "modules/_configuration.html" %}
+                        {% endwith %}
+                    {% endif %}
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-info btn-fill"><i class="fa fa-save"></i> Save</button>
+                    </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

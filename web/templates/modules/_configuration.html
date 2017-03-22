@@ -1,0 +1,34 @@
+<hr />
+
+{% for config in settings %}
+    <div class="form-group">
+        {% if config.type == 'bool' %}
+            <div class="col-sm-2"></div>
+            <div class="col-sm-8">
+                <label class="checkbox checkbox-inline">
+                    <input type="checkbox" name="config_{{config.name}}" {% if config.value %}checked{% endif %} data-toggle="checkbox">{{config.name}}
+                </label>
+                <p class="help-block">{{config.description}}</p>
+            </div>
+        {% elif config.type == 'text' %}
+            <label for="config_{{config.name}}" class="col-sm-2 control-label">{{config.name}} {% if 'default' not in config %}*{% endif %}</label>
+            <div class="col-sm-8">
+                <textarea type="text" class="form-control" name="config_{{config.name}}" placeholder="{{config.default|form_value}}" {% if 'default' not in config %}required{% endif %}>{{config.value|form_value}}</textarea>
+                <p class="help-block">{{config.description}}</p>
+            </div>
+        {% else %}
+            <label for="config_{{config.name}}" class="col-sm-2 control-label">{{config.name}}  {% if 'default' not in config %}*{% endif %}</label>
+            <div class="col-sm-8">
+                <input type="text" class="form-control" name="config_{{config.name}}" value="{{config.value|form_value}}" placeholder="{{config.default|form_value}}" {% if 'default' not in config %}required{% endif %}>
+                <p class="help-block">{{config.description}}</p>
+            </div>
+        {% endif %}
+        <div class="col-sm-2">
+            {% if option %}
+                <label class="checkbox checkbox-inline">
+                    <input type="checkbox" name="config_{{config.name}}_option" {% if config.option %}checked{% endif %} data-toggle="checkbox">Option
+                </label>
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}

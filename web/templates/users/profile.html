@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% set user = data['user'] %}
+
+{% block body %}
+{% if current_user.has_permission('manage_users') %}
+{% include "users/_form.html" %}
+{% endif %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Sharing configuration</h4>
+                <p class="category">Sharing is caring</p>
+            </div>
+            <div class="content">
+                <form action="{{ url_for('UsersView:default_sharing', id=user._id) }}" method="POST">
+                    <div class="form-group">
+                        <label for="groups">By default, share with: </label>
+                        <input name="groups" class="tags-input tag-azure" type="text" value="{{ user.default_sharing|join(',') }}" />
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-info btn-fill">Update sharing configuration</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">API Key</h4>
+                <p class="category">Build great stuff with it</p>
+            </div>
+            <div class="content">
+                <div>{{user.api_key}}</div>
+                <br />
+                <form action="{{ url_for('UsersView:reset_api', id=user._id) }}" method="POST">
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-info btn-fill">Reset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $('.tags-input').tagsInput();
+</script>
+
+{% include 'auth_profile.html' ignore missing %}
+{% endblock %}

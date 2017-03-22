@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% set analysis = analysis['analysis'] %}
+
+{% macro support_files(module) -%}
+    {% if 'support_files' in analysis %}
+        {% for support_file in analysis.support_files[module] %}
+            <li><a href="{{url_for('AnalysesView:download_support_file', id=analysis._id, filename=support_file[1])}}" target="_blank"><i class="pe-7s-link"></i> Download {{support_file[0]}}</a></li>
+            {{name}}
+        {% endfor %}
+    {% endif %}
+{%- endmacro %}
+
+{% block title %}
+Analysis
+{% endblock %}
+
+{% block sidebar %}
+<li>
+    <a href="#file-details">
+        <i class="pe-7s-note2"></i>
+        <p>File Details</p>
+    </a>
+</li>
+<li>
+    <a href="#execution-path">
+        <i class="pe-7s-way"></i>
+        <p>Execution Path</p>
+    </a>
+</li>
+
+{% if analysis.extracted_files|length %}
+<li>
+    <a href="#extracted_files">
+        <i class="fa fa-code-fork"></i>
+        <p>Extracted Files</p>
+    </a>
+</li>
+{% endif %}
+
+{% if analysis.iocs|length %}
+<li>
+    <a href="#iocs">
+        <i class="pe-7s-diamond"></i>
+        <p>Observables</p>
+    </a>
+</li>
+{% endif %}
+{% if analysis.extractions|length %}
+<li>
+    <a href="#extractions">
+        <i class="pe-7s-like2"></i>
+        <p>Extractions <b class="caret caret-right"></b></p>
+    </a>
+    <ul class="nav">
+        {% for extraction in analysis.extractions %}
+            <li>
+                <a class="sidebar-subnav" href="#extraction-{{extraction.label|replace(' ', '-')}}">{{extraction.label}}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</li>
+{% endif %}
+{% if analysis.results|length %}
+<li>
+    <a href="#details">
+        <i class="pe-7s-notebook"></i>
+        <p>Detailed Results <b class="caret caret-right"></b></p>
+    </a>
+    <ul class="nav">
+        {% for name in analysis.results %}
+            <li>
+                <a class="sidebar-subnav" href="#results-{{name|replace(' ', '-')}}">{{name}}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</li>
+{% endif %}
+{% if analysis.logs|length and current_user.has_permission('see_logs') %}
+<li>
+    <a href="#logs">
+        <i class="pe-7s-info"></i>
+        <p>Logs</p>
+    </a>
+</li>
+{% endif %}
+{% endblock %}
+
+{% block body %}
+
+{% if analysis.probable_names %}
+    <h4 class="probable-names">Probable Name(s): {{analysis.probable_names|join(', ')}}</h4>
+{% endif %}
+
+{% with file=analysis.file %}
+{% include "files/details.html" %}
+{% endwith %}
+
+<div class="row" id="execution-path">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                {% if analysis.status == 'running' or analysis.status == 'pending' %}
+                    <div class="sharing-groups">
+                        <label class="checkbox checkbox-inline"><input type="checkbox" checked data-toggle="checkbox" id="auto-refresh" /> Auto-update</label>
+                    </div>
+                {% endif %}
+                <h4 class="title">Execution Path</h4>
+                <p class="category">Tags &amp; modules</p>
+            </div>
+            <div class="content">
+                <div>
+                    {% for tag in analysis.tags %}
+                        <span class="tag tag-azure">{{tag}}</span>
+                    {% else %}
+                        <p>No tags.</p>
+                    {% endfor %}
+                </div>
+                <hr />
+                <div>
+                    {% for module in analysis.executed_modules %}
+                        {% if module not in analysis.pending_modules %}
+                            <span class="tag tag-executed">{{module}}</span>
+                        {% endif %}
+                    {% endfor %}
+                    {% for module in analysis.pending_modules %}
+                        {% if module in analysis.executed_modules %}
+                            <span class="tag tag-ongoing">{{module}}</span>
+                        {% else %}
+                            <span class="tag tag-pending">{{module}}</span>
+                        {% endif %}
+                    {% endfor %}
+                    {% for module in analysis.waiting_modules %}
+                        <span class="tag tag-waiting">{{module}}</span>
+                    {% endfor %}
+                    {% for module in analysis.canceled_modules %}
+                        <span class="tag tag-cancelled">{{module}}</span>
+                    {% endfor %}
+                </div>
+                <div class="footer">
+                    <div class="stats">
+                        <ul>
+                            <li>Status:
+                                {% if analysis.status == 'running' %}
+                                    <i class="fa fa-refresh text-info spinner"></i>
+                                {% elif analysis.status == 'finished' %}
+                                    <i class="fa fa-check text-success"></i>
+                                {% elif analysis.status == 'pending' %}
+                                    <i class="fa fa-clock-o text-info spinner"></i>
+                                {% elif analysis.status == 'error' %}
+                                    <i class="fa fa-warning text-danger"></i>
+                                {% endif %}
+                                {{ analysis.status }}
+                            </li>
+                            <li>
+                                <div class="legend">
+                                    <i class="fa fa-circle text-success"></i> Executed
+                                    <i class="fa fa-circle text-muted"></i> Ongoing
+                                    <i class="fa fa-circle text-info"></i> Pending
+                                    <i class="fa fa-circle text-warning"></i> Waiting
+                                    <i class="fa fa-circle text-danger"></i> Cancelled
+                                </div>
+                            </li>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if analysis.extracted_files|length %}
+    <div class="row" id="extracted_files">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <h4 class="title">Extracted Files</h4>
+                    <p class="category">Really deserve their own analysis</p>
+                </div>
+                <div class="content">
+                    <div class="table-responsive table-full-width">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Names</th>
+                                    <th>Type</th>
+                                    <th>MD5</th>
+                                    <th>Classification</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in analysis.extracted_files %}
+                                    <tr>
+                                        <td class="file-name">{{file.names|join(', ')}}</td>
+                                        <td class="file-type">{{file.type}}</td>
+                                        <td class="file-md5"><a href="{{ url_for('FilesView:get', id=file._id) }}">{{file.md5}}<a></td>
+                                        <td class="file-probable-names">{{file.probable_names|join(', ')}}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+
+{% if analysis.iocs|length %}
+    <div class="row" id="iocs">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <h4 class="title">Observables</h4>
+                    <p class="category">Network & Host</p>
+                </div>
+                <div class="content" id="ioc-display">
+                    <div class="table-responsive table-full-width">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Value</th>
+                                    <th>Sources</th>
+                                    <th>Tags</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ioc in analysis.iocs %}
+                                    <tr>
+                                        <td>{{ioc.value}}</td>
+                                        <td>{{ioc.sources|join(', ')}}</td>
+                                        <td>
+                                            {% for tag in ioc.tags %}
+                                                {% if tag in ioc.ti_tags %}
+                                                    <span class="tag tag-both">{{tag}}</span>
+                                                {% else %}
+                                                    <span class="tag tag-azure">{{tag}}</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% for tag in ioc.ti_tags %}
+                                                {% if tag not in ioc.tags %}
+                                                    <span class="tag tag-cancelled">{{tag}}</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% for indicator in ioc.ti_indicators %}
+                                                <span class="tag tag-waiting" data-toggle="tooltip" data-placement="top" title="{{indicator.description}}">{{indicator.name}}</span>
+                                            {% endfor %}
+
+                                            <script>
+                                                $('[data-toggle="tooltip"]').tooltip();
+                                            </script>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="footer">
+                        <hr />
+                        <div class="stats">
+                            <ul>
+                                {% if current_user.has_permission('submit_iocs') %}
+                                    {% for module in ti_modules %}
+                                        <li id="ioc-sent-{{module}}" {% if not analysis.threat_intelligence[module] %}class="hidden"{% endif %}>
+                                            <i class="fa fa-check text-success"></i> Sent to {{module}}
+                                        </li>
+                                        <li id="ioc-sendto-{{module}}" {% if analysis.threat_intelligence[module] %}class="hidden"{% endif %}>
+                                            <a class="ioc-submission-link" href="{{ url_for('AnalysesView:submit_iocs', id=analysis._id, module=module) }}"><i class="fa fa-send"></i> Send to {{module}}</a>
+                                        </li>
+                                    {% endfor %}
+                                {% endif %}
+                                <li>
+                                    <div class="legend">
+                                        <i class="fa fa-circle text-info"></i> Fame
+                                        <i class="fa fa-circle text-danger"></i> Threat Intelligence Data
+                                        <i class="fa fa-circle text-both"></i> Both
+                                        <i class="fa fa-circle text-warning"></i> Threat Intelligence Indicators
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% if current_user.has_permission('submit_iocs') %}
+                <div class="content" id="ioc-submission">
+                    <form>
+                        <input id="ioc-submission-url" type="hidden" value="" />
+                        <div class="table-responsive table-full-width">
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th class="ioc-checkbox"></th>
+                                        <th>Value</th>
+                                        <th>Sources</th>
+                                        <th>Tags</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ioc in analysis.iocs %}
+                                        <tr class="submission-single-ioc">
+                                            <td><label class="checkbox checkbox-inline"><input type="checkbox" {% if ioc.tags %}checked{% endif %} data-toggle="checkbox" /></label></td>
+                                            <td class="submission-ioc-value">{{ioc.value}}</td>
+                                            <td class="submission-ioc-sources">{{ioc.sources|join(', ')}}</td>
+                                            <td>
+                                                {% if ioc.ti_tags %}
+                                                    <input name="tags" class="tags-input tag-azure" type="text" value="{{ (ioc.tags+ioc.ti_tags)|unique|join(',') }}" />
+                                                {% else %}
+                                                    <input name="tags" class="tags-input tag-azure" type="text" value="{{ ioc.tags|join(',') }}" />
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="form-group">
+                            <label>Tags for all</label>
+                            <input id="ioc-submission-tags" class="tags-input tag-azure" type="text" value="" />
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-info btn-fill"><i class="feedback hidden fa fa-refresh spinner"></i> Send</button>
+                            <button id="ioc-submission-cancel" class="btn-link">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<div id="extractions">
+{% for extraction in analysis.extractions %}
+<div class="row" id="extraction-{{extraction.label|replace(' ', '-')}}">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">{{extraction.label}}</h4>
+                <p class="category">Extraction</p>
+            </div>
+            <div class="content">
+                <pre><code>{{extraction.content}}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+</div>
+
+<div id="details">
+{% for name, results in analysis.results.items() %}
+<div class="row" id="results-{{name|replace(' ', '-')}}">
+    {% if name in modules %}
+        {% include [modules[name].details_template(), 'analyses/details.html'] %}
+    {% else %}
+        {% include 'analyses/details.html' %}
+    {% endif %}
+</div>
+{% endfor %}
+</div>
+
+{% if analysis.logs|length and current_user.has_permission('see_logs') %}
+<div class="row" id="logs">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Logs</h4>
+            </div>
+            <div class="content">
+                <pre>{{analysis.logs|join('\n')}}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+<script type="text/javascript">
+    $('.main-panel').scrollspy({ target: '#sidebar-nav' });
+
+    hljs.initHighlighting.called = false;
+    hljs.initHighlighting();
+
+    $('.tags-input').tagsInput();
+</script>
+
+{% if analysis.status == 'pending' or analysis.status == 'running' %}
+<script>
+    auto_update("{{ url_for('AnalysesView:get', id=analysis._id) }}", 3000, '.auto-update');
+    enable_checkboxes();
+</script>
+{% endif %}
+
+{% endblock %}

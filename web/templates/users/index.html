@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <div class="col-sm-8">
+                        <h4 class="title">Users</h4>
+                        <p class="category"></p>
+                    </div>
+                    <div class="col-sm-4 text-right module-actions">
+                        <a href="{{ url_for('UsersView:new')}}" class="btn btn-sm btn-fill btn-info">
+                            Create New User
+                        </a>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="table-responsive table-full-width">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Groups</th>
+                                    <th>Default Sharing</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in data['users'] %}
+                                    <tr {% if not user.enabled %}class="user-disabled"{% endif %}>
+                                            <td class="list-avatar avatar">
+                                                <img class="img-circle" src="{{user._id|avatar}}" />
+                                            </td>
+                                            <td><a href="{{ url_for('UsersView:get', id=user._id)}}">
+                                                {{user.name}}
+                                            </a></td>
+                                            <td>{{user.email}}</td>
+                                            <td>
+                                                {% for group in user.groups %}
+                                                    <span class="tag tag-azure">{{group}}</span>
+                                                {% endfor %}
+                                            </td>
+                                            <td>
+                                                {% for group in user.default_sharing %}
+                                                    <span class="tag tag-azure">{{group}}</span>
+                                                {% endfor %}
+                                            </td>
+                                        <td class="user-actions">
+                                            {% if user.enabled %}
+                                                <form method="post" action="{{ url_for('UsersView:disable', id=user._id) }}">
+                                                    <button type="submit" class="btn btn-danger btn-xs btn-fill"><i class="fa fa-remove"></i> Disable</button>
+                                                </form>
+                                            {% else %}
+                                                <form method="post" action="{{ url_for('UsersView:enable', id=user._id) }}">
+                                                    <button type="submit" class="btn btn-success btn-xs btn-fill"><i class="fa fa-check"></i> Enable</button>
+                                                </form>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

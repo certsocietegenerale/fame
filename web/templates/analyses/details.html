@@ -1,0 +1,37 @@
+<div class="col-md-12">
+    <div class="card">
+        <div class="header">
+            <h4 class="title">{{name}}</h4>
+            <p class="category">Detailed Results</p>
+        </div>
+        <div class="content">
+            {% if results is mapping %}
+                {% for key in results %}
+                    <h5>{{key}}</h5>
+                    {% if results[key] is string %}
+                        <pre><code>{{results[key]}}</code></pre>
+                    {% else %}
+                        <pre><code>{{results[key]|to_json}}</code></pre>
+                    {% endif %}
+                {% endfor %}
+            {% elif results is string %}
+                <pre><code>{{ results }}</code></pre>
+            {% else %}
+                <pre><code>{{ results|to_json }}</code></pre>
+            {% endif %}
+
+            {% if 'support_files' in analysis %}
+                {% if name in analysis.support_files %}
+                    <div class="footer">
+                        <hr />
+                        <div class="stats">
+                            <ul>
+                                {{support_files(name)}}
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>

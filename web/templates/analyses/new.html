@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="row">
+	<div class="col-md-8 col-md-offset-2">
+        <div class="card">
+            <div class="header text-center">
+                <h3>Submit a new file</h3>
+                <p class="category">And start an analysis</p>
+            </div>
+            <div class="content">
+                <form id="submit" enctype="multipart/form-data" action="{{ url_for('AnalysesView:post') }}" method="POST">
+                    <div class="tab-pills">
+                        <ul class="nav nav-pills">
+                            <li class="active"><a href="#file" role="tab" data-toggle="tab">File</a></li>
+                            <li><a href="#url" role="tab" data-toggle="tab">URL</a></li>
+                            {% if hash_capable %}
+                                <li><a href="#hash" role="tab" data-toggle="tab">Hash</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <div class="tab-content">
+                        <div role="tabpanel" class="tab-pane active" id="file">
+                            <div class="form-group">
+                                <input type="file" id="file-field" name="file" />
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="url">
+                            <div class="form-group">
+                                <input class="form-control" type="text" name="url" placeholder="URL" />
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="hash">
+                            <div class="form-group">
+                                <input class="form-control" type="text" name="hash" placeholder="Hash" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <input class="form-control" id="typeahead-modules" name="module" type="text" placeholder="Module / Just do your magic" data-url="{{url_for('ModulesView:list')}}" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="groups">Share with: </label>
+                        <input name="groups" class="tags-input tag-azure" type="text" value="{{ current_user['default_sharing']|join(',') }}" />
+                    </div>
+
+                    {% include "analyses/_options.html" %}
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-info btn-fill">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $('.tags-input').tagsInput();
+</script>
+
+{% include "modules/templates.html" %}
+<script src="{{ url_for('static', filename='js/modules-typeahead.js') }}"></script>
+
+{% endblock %}

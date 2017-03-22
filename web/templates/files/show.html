@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% set file = data['file'] %}
+{% set av_modules = data['av_modules'] %}
+
+{% block sidebar %}
+    <div class="sidebar-submission">
+        <h4>New Analysis</h4>
+        <form action="{{ url_for('AnalysesView:post') }}" method="POST">
+            <input type="hidden" name="file_id" value="{{file._id}}" />
+            <div class="form-group">
+                <input class="form-control" id="typeahead-modules" name="module" type="text" placeholder="Module / Just do your magic" data-url="{{url_for('ModulesView:list')}}" />
+            </div>
+
+            <div class="form-group">
+                <label for="groups">Share with: </label>
+                <input name="groups" class="tags-input" type="text" value="{{ current_user['default_sharing']|join(',') }}" />
+            </div>
+
+            {% include "analyses/_options.html" %}
+
+            <button type="submit" class="btn btn-info btn-fill">Submit</button>
+        </form>
+    </div>
+
+<script>
+    $('.tags-input').tagsInput();
+</script>
+{% endblock %}
+
+{% block body %}
+{% include "files/details.html" %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Analyses</h4>
+                <p class="category">Most recent first</p>
+            </div>
+            <div class="content">
+                <div class="table-responsive table-full-width">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Target</th>
+                                <th>Probable Names</th>
+                                <th>Extractions</th>
+                                <th>Tags</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for analysis in file.analysis %}
+                				<tr>
+                                    <td class="list-avatar avatar">
+                                        {% if analysis.analyst %}
+                                            <img class="img-circle" src="{{analysis.analyst._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.analyst.name}}" />
+                                        {% endif %}
+                                    </td>
+                					<td><a href="{{ url_for('AnalysesView:get', id=analysis._id) }}">{{analysis.date|date}}</a></td>
+                					<td>{{analysis.status}}</td>
+                					<td>{{analysis.module if analysis.module != None}}</td>
+                					<td>{{analysis.probable_names|join(', ')}}</td>
+                					<td>{{analysis.extractions|join(', ', attribute='label')}}</td>
+                                    <td>
+                                        {% for tag in analysis.tags %}
+                                            <span class="tag tag-azure">{{tag}}</span>
+                                        {% endfor %}
+                                    </td>
+                				</tr>
+                			{% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+      </div>
+</div>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+</script>
+
+
+{% include "modules/templates.html" %}
+<script src="{{ url_for('static', filename='js/modules-typeahead.js') }}"></script>
+
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <h4 class="title">New Module Repository</h4>
+                    <p class="category"></p>
+                </div>
+                <div class="content module-configuration">
+
+                    <form class="form-horizontal" method="post" action="{{url_for('ModulesView:repository_new')}}">
+
+                    <hr />
+
+                    <div class="row">
+                        <label for="name" class="col-sm-2 control-label">Name *</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" name="name" value="{{data.repository.name}}" required />
+                            <p class="help-block">Name of the repository. This should be unique, and will be the name of the directory / package where the modules will be stored.</p>
+                        </div>
+                        <div class="col-sm-2"></div>
+                    </div>
+
+                    <div class="row">
+                        <label for="address" class="col-sm-2 control-label">Address *</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" name="address" value="{{data.repository.address}}" required />
+                            <p class="help-block">Address of the git repository. Make sure to use an 'ssh' address if the repository is private.</p>
+                        </div>
+                        <div class="col-sm-2"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-2"></div>
+                        <div class="col-sm-8">
+                            <label class="checkbox checkbox-inline">
+                                <input id="private_repository" type="checkbox" name="private" data-toggle="checkbox" {% if not data.deploy_key %}disabled{% endif %} {% if data.repository.private %}checked{% endif %}>Private
+                            </label>
+                            {% if data.deploy_key %}
+                                <p class="help-block">Specify if the repository is private.</p>
+                            {% else %}
+                                <p class="help-block"><i class="fa fa-exclamation-triangle text-danger"></i> Private repositories are disabled because of a problem with your installation (you do not have a deploy key in 'conf/id_rsa.pub')</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-sm-2"></div>
+                    </div>
+
+                    <div id="private_repository_warning" class="collapse">
+                        <hr />
+                        <div class="panel panel-danger">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Private repositories</h3>
+                            </div>
+                            <div class="panel-body">
+                                <p>In order for private repositories to work, you should set up the following deploy key in your repository:</p>
+                                <pre>{{data.deploy_key}}</pre>
+                                <p>You should also make sure that you are using the 'ssh' address of your repository.</p>
+                                <p><b>The configuration of the deploy key should be done before you save this repository.</b></p>
+                                <p><b>You cannot add the same deploy key to several repositories. If you need to have more than one private repository, you should use a machine user instead. See <a href="https://developer.github.com/guides/managing-deploy-keys/#machine-users" target="_blank">this link</a> for more information.</b></p>
+                            </div>
+                        </div>
+                        <hr />
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-info btn-fill"><i class="fa fa-save"></i> Add</button>
+                    </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

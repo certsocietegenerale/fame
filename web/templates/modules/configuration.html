@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <h4 class="title">{{data.config.name}}</h4>
+                    <p class="category">Configuration</p>
+                </div>
+                <div class="content admin-form">
+                    {% if data.config.description %}
+                        <p>{{data.config.description}}</p>
+                    {% endif %}
+
+                    <form class="form-horizontal" method="post" action="{{url_for('ModulesView:configuration', id=data.config._id)}}">
+
+                    {% with settings=data.config.config, option=False %}
+                        {% include "modules/_configuration.html" %}
+                    {% endwith %}
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-info btn-fill"><i class="fa fa-save"></i> Save</button>
+                    </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

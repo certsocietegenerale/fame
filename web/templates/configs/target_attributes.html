@@ -1,0 +1,9 @@
+<td>{{attributes.count}}</td>
+<td>
+	{% set botnets = attributes.botnets %}
+	{% include 'configs/botnet_list.html' %}
+</td>
+<td>
+	{% set botnets = attributes.active_botnets %}
+	{% include 'configs/botnet_list.html' %}
+</td>

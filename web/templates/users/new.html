@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block body %}
+    {% include "users/_form.html" %}
+
+    <script>
+        $('.tags-input').tagsInput();
+    </script>
+{% endblock %}

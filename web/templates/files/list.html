@@ -1,0 +1,34 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Objects</h4>
+                <p class="category">Most recent first</p>
+            </div>
+            <div class="content">
+                <div class="table-responsive table-full-width">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Names</th>
+                                <th>Type</th>
+                                <th>MD5</th>
+                                <th>Classification</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for file in data['files'] %}
+                				<tr>
+                					<td class="file-name">{{file.names|join(', ')}}</td>
+                					<td class="file-type">{{file.type}}</td>
+                					<td class="file-md5"><a href="{{ url_for('FilesView:get', id=file._id) }}">{{file.md5}}<a></td>
+                					<td class="file-probable-names">{{file.probable_names|join(', ')}}</td>
+                	  			</tr>
+                  			{% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

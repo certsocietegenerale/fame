@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block body %}
+	{% if data['files']|length %}
+		{% include "files/list.html" %}
+	{% else %}
+		<p>No files to show</p>
+	{% endif %}
+
+	{% if data['analyses']|length %}
+		{% include "analyses/list.html" %}
+	{% else %}
+		<p>No analyses to show</p>
+	{% endif %}
+{% endblock %}

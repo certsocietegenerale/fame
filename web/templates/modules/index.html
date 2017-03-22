@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <h4 class="title">Configurations</h4>
+                    <p class="category">For core and abstract modules.</p>
+                </div>
+                <div class="content module-list">
+                    {% for config in data.configs %}
+                        <div class="module-info">
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <h5>{{config.name}}</h5>
+                                </div>
+                                <div class="col-sm-4 text-right module-actions">
+                                    <a class="btn btn-xs btn-fill" href="{{ url_for('ModulesView:configuration', id=config._id)}}"><i class="fa fa-sliders"></i> Configure</a>
+                                </div>
+                            </div>
+                            {% if config.description %}
+                                <div>{{config.description}}</div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div><i class="fa fa-exclamation-triangle text-danger"></i> You have no configuration available. Your FAME instance does not seem to be installed properly.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <div class="row">
+                        <div class="col-sm-8">
+                            <h4 class="title">Module Repositories</h4>
+                            <p class="category">Where the goodness comes from</p>
+                        </div>
+                        <div class="col-sm-4 text-right module-actions">
+                            <form method="post" action="{{ url_for('ModulesView:reload')}}">
+                                <button type="submit" class="btn btn-xs btn-fill"><i class="fa fa-refresh"></i> Reload</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="module-list">
+                        {% for repository in data.repositories %}
+                            <div class="module-info">
+                                <div class="row">
+                                    <div class="col-sm-8">
+                                        <h5>{{repository.name}}</h5>
+                                    </div>
+                                    <div class="col-sm-4 text-right module-actions">
+                                        <form method="post" action="{{ url_for('ModulesView:repository_update', id=repository._id) }}">
+                                            <button type="submit" class="btn btn-info btn-xs btn-fill"><i class="fa fa-download"></i> Update</button>
+                                        </form>
+                                        <form method="post" action="{{ url_for('ModulesView:repository_delete', id=repository._id) }}" data-confirm="This will delete all files / modules from this repository. Are you sure ?">
+                                            <button type="submit" class="btn btn-danger btn-xs btn-fill"><i class="fa fa-trash"></i> Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div>{{repository.address}}</div>
+                                <ul>
+                                {% if repository.status == 'error' %}
+                                <div class="panel panel-danger">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">Error</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <pre>{{repository.error_msg}}</pre>
+                                    </div>
+                                </div>
+                                {% else %}
+                                    {% if repository.status == 'updating' or repository.status == 'cloning' %}
+                                        <script>
+                                            auto_update("{{ url_for('ModulesView:index') }}", 3000, '.auto-update');
+                                        </script>
+                                    {% endif %}
+                                    <li><span class="label">Status</span> {{repository.status}}</li>
+                                {% endif %}
+                                </ul>
+                            </div>
+                        {% else %}
+                            <div>No module repository configured.</div>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <hr />
+                        <a class="" href="{{url_for('ModulesView:repository_new')}}">Add repository</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <h4 class="title">Processing Modules</h4>
+                    <p class="category"></p>
+                </div>
+                <div class="content module-list">
+                    {% for module in data.modules['Processing'] %}
+                        <div class="module-info">
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <h5>{{module.name}}</h5>
+                                </div>
+                                <div class="col-sm-4 text-right module-actions">
+                                    <a class="btn btn-xs btn-fill" href="{{ url_for('ModulesView:configure', id=module._id)}}"><i class="fa fa-sliders"></i> Configure</a>
+                                    {% if module.enabled %}
+                                        <form method="post" action="{{ url_for('ModulesView:disable', id=module._id) }}">
+                                            <button type="submit" class="btn btn-danger btn-xs btn-fill"><i class="fa fa-remove"></i> Disable</button>
+                                        </form>
+                                    {% else %}
+                                        {% if not module.error %}
+                                            <form method="post" action="{{ url_for('ModulesView:enable', id=module._id) }}">
+                                                <button type="submit" class="btn btn-success btn-xs btn-fill"><i class="fa fa-check"></i> Enable</button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if module.description %}
+                                <div>{{module.description}}</div>
+                            {% endif %}
+
+                            {% if module.error %}
+                            <div class="panel panel-danger">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">Error</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <pre>{{module.error}}</pre>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <ul>
+                                {% if module.acts_on %}
+                                    <li><span class="label">Acts On</span> {{module.acts_on|smart_join}}</li>
+                                {% endif %}
+                                {% if module.generates %}
+                                    <li><span class="label">Generates</span> {{module.generates|smart_join}}</li>
+                                {% endif %}
+                                {% if module.triggered_by %}
+                                    <li><span class="label">Trigerred By</span> {{module.triggered_by|smart_join}}</li>
+                                {% endif %}
+                                <li><span class="label">Queue</span> {{module.queue}}</li>
+                                {% if module.enabled %}
+                                    <li><i class="fa fa-check text-success"></i> enabled</li>
+                                {% else %}
+                                    <li><i class="fa fa-remove text-danger"></i> Disabled</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div>No module to list. Consider <a href="{{url_for('ModulesView:repository_new')}}">adding a module repository</a>.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% for type in ['Antivirus', 'Threat Intelligence', 'Reporting'] %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <h4 class="title">{{type}} Modules</h4>
+                    <p class="category"></p>
+                </div>
+                <div class="content module-list">
+                    {% for module in data.modules[type] %}
+                        <div class="module-info">
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <h5>{{module.name}}</h5>
+                                </div>
+                                <div class="col-sm-4 text-right module-actions">
+                                    {% if module.config %}
+                                        <a class="btn btn-xs btn-fill" href="{{ url_for('ModulesView:configure', id=module._id)}}"><i class="fa fa-sliders"></i> Configure</a>
+                                    {% endif %}
+                                    {% if module.enabled %}
+                                        <form method="post" action="{{ url_for('ModulesView:disable', id=module._id) }}">
+                                            <button type="submit" class="btn btn-danger btn-xs btn-fill"><i class="fa fa-remove"></i> Disable</button>
+                                        </form>
+                                    {% else %}
+                                        {% if not module.error %}
+                                            <form method="post" action="{{ url_for('ModulesView:enable', id=module._id) }}">
+                                                <button type="submit" class="btn btn-success btn-xs btn-fill"><i class="fa fa-check"></i> Enable</button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if module.description %}
+                                <div>{{module.description}}</div>
+                            {% endif %}
+
+                            {% if module.error %}
+                            <div class="panel panel-danger">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">Error</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <pre>{{module.error}}</pre>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <ul>
+                                {% if module.enabled %}
+                                    <li><i class="fa fa-check text-success"></i> enabled</li>
+                                {% else %}
+                                    <li><i class="fa fa-remove text-danger"></i> Disabled</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div>No module to list. Consider <a href="{{url_for('ModulesView:repository_new')}}">adding a module repository</a>.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endblock %}

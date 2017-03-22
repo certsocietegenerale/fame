@@ -1,0 +1,29 @@
+ROLE_KEY = "saml_response.roles"
+
+ROLE_MAPPING = {
+    "SAML_ROLE_1": {
+        "permissions": [
+            "submit_iocs",
+            "configs",
+            "cuckoo_access",
+        ],
+        "default_sharing": [
+            "cert",
+            "users"
+        ],
+        "groups": [
+            "cert",
+            "*",
+        ],
+    },
+    "SAML_ROLE_2": {
+        "permissions": [],
+        "default_sharing": [
+            "cert",
+            "users"
+        ],
+        "groups": [
+            "users",
+        ],
+    }
+}

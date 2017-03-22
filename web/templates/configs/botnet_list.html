@@ -1,0 +1,3 @@
+{% for botnet in botnets %}
+	<a href="{{ url_for('ConfigsView:show', botnet=botnet) }}">{{botnet}}</a>&nbsp;
+{% endfor %}

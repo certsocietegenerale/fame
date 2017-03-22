@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}
+Configs
+{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Targets</h4>
+                <p class="category">Ordered by monitors</p>
+            </div>
+            <div class="content">
+                <div class="table-responsive table-full-width">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Target</th>
+                                <th>Count</th>
+                                <th>Botnets</th>
+                                <th>Active Botnets</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for monitor, values in data.items() %}
+                				<tr class="config-list-monitor info">
+                					<td><a href="{{ url_for('ConfigsView:show', monitor=monitor) }}">{{monitor}}</a></td>
+                					{% set attributes = values %}
+                					{% include 'configs/target_attributes.html' %}
+                	  			</tr>
+                	  			{% for target, tvalues in values.targets.items() %}
+                	  				<tr class="config-list-target">
+                						<td><a href="{{ url_for('ConfigsView:show', target=target) }}">{{target}}</a></td>
+                						{% set attributes = tvalues %}
+                						{% include 'configs/target_attributes.html' %}
+                	  				</tr>
+                	  			{% endfor %}
+                  			{% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+      </div>
+</div>
+{% endblock %}

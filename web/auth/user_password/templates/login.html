@@ -1,0 +1,27 @@
+{% extends "base_unauthenticated.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block body %}
+    <form method="post" action="{{url_for('auth.login')}}">
+
+        <div class="card">
+            <div class="content">
+                <div class="form-group">
+                    <label>Email address</label>
+                    <input type="email" name="email" placeholder="Enter email" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="Password" class="form-control">
+                </div>
+            </div>
+            <div class="footer text-center">
+                <button type="submit" class="btn btn-fill btn-warning btn-wd">Login</button>
+                <br />
+                <a href="{{url_for('auth.password_reset_form')}}">Reset password</a>
+            </div>
+        </div>
+
+    </form>
+{% endblock %}

@@ -1,0 +1,102 @@
+<div class="row" id="file-details">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <div class="sharing-groups">
+                    {% for group in file.groups %}
+                        <span class="tag tag-azure">
+                            <span>{{group}}</span>
+                            <a class="tags-remove-link"></a>
+                            <form class="hidden" method="post" action="{{url_for('FilesView:remove_group', id=file._id)}}">
+                                <input type="text" name="group" value="{{group}}" />
+                            </form>
+                        </span>
+                    {% endfor %}
+                    <a href="#" id="add-sharing-group">+</a>
+                    <form id="add-sharing-group-form" class="hidden" method="post" action="{{url_for('FilesView:add_group', id=file._id)}}">
+                        <input type="text" name="group" value="" />
+                    </form>
+                </div>
+                <h4 class="title">Object Details</h4>
+            </div>
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-2 text-right"><strong>Name(s)</strong></div>
+                    <div class="col-sm-10">{{file.names|join(', ')}}</div>
+                </div>
+                {% if not file.type == 'url' %}
+                <div class="row">
+                    <div class="col-sm-2 text-right"><strong>MD5</strong></div>
+                    <div class="col-sm-10">{{file.md5}}</div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2 text-right"><strong>SHA1</strong></div>
+                    <div class="col-sm-10">{{file.sha1}}</div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2 text-right"><strong>SHA256</strong></div>
+                    <div class="col-sm-10">{{file.sha256}}</div>
+                </div>
+                {% endif %}
+                <div class="row">
+                    <div class="col-sm-2 text-right"><strong>Type</strong></div>
+                    <div class="col-sm-10">{{file.type}}
+                        <a href="#" id="change-file-type"><i class="glyphicon glyphicon-pencil"></i></a>
+                        <form id="change-file-type-form" class="hidden" method="post" action="{{url_for('FilesView:change_type', id=file._id)}}">
+                            <input type="text" name="type" value="" />
+                        </form>
+                    </div>
+                </div>
+                {% if not file.type == 'url' %}
+                <div class="row">
+                    <div class="col-sm-2 text-right"><strong>Mime</strong></div>
+                    <div class="col-sm-10">{{file.mime}}</div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2 text-right"><strong>Detailed Type</strong></div>
+                    <div class="col-sm-10">{{file.detailed_type}}</div>
+                </div>
+                {% endif %}
+                {% if file.parent_analyses %}
+                <div class="row">
+                    <div class="col-sm-2 text-right"><strong>Parent Analyses</strong></div>
+                    <div class="col-sm-10">
+                        {% for analysis in file.parent_analyses %}
+                            <div><a href="{{ url_for('AnalysesView:get', id=analysis) }}">{{analysis}}</a></div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="footer">
+                    <br />
+                    {% if file.type != 'url' %}
+                    <hr>
+                    <div class="stats">
+                        <ul>
+                            <li><a href="{{ url_for('FilesView:download', id=file._id) }}"><i class="pe-7s-cloud-download"></i> Download</a></li>
+                            {% if request.endpoint == 'AnalysesView:get' %}
+                                <li><a href="{{ url_for('FilesView:get', id=file._id)}}"><i class="pe-7s-note2"></i> All analyses</a></li>
+                            {% endif %}
+
+                            {% for module in av_modules %}
+                                <li id="av-sent-{{module}}" {% if not file.antivirus[module] %}class="hidden"{% endif %} {% if file.antivirus[module] is string %}data-toggle="tooltip" data-placement="top" title="{{file.antivirus[module]}}"{% endif %}>
+                                    <i class="fa fa-check text-success"></i> {{module}}
+                                </li>
+                                <li id="av-sendto-{{module}}" {% if file.antivirus[module] %}class="hidden"{% endif %}>
+                                    <a class="av-submission-link" href="{{ url_for('FilesView:submit_to_av', id=file._id, module=module) }}" data-module="{{module}}"><i class="fa fa-send"></i> Send to {{module}}</a>
+                                </li>
+                            {% endfor %}
+
+                            <script src="{{ url_for('static', filename='js/fame-file.js') }}"></script>
+                            <script>
+                                $('[data-toggle="tooltip"]').tooltip();
+                            </script>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

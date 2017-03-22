@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block body %}
+{{ pagination.links }}
+{% include "analyses/list.html" %}
+{{ pagination.links }}
+{% endblock %}

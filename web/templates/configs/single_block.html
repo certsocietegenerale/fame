@@ -1,0 +1,60 @@
+<li class="timeline-entry">
+    <div class="timeline-time">{{ block.created|date }}<div class="timeline-timesince">({{block.created|timesince}})</div></div>
+    {% if block.action == 'new' or block.action == 'added' %}
+	<div class="timeline-badge"><i class="glyphicon glyphicon-plus"></i></div>
+	{% elif block.action == 'update' %}
+	<div class="timeline-badge timeline-updated"><i class="glyphicon glyphicon-random"></i></div>
+	{% elif block.action == 'removed' %}
+	<div class="timeline-badge timeline-removed"><i class="glyphicon glyphicon-thumbs-up"></i></div>
+	{% endif %}
+
+    <div class="row timeline-panel">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <div class="timeline-botnet">{{ block.botnet }}</div>
+                    <h4 class="title">{{block.type}} : {{ block.target }} ({{ block.monitor }})</h4>
+                    <p class="category">
+                        {% if block.action == 'new' %}
+                        Was added to configuration
+                        {% elif block.action == 'update' %}
+                        Changes were made
+                        {% elif block.action == 'removed' %}
+                        Was removed from configuration
+                        {% elif block.action == 'added' %}
+                        Was in configuration
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="content toggle-block">
+                    <div class="timeline-body toggle">
+                        {% if block.action == 'new' or block.action == 'added' %}
+                        <pre>{{ block.content }}</pre>
+                        {% elif block.action == 'update' %}
+                        <pre>{{ block.diff }}</pre>
+                        {% endif %}
+                    </div>
+                    <div class="footer">
+                        <hr />
+                        <div class="stats">
+                            <ul>
+                                <li><a class="timeline-delete" href="{{ url_for('ConfigsView:delete', id=block._id) }}"><i class="glyphicon glyphicon-trash"></i> Delete</a></li>
+                                {% if block.action != 'removed' %}
+                                <li><a class="toggle" href="#"><i class="glyphicon glyphicon-eye-close"></i> Hide Content</a><a class="toggle" style="display:none" href="#"><i class="glyphicon glyphicon-eye-open"></i> Show Content</a></li>
+                                {% endif %}
+                                {% if block.analyses %}
+                                    <li>
+                                        Analyses:
+                                        {% for analysis in block.analyses %}
+                                        <a href="{{ url_for('AnalysesView:get', id=analysis) }}">{{ loop.index }}</a>&nbsp;
+                                        {% endfor %}
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</li>

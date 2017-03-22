@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}
+Config Timeline
+{% endblock %}
+
+{% block body %}
+<ul class="timeline toggle-block">
+    <li>
+        <div class="timeline-badge timeline-actions"><i class="glyphicon glyphicon-cog"></i></div>
+        <div class="row timeline-panel">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="header">
+                        <h4 class="title">Global Actions</h4>
+                        <p class="category">Manage the config timeline</p>
+                    </div>
+                    <div class="content">
+                        <h5>Filters</h5>
+        				<ul class="timeline-filters">
+        					{% set filters = [
+        			    		('Monitors', data['monitors'], 'monitor'),
+        			    		('Targets', data['targets'], 'target'),
+        			    		('Types', data['types'], 'type'),
+        			    		('Botnets', data['botnets'], 'botnet')
+        					] -%}
+        					{% for collection_name, collection, key in filters %}
+        						<li>
+        							<span class="timeline-filter-name">{{ collection_name }}</span>:
+        							{% for element in collection %}
+        								{% if element == request.args.get(key) %}
+        									<span class="timeline-filter-active">
+        										{{ element }}
+        										<a href="{{ delete_query(key) }}"><i class="glyphicon glyphicon-remove"></i></a>
+        									</span>
+        								{% else %}
+        									<a href="{{ modify_query(key, element) }}">{{ element }}</a>
+        								{% endif %}
+        							{% endfor %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <div class="footer">
+                            <br />
+                            <hr>
+                            <div class="stats">
+                                <ul>
+                                    <li><a class="toggle" href="#"><i class="glyphicon glyphicon-eye-close"></i> Hide All Content</a></li>
+                                    <li><a class="toggle" style="display:none" href="#"><i class="glyphicon glyphicon-eye-open"></i> Show All Content</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <div>
+    </li>
+
+	{% for block in data['config_blocks'] %}
+		{% include 'configs/single_block.html' %}
+	{% endfor %}
+</ul>
+{% endblock %}
