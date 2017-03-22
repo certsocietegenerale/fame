@@ -16,7 +16,7 @@ You can get more information (and screenshots !) on the [website](https://certso
 
 # Installation
 
-The detailed installation instructions can be found in the [documentation](FIXME).
+The detailed installation instructions can be found in the [documentation](https://fame.readthedocs.io/en/latest/installation.html).
 
 # Community
 
