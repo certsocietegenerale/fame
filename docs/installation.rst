@@ -10,7 +10,7 @@ Dependencies
 
 Install dependencies::
 
-    $ sudo apt-get install git python-pip
+    $ sudo apt-get install git python-pip python-dev
     $ sudo pip install virtualenv
 
 MongoDB
