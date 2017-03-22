@@ -19,7 +19,7 @@ Our answer to these problems is FAME, our malware analysis platform.
 
 <!--more-->
 
-FAME is a malware analysis pipeline, that will chain the execution of modules in order to perform end-to-end analysis. In the best case scenario, an analyst will submit a sample, wait for a few minutes, and FAME will be able to recognize the malware family, extract its configuration and identify how the malware is targeting your organization.
+FAME is a malware analysis pipeline that will chain the execution of modules in order to perform end-to-end analysis. In the best case scenario, an analyst will submit a sample, wait for a few minutes, and FAME will be able to recognize the malware family, extract its configuration and identify how the malware is targeting your organization.
 
 ### Not a sandbox
 
@@ -37,10 +37,10 @@ from fame.core.module import ProcessingModule
 
 class DummyModule(ProcessingModule):
     name = "dummy"
-    description = "Does nothing. Give me something useful to do !"
+    description = "Does nothing. Give me something useful to do!"
 
     def each(self, target):
-        # Do something useful !
+        # Do something useful!
 
         return True
 ```
@@ -63,8 +63,8 @@ You can also add observables to your Threat Intelligence Platform directly from 
 
 We were really pleased with our experience open-sourcing [FIR](https://github.com/certsocietegenerale/FIR), our incident management platform.
 
-That is why we are now releasing FAME, hoping it will help incident response teams with their malware analysis needs. We cannot wait to hear about your ideas and use the awesome modules that will be created by the community. See the [Community](FIXME) page for more details.
+That is why we are now releasing FAME, hoping it will help incident response teams with their malware analysis needs. We cannot wait to hear about your ideas and use the awesome modules that will be created by the community. See the [Community](https://certsocietegenerale.github.io/fame/community) page for more details.
 
 ### Get yours today
 
-Sounds interesting ? Get started now by getting the code from [GitHub](https://github.com/certsocietegenerale/fame). Do not forget to [read the docs](FIXME).
+Sounds interesting ? Get started now by getting the code from [GitHub](https://github.com/certsocietegenerale/fame). Do not forget to [read the docs](https://fame.readthedocs.io/).
