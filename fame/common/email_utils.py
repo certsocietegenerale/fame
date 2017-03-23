@@ -76,7 +76,7 @@ class EmailMessage:
         self.msg.preamble = subject
 
     def add_content(self, text, content_type="text"):
-        self.msg.attach(MIMEText(text, content_type))
+        self.msg.attach(MIMEText(text, content_type, "utf-8"))
 
     def add_attachment(self, filepath, filename=None):
         if filename is None:
