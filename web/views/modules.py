@@ -230,7 +230,7 @@ class ModulesView(FlaskView, UIView):
         readme = module.get_file('README.md')
         if readme:
             with open(readme, 'r') as f:
-                flash(markdown(f.read()), 'persistent')
+                flash(markdown(f.read(), extras=["code-friendly"]), 'persistent')
 
         return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
 
