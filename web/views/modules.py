@@ -11,7 +11,7 @@ from web.views.mixins import UIView
 from web.views.helpers import get_or_404, requires_permission, file_download, clean_modules, clean_repositories
 from fame.common.config import fame_config
 from fame.common.constants import FAME_ROOT, MODULES_ROOT
-from fame.common.utils import get_class
+from fame.common.utils import get_class, tempdir
 from fame.common.exceptions import MissingConfiguration
 from fame.core.module import ModuleInfo
 from fame.core.config import Config
@@ -445,8 +445,8 @@ class ModulesView(FlaskView, UIView):
     @route('/download', methods=['GET'])
     def download(self):
         # First, create a zip file with the modules
-        f, path = mkstemp(dir=fame_config.temp_path)
-        with ZipFile(os.fdopen(f, 'w'), 'w') as zipf:
+        path = os.path.join(tempdir(), 'modules.zip')
+        with ZipFile(path, 'w') as zipf:
             for root, dirs, files in os.walk(MODULES_ROOT):
                 for filename in files:
                     # Ignore pyc files
