@@ -10,7 +10,7 @@ if exist %VIRTUALENV% (
     echo [+] Using existing virtualenv.
 ) ELSE (
     echo [+] Creating virtualenv...
-    call virtualenv %VIRTUALENV% > nul
+    call python -mvirtualenv %VIRTUALENV% > nul
 )
 
 call %VIRTUALENV%\Scripts\activate

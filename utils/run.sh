@@ -8,7 +8,7 @@ if [ -d "$VIRTUALENV" ]; then
     echo "[+] Using existing virtualenv."
 else
     echo "[+] Creating virtualenv..."
-    virtualenv "$VIRTUALENV" > /dev/null
+    python2 -mvirtualenv "$VIRTUALENV" > /dev/null
 fi
 
 . "$VIRTUALENV/bin/activate"
