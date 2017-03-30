@@ -1,4 +1,3 @@
-import shutil
 import urlparse
 from bson import ObjectId
 from flask import make_response, abort, request
