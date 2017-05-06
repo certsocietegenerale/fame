@@ -446,22 +446,22 @@ td.user-actions .btn {
     border: 1px solid #23CCEF;
 }
 
-.messages h1 {
+.messages h1, .readme h1 {
     font-size: 22px;
     font-weight: bold;
 }
 
-.messages h2 {
+.messages h2, .readme h2 {
     font-size: 20px;
     font-weight: bold;
 }
 
-.messages h3 {
+.messages h3, .readme h3 {
     font-size: 18px;
     font-weight: bold;
 }
 
-.messages h4 {
+.messages h4, .readme h4 {
     font-size: 18px;
 }
 

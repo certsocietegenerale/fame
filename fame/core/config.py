@@ -51,7 +51,9 @@ class Config(MongoDict):
             if (setting['value'] is None) and ('default' not in setting):
                 raise MissingConfiguration("Missing configuration value: {} (in '{}')".format(setting['name'], self['name']), self)
 
-            values[setting['name']] = setting['value'] or setting['default']
+            values[setting['name']] = setting['value']
+            if setting['value'] is None:
+                values[setting['name']] = setting['default']
 
         return values
 

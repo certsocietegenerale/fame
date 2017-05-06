@@ -7,6 +7,7 @@ FAME relies on modules to add functionality. Modules are actually Python classes
 Several kind of modules can be created:
 
 * ``ProcessingModule``: this is where FAME's magic is. A ``ProcessingModule`` should define some automated analysis that can be performed on some types of files / analysis information.
+* ``IsolatedProcessingModule``: this is a special ``ProcessingModule`` that will be executed inside a VM, because it contains risks of infection.
 * ``ReportingModule``: this kind of module enables reporting options, such as sending analysis results by email, or post a Slack notification when the analysis is finished.
 * ``ThreatIntelligenceModule``: this kind of modules acts on IOCs. a ``ThreatIntelligenceModule`` has two roles:
 
@@ -14,6 +15,7 @@ Several kind of modules can be created:
   * Enrich the Threat Intelligence Platform with IOCs extracted by FAME.
 
 * ``AntivirusModule``: modules that act on files, and send them to antivirus vendors.
+* ``VirtualizationModule``: modules that determine how-to orchestrate Virtual Machines when using ``IsolatedProcessingModule``.
 
 In order to create a module, create a Python file, and place it in the `fame/modules/processing`, `fame/modules/reporting` or `fame/modules/threat_intelligence` directory.
 
@@ -288,6 +290,21 @@ As an example, here is the default template used::
         </div>
     </div>
 
+Isolated Processing Modules
+---------------------------
+
+When executing your module comes with risks of infection, it should not have full access to your FAME instance / your operating system. For this reason, you have the possibility to create an ``IsolatedProcessingModule``. It is similar to a ``ProcessingModule`` except that it will be executed inside a Virtual Machine and will not have full access to your FAME instance.
+
+Writing an ``IsolatedProcessingModule`` is similar to writing a ``ProcessingModule``, with the following exceptions:
+
+* An ``IsolatedProcessingModule`` does not have full access to FAME's code base. The only imports that will work are the following::
+
+    from fame.core.module import IsolatedProcessingModule
+    from fame.common.exceptions import ModuleInitializationError, ModuleExecutionError
+
+* An ``IsolatedProcessingModule`` cannot have installation scripts (they will not be executed). You should make sure to give specific installation instruction in the module's README and verify requirements in the module's ``initialize`` method.
+
+
 Testing Processing Modules
 --------------------------
 
@@ -295,6 +312,7 @@ When it comes to testing your processing modules during development, you have tw
 
 * Use a full FAME instance and test your module by launching new analyses using the web interface. You will need a running worker to execute your module. Note that the workers will not automatically reload modified code, so you should make sure to click on the `Reload` button on :ref:`admin-configuration`.
 * The simpler option is to use the :ref:`single_module` utility. This way, you don't need a webserver, a worker or even a MongoDB instance.
+* An ``IsolatedProcessingModule`` can also be tested with the :ref:`single_module` utility. By default, it will execute inside a Virtual Machine (as it should). If you want to test your module without this overhead (if you are already inside the VM for example), you can use the ``-l, --local`` switch.
 
 Common module features
 ======================
@@ -395,6 +413,9 @@ When creating installation scripts, you can use ``from fame.common.constants imp
 .. note::
     You can also provide additional information and installation information that will be displayed to the user by creating a ``README.md`` file.
 
+.. warning::
+    Installation scripts are not available for ``IsolatedProcessingModule`` and ``VirtualizationModule``.
+
 Abstract Modules
 ----------------
 
@@ -461,6 +482,12 @@ develop certain kinds of modules:
 .. autoclass:: fame.modules.community.processing.apk.apk_plugins.APKPlugin
     :members:
 
+Isolated Processing Module
+--------------------------
+
+.. autoclass:: fame.core.module.IsolatedProcessingModule
+    :members:
+
 Reporting Modules
 -----------------
 
@@ -489,4 +516,10 @@ Antivirus Modules are used to submit analyzed files to antivirus vendors so that
     :members:
 
 .. autoclass:: fame.modules.community.antivirus.mail.mail_submission.MailSubmission
+    :members:
+
+Virtualization Module
+---------------------
+
+.. autoclass:: fame.core.module.VirtualizationModule
     :members:

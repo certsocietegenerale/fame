@@ -2,7 +2,6 @@ import os
 from time import time
 from zipfile import ZipFile
 from tempfile import mkstemp
-from markdown2 import markdown
 from flask import url_for, request, flash
 from flask_classy import FlaskView, route
 
@@ -158,7 +157,8 @@ class ModulesView(FlaskView, UIView):
             'Processing': [],
             'Reporting': [],
             'Threat Intelligence': [],
-            'Antivirus': []
+            'Antivirus': [],
+            'Virtualization': []
         }
 
         for module in ModuleInfo.get_collection().find():
@@ -227,10 +227,9 @@ class ModulesView(FlaskView, UIView):
         module.update_value('enabled', True)
         dispatcher.reload()
 
-        readme = module.get_file('README.md')
+        readme = module.get_readme()
         if readme:
-            with open(readme, 'r') as f:
-                flash(markdown(f.read(), extras=["code-friendly"]), 'persistent')
+            flash(readme, 'persistent')
 
         return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
 
@@ -294,6 +293,7 @@ class ModulesView(FlaskView, UIView):
             modules).
         """
         module = ModuleInfo(get_or_404(ModuleInfo.get_collection(), _id=id))
+        module['readme'] = module.get_readme()
 
         if request.method == "POST":
             if module['type'] == 'Processing':

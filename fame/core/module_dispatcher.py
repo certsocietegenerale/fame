@@ -20,7 +20,8 @@ class ModuleDispatcher(object):
             'Processing': {},
             'Reporting': [],
             'Antivirus': [],
-            'Threat Intelligence': []
+            'Threat Intelligence': [],
+            'Virtualization': []
         }
         self._direct_transforms = {}
         self._transforms = {}
@@ -67,6 +68,9 @@ class ModuleDispatcher(object):
     def next_module(self, types_available, module_name, excluded_modules):
         module = self.get_processing_module(module_name)
 
+        if module is None:
+            raise DispatchingException("Could not find execution path")
+
         if not module.info['acts_on']:
             return module_name
         else:
@@ -89,6 +93,13 @@ class ModuleDispatcher(object):
     def get_antivirus_modules(self):
         return self._modules['Antivirus']
 
+    def get_virtualization_module(self, name):
+        for m in self._modules['Virtualization']:
+            if m.name == name and m.info['enabled']:
+                return m()
+
+        return None
+
     def add_module(self, module):
         m = get_class(module['path'], module['class'])
         if m:
@@ -99,6 +110,13 @@ class ModuleDispatcher(object):
                     self._modules[module['type']].append(m)
             except Exception, e:
                 print "Could not initialize module '{0}': {1}".format(module['name'], e)
+
+    def add_virtualization_module(self, module):
+        m = get_class(module['path'], module['class'])
+
+        if m:
+            m.info = module
+            self._modules['Virtualization'].append(m)
 
     def add_processing_module(self, module):
         m = get_class(module['path'], module['class'])
@@ -175,6 +193,8 @@ class ModuleDispatcher(object):
         for module in ModuleInfo.get_collection().find({'enabled': True}):
             if module['type'] == "Processing":
                 self.add_processing_module(module)
+            elif module['type'] == "Virtualization":
+                self.add_virtualization_module(module)
             else:
                 self.add_module(module)
 

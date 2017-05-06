@@ -74,7 +74,7 @@ Here is the full usage of this tool::
     $ utils/run.sh utils/single_module.py -h
     [+] Using existing virtualenv.
 
-    usage: single_module.py [-h] [-i] [-t] module file [type]
+    usage: single_module.py [-h] [-i] [-t] [-l] module file [type]
 
     Launches a single FAME module.
 
@@ -91,6 +91,10 @@ Here is the full usage of this tool::
       -t, --test         Enable test mode. This mode does not require connection
                          to the database. It is automatically enabled when a
                          connection is not available or the module is disabled.
+      -l, --local        IsolatedProcessingModule will be directly executed on the
+                         local system, bypassing the use of virtualization. THIS
+                         MIGHT BE DANGEROUS AND INFECT YOUR SYSTEM, ONLY USE IF
+                         YOU KNOW WHAT YOU ARE DOING!
 
 Example of using this script to test the `apk` module::
 

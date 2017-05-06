@@ -74,6 +74,9 @@ class MongoDict(dict):
         local_field = self
 
         for name in iterify(names):
+            if name not in local_field:
+                local_field[name] = {}
+
             local_field = local_field[name]
 
         return local_field
@@ -84,7 +87,9 @@ class MongoDict(dict):
         else:
             return names
 
-    def _update(self, operation):
-        result = self.collection.update_one({'_id': self['_id']}, operation)
+    def _update(self, operation, conditions={}):
+        query = {'_id': self['_id']}
+        query.update(conditions)
+        result = self.collection.update_one(query, operation)
 
         return result.modified_count == 1

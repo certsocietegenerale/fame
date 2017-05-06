@@ -245,6 +245,29 @@ You can then follow the same installation instructions::
 
 Before starting FAME, make sure to follow the specific installation instructions for `python-magic` on Windows (https://github.com/ahupp/python-magic#dependencies). The three DLLs should be on your PATH (you can directly put them in the `fame` directory if you want).
 
+Isolated Processing Modules
+===========================
+
+Some modules (that inherit from ``IsolatedProcessingModule``) require the use of Virtual Machines to work properly. You will recognize these modules by the fact that they are asking for virtualization information in their configuration.
+
+Here is how you can create a Virtual Machine that will work with these modules:
+
+* Use virtualization software that has a ``VirtualizationModule`` (FAME only supports Virtualbox out of the box).
+* Install the operating system of your choice (verify the module's requirements in the module's README).
+* Install Python 2.7.
+* Install flask (``pip install flask``).
+* Configure networking. You have two options:
+    * Use NAT. If you do, you have to make sure to enable port forwarding so that port 4242 inside the guest is mapped to a port of your choice on the host. This port should then be specified in the module's configuration.
+    * Use Host-Only. If you do, make sure to set a static IP address and specify this IP address in the module's configuration.
+* Make sure to install module's dependencies (see module's README for instructions).
+* Copy FAME's agent (in ``agent/agent.py``) on the system.
+* Make sure the agent is running.
+* Create a snapshot. You have to put the snapshot name in the module's configuration.
+
+.. note::
+    Depending on what you are trying to do, your Virtual Machine might need some hardening in order for malware to properly execute. These steps are not described here.
+
+
 Updating FAME
 =============
 

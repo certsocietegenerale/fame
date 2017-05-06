@@ -1,11 +1,18 @@
 import os
+import inspect
+import requests
 import traceback
+from time import sleep
+from urlparse import urljoin
+from markdown2 import markdown
+from datetime import datetime, timedelta
 
 from fame.common.constants import MODULES_ROOT
 from fame.common.exceptions import ModuleInitializationError, ModuleExecutionError, MissingConfiguration
-from fame.common.utils import iterify, is_iterable, list_value
+from fame.common.utils import iterify, is_iterable, list_value, save_response
 from fame.common.mongo_dict import MongoDict
 from fame.core.config import Config, apply_config_update, incomplete_config
+from fame.core.internals import Internals
 
 
 def init_config_values(info):
@@ -31,6 +38,15 @@ class ModuleInfo(MongoDict):
             return filepath
 
         return None
+
+    def get_readme(self):
+        readme = self.get_file('README.md')
+
+        if readme:
+            with open(readme, 'r') as f:
+                readme = markdown(f.read(), extras=["code-friendly"])
+
+        return readme
 
     def details_template(self):
         return '/'.join(self['path'].split('.')[2:-1]) + '/details.html'
@@ -230,7 +246,9 @@ class Module(object):
             if (config['value'] is None) and ('default' not in config):
                 raise MissingConfiguration("Missing configuration value: {}".format(config['name']))
 
-            setattr(self, config['name'], config['value'] or config['default'])
+            setattr(self, config['name'], config['value'])
+            if config['value'] is None:
+                setattr(self, config['name'], config['default'])
 
     @classmethod
     def named_config(cls, name):
@@ -468,6 +486,7 @@ class ProcessingModule(Module):
             if file_type == 'url':
                 with open(target, 'rb') as fd:
                     target = fd.read()
+
             return self.each_with_type(target, file_type)
         except ModuleExecutionError, e:
             self.log("error", "Could not run on %s: %s" % (target, e))
@@ -484,6 +503,286 @@ class ProcessingModule(Module):
             "description": cls.description,
             "type": "Processing",
             "config": cls.config,
+            "diffs": {},
+            "acts_on": iterify(cls.acts_on),
+            "generates": iterify(cls.generates),
+            "triggered_by": iterify(cls.triggered_by),
+            "queue": cls.queue
+        }
+
+        init_config_values(info)
+
+        return ModuleInfo(info)
+
+
+class IsolatedProcessingModule(ProcessingModule):
+    """Base class for isolated processing modules.
+
+    All processing modules that needs to be executed in an isolated environment
+    (a VM) should inherit from this class.
+
+    Instead of executing the module directly, the worker will orchestrate a
+    specifically configured Virtual Machine and execute the module inside of it.
+
+    Attributes:
+        should_restore: A boolean that can be set by the module to indicate that
+            the VM should be restored to a clean state. It is set to ``False`` by
+            default.
+    """
+    vm_config = [
+        {
+            'name': 'virtualization',
+            'type': 'str',
+            'default': 'virtualbox',
+            'description': 'Name of the VirtualizationModule to use.'
+        },
+        {
+            'name': 'label',
+            'type': 'str',
+            'description': 'Label of the virtual machine to use.'
+        },
+        {
+            'name': 'snapshot',
+            'type': 'str',
+            'default': None,
+            'description': 'Name of the snaptshot to restore clean state.'
+        },
+        {
+            'name': 'ip_address',
+            'type': 'str',
+            'default': '127.0.0.1',
+            'description': 'IP address of the guest. 127.0.0.1 can only be used with NAT and port forwarding.'
+        },
+        {
+            'name': 'port',
+            'type': 'str',
+            'default': '4242',
+            'description': 'Port the agent is listening to. You might have to change this value if you are using NAT and port forwarding.'
+        },
+        {
+            'name': 'always_ready',
+            'type': 'bool',
+            'default': True,
+            'description': 'Make sure the VM is always started and ready to execute a new task.'
+        },
+        {
+            'name': 'restore_after',
+            'type': 'integer',
+            'default': 10,
+            'description': 'Only used when always_ready is used. Specifies the number of times this module can be executed before having to clean up the virtual machine.'
+        }
+    ]
+
+    def initialize(self):
+        self.task_id = None
+        self.should_restore = False
+        self.base_url = "http://{}:{}".format(self.ip_address, self.port)
+        self.vm_record = "{}|{}".format(self.virtualization, self.label)
+
+    def __init__(self, with_config=True):
+        ProcessingModule.__init__(self, with_config)
+
+        setattr(self.__class__, 'initialize', IsolatedProcessingModule.initialize)
+        setattr(self.__class__, 'each_with_type', IsolatedProcessingModule.each_with_type)
+
+    def _url(self, path):
+        if self.task_id:
+            return urljoin(self.base_url, "/{}{}".format(self.task_id, path))
+        else:
+            return urljoin(self.base_url, path)
+
+    def _make_request(self, method, path, **kwargs):
+        try:
+            url = self._url(path)
+
+            if method == "GET":
+                response = requests.get(url, **kwargs)
+            else:
+                response = requests.post(url, **kwargs)
+
+            response.raise_for_status()
+
+            return response
+        except Exception, e:
+            raise ModuleExecutionError("Error communicating with agent ({}): {}".format(path, e))
+
+    def _get(self, path, **kwargs):
+        return self._make_request("GET", path, **kwargs).json()
+
+    def _post(self, path, **kwargs):
+        return self._make_request("POST", path, **kwargs).json()
+
+    def _new_task(self):
+        response = self._get('/new_task')
+        self.task_id = response['task_id']
+
+        if self.task_id is None:
+            raise ModuleExecutionError("Could not get valid task id.")
+
+    def _get_config(self):
+        result = {}
+
+        for setting in self.config:
+            result[setting['name']] = getattr(self, setting['name'])
+
+        return result
+
+    def _send_module(self):
+        fd = open(inspect.getsourcefile(self.__class__))
+        result = self._post('/module_update', files={'file': fd})
+        fd.close()
+
+        result = self._post('/module_update_info', json={'name': self.name, 'config': self._get_config()})
+
+        if result['status'] != 'ok':
+            raise ModuleInitializationError(self, result['error'])
+
+    def _get_file(self, filepath):
+        response = self._make_request('POST', '/get_file', data={'filepath': filepath}, stream=True)
+
+        return save_response(response)
+
+    def _get_results(self):
+        results = self._get('/results')
+
+        self.results = results['results']
+        self.should_restore = results['should_restore']
+        self.tags = results['_results']['tags']
+
+        for level, message in results['_results']['logs']:
+            self.log(level, message)
+
+        for name in results['_results']['probable_names']:
+            self.add_probable_name(name)
+
+        for extraction in results['_results']['extractions']:
+            self.add_extraction(extraction, results['_results']['extractions'][extraction])
+
+        for ioc in results['_results']['iocs']:
+            self.add_ioc(ioc, results['_results']['iocs'][ioc])
+
+        for file_type in results['_results']['generated_files']:
+            local_files = []
+
+            for remote_file in results['_results']['generated_files'][file_type]:
+                local_files.append(self._get_file(remote_file))
+
+            self.register_files(file_type, local_files)
+
+        for f in results['_results']['extracted_files']:
+            self.add_extracted_file(self._get_file(f))
+
+        for name in results['_results']['support_files']:
+            self.add_support_file(name, results['_results']['support_files'][name])
+
+        return results['_results']['result']
+
+    def _acquire_lock(self):
+        LOCK_TIMEOUT = timedelta(minutes=120)
+        WAIT_STEP = 15
+
+        vms = Internals.get(name='virtual_machines')
+
+        if vms is None:
+            vms = Internals({'name': 'virtual_machines'})
+            vms.save()
+
+        last_locked = "{}.last_locked".format(self.vm_record)
+        while True:
+            if vms.update_value([self.vm_record, 'locked'], True):
+                vms.update_value([self.vm_record, 'last_locked'], datetime.now())
+                break
+
+            expired_date = datetime.now() - LOCK_TIMEOUT
+            if vms._update({'$set': {last_locked: datetime.now()}},
+                           {last_locked: {'$lt': expired_date}}):
+                vms.update_value([self.vm_record, 'locked'], True)
+                break
+
+            sleep(WAIT_STEP)
+
+    def _release_lock(self):
+        vms = Internals.get(name='virtual_machines')
+        vms.update_value([self.vm_record, 'locked'], False)
+
+    def _init_vm(self):
+        from fame.core.module_dispatcher import dispatcher
+        self._vm = dispatcher.get_virtualization_module(self.virtualization)
+
+        if self._vm is None:
+            raise ModuleExecutionError('missing (or disabled) virtualization module: {}'.format(self.virtualization))
+
+        self._vm.initialize(self.label, self.base_url, self.snapshot)
+        self._vm.prepare()
+
+    def _restore_vm(self):
+        if self.always_ready:
+            vms = Internals.get(name='virtual_machines')
+
+            if self.name not in vms[self.vm_record]:
+                vms.update_value([self.vm_record, self.name], 1)
+            else:
+                vms.update_value([self.vm_record, self.name], vms[self.vm_record][self.name] + 1)
+
+            if vms[self.vm_record][self.name] >= self.restore_after:
+                self.should_restore = True
+
+            if self.should_restore:
+                self._vm.restore()
+                vms.update_value([self.vm_record, self.name], 0)
+        else:
+            self._vm.stop()
+
+    def run(self):
+        # Make sure no other module will use this VM before we are done
+        self._acquire_lock()
+
+        try:
+            # Make sure the VM is ready
+            self._init_vm()
+
+            # Launch the module on the agent
+            self._new_task()
+            self._send_module()
+            ProcessingModule.run(self)
+            result = self._get_results()
+            self._restore_vm()
+
+            return result
+        finally:
+            # Release the virtual machine
+            self._release_lock()
+
+        return True
+
+    def each_with_type(self, target, target_type):
+        # First, send target and start processing
+        kwargs = {}
+
+        if target_type == 'url':
+            kwargs['data'] = {'url': target}
+        else:
+            fd = open(target, 'rb')
+            kwargs['files'] = {'file': fd}
+
+        self._post('/module_each/{}'.format(target_type), **kwargs)
+
+        if target_type != 'url':
+            fd.close()
+
+        # Then, wait for processing to be over
+        ready = self._get('/ready')['ready']
+        while not ready:
+            sleep(5)
+            ready = self._get('/ready')['ready']
+
+    @classmethod
+    def static_info(cls):
+        info = {
+            "name": cls.name,
+            "description": cls.description,
+            "type": "Processing",
+            "config": cls.vm_config + cls.config,
             "diffs": {},
             "acts_on": iterify(cls.acts_on),
             "generates": iterify(cls.generates),
@@ -619,6 +918,116 @@ class AntivirusModule(Module):
             "name": cls.name,
             "description": cls.description,
             "type": "Antivirus",
+            "config": cls.config,
+            "diffs": {},
+        }
+
+        init_config_values(info)
+
+        return ModuleInfo(info)
+
+
+class VirtualizationModule(Module):
+    """Base class for Virtualization modules, used by IsolatedProcessingModules"""
+
+    TIMEOUT = 120
+
+    def initialize(self, vm, base_url, snapshot=None):
+        """To implement if you have to check for requirements.
+
+        If you define your own implementation, you should make sure to call the
+        base one::
+
+            VirtualizationModule.initialize(self, vm, base_url, snapshot)
+
+        Args:
+            vm (string): label associated with the VM to use.
+            base_url (string): base URL for the web service.
+            snapshot (string): name of the snapshot to use when restoring the VM.
+
+        Raises:
+            ModuleInitializationError: One of requirements was not met.
+        """
+        self.vm_label = vm
+        self.snapshot = snapshot
+
+        self.agent_url = "{}/ready".format(base_url)
+
+    def is_running(self):
+        """To implement.
+
+        Must return ``True`` if the VM ``self.vm_label`` is in a running state.
+
+        Raises:
+            ModuleExecutionError: Could not execute correctly.
+        """
+        raise NotImplementedError
+
+    def restore_snapshot(self):
+        """To implement.
+
+        Restore the snapshot in ``self.snapshot``. When ``None``, should restore
+        the current snapshot.
+
+        Raises:
+            ModuleExecutionError: Could not execute correctly.
+        """
+        raise NotImplementedError
+
+    def start(self):
+        """To implement.
+
+        Start the VM ``self.vm_label``.
+
+        Raises:
+            ModuleExecutionError: Could not execute correctly.
+        """
+        raise NotImplementedError
+
+    def stop(self):
+        """To implement.
+
+        Stop the VM ``self.vm_label``.
+
+        Raises:
+            ModuleExecutionError: Could not execute correctly.
+        """
+        raise NotImplementedError
+
+    def is_ready(self):
+        try:
+            r = requests.get(self.agent_url, timeout=1)
+
+            return r.status_code == 200
+        except:
+            return False
+
+    def restore(self, should_raise=True):
+        if self.is_running():
+            self.stop()
+
+        self.restore_snapshot()
+        self.start()
+
+        started_at = datetime.now()
+        while (started_at + timedelta(seconds=self.TIMEOUT) > datetime.now()):
+            if self.is_ready():
+                break
+            sleep(5)
+        else:
+            if should_raise:
+                raise ModuleExecutionError("could not restore virtual machine '{}' before timeout.".format(self.vm_label))
+
+    def prepare(self):
+        if not (self.is_running() and self.is_ready()):
+            self.restore()
+
+    @classmethod
+    def static_info(cls):
+        info = {
+            "name": cls.name,
+            "description": cls.description,
+            "type": "Virtualization",
             "config": cls.config,
             "diffs": {},
         }

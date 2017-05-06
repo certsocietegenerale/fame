@@ -1,8 +1,13 @@
 import os
 import requests
 import collections
+from time import sleep
 from uuid import uuid4
 from urlparse import urljoin
+from datetime import datetime
+from shutil import copyfileobj
+from werkzeug.utils import secure_filename
+from rfc6266 import parse_requests_response
 
 from fame.common.config import fame_config
 
@@ -76,3 +81,28 @@ def tempdir():
         pass
 
     return tempdir
+
+
+def save_response(response):
+    tmp = tempdir()
+    filename = secure_filename(parse_requests_response(response).filename_unsafe)
+    filepath = os.path.join(tmp, filename)
+
+    with open(filepath, 'wb') as out:
+        copyfileobj(response.raw, out)
+
+    return filepath
+
+
+def with_timeout(func, timeout, step):
+    started_at = datetime.now()
+
+    while started_at + timeout > datetime.now():
+        result = func()
+
+        if result:
+            return result
+
+        sleep(step)
+
+    return None

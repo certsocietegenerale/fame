@@ -13,3 +13,4 @@ Flask-Login==0.3.2
 zxcvbn
 GitPython
 markdown2
+-e git+https://github.com/g2p/rfc6266#egg=rfc6266

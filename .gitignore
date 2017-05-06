@@ -74,3 +74,6 @@ web/static/img/avatars/*
 
 # vendor
 vendor/*
+
+# Agent
+agent/module.py

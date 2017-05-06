@@ -12,6 +12,7 @@ sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__
 
 from utils import error, user_input
 from fame.core import fame_init
+from fame.core import module as module_classes
 from fame.common.objects import Dictionary
 from fame.common.constants import MODULES_ROOT
 from fame.common.utils import iterify, u
@@ -29,7 +30,7 @@ class Dispatcher:
                 try:
                     module = importlib.import_module(name)
                     for _, obj in inspect.getmembers(module, inspect.isclass):
-                        if issubclass(obj, ProcessingModule):
+                        if issubclass(obj, module_classes.ProcessingModule):
                             if obj.name:
                                 self.modules[obj.name] = obj
                 except:
@@ -179,9 +180,7 @@ def test_mode_module(name, interactive):
     dispatcher = Dispatcher(interactive)
     module = dispatcher.get_processing_module(name)
 
-    if module:
-        module.initialize()
-    else:
+    if not module:
         error("Could not find module '{}'".format(name))
 
     return module
@@ -199,10 +198,16 @@ if __name__ == '__main__':
                         help='Ask the user for every configuration option. Without this option, it will use default values when provided. Only used in test mode.')
     parser.add_argument('-t', '--test', action='store_true',
                         help='Enable test mode. This mode does not require connection to the database. It is automatically enabled when a connection is not available or the module is disabled.')
+    parser.add_argument('-l', '--local', action='store_true',
+                        help='IsolatedProcessingModule will be directly executed on the local system, bypassing the use of virtualization. THIS MIGHT BE DANGEROUS AND INFECT YOUR SYSTEM, ONLY USE IF YOU KNOW WHAT YOU ARE DOING!')
 
     args = parser.parse_args()
 
     analysis = TestAnalysis(args.file, args.type)
+
+    if args.local:
+        print "[+] Enabling local mode. /!\ THIS COULD BE DANGEROUS! /!\ "
+        module_classes.IsolatedProcessingModule = module_classes.ProcessingModule
 
     if args.test:
         module = test_mode_module(args.module, args.interactive)
@@ -213,6 +218,7 @@ if __name__ == '__main__':
             module.initialize()
         except:
             module = test_mode_module(args.module, args.interactive)
+            module.initialize()
 
     ret = module.execute(analysis)
 

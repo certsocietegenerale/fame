@@ -13,6 +13,11 @@
                         <p>{{data.module.description}}</p>
                     {% endif %}
 
+                    {% if data.module.readme %}
+                        <hr />
+                        <div class="readme">{{data.module.readme|safe}}</div>
+                    {% endif %}
+
                     <form class="form-horizontal" method="post" action="{{url_for('ModulesView:configure', id=data.module._id)}}">
                     {% if data.module.type == "Processing" %}
                         <hr />
