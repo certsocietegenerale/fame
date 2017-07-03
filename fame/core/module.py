@@ -1007,7 +1007,9 @@ class VirtualizationModule(Module):
             self.stop()
 
         self.restore_snapshot()
-        self.start()
+
+        if not self.is_running():
+            self.start()
 
         started_at = datetime.now()
         while (started_at + timedelta(seconds=self.TIMEOUT) > datetime.now()):

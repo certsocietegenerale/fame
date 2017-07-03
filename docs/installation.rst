@@ -252,7 +252,7 @@ Some modules (that inherit from ``IsolatedProcessingModule``) require the use of
 
 Here is how you can create a Virtual Machine that will work with these modules:
 
-* Use virtualization software that has a ``VirtualizationModule`` (FAME only supports Virtualbox out of the box).
+* Use virtualization software that has a ``VirtualizationModule`` (FAME currently has support for Virtualbox and KVM).
 * Install the operating system of your choice (verify the module's requirements in the module's README).
 * Install Python 2.7.
 * Install flask (``pip install flask``).
