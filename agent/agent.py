@@ -92,7 +92,7 @@ class IsolatedModule:
             self._results['extracted_files'].append(location)
 
         def add_support_file(self, name, location):
-            self._results['support_files']['name'] = location
+            self._results['support_files'][name] = location
 
         def add_extraction(self, label, extraction):
             self._results['extractions'][label] = extraction

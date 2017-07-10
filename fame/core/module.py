@@ -673,7 +673,7 @@ class IsolatedProcessingModule(ProcessingModule):
             self.add_extracted_file(self._get_file(f))
 
         for name in results['_results']['support_files']:
-            self.add_support_file(name, results['_results']['support_files'][name])
+            self.add_support_file(name, self._get_file(results['_results']['support_files'][name]))
 
         return results['_results']['result']
 
