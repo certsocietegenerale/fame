@@ -73,7 +73,7 @@ class Worker:
 
             if module['type'] == "Processing":
                 should_update = (module['queue'] in self.queues)
-            elif module['type'] in ["Threat Intelligence", "Reporting"]:
+            elif module['type'] in ["Threat Intelligence", "Reporting", "Filetype"]:
                 should_update = True
             else:
                 should_update = (not fame_config.remote)

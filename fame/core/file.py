@@ -53,9 +53,6 @@ class File(MongoDict):
 
     def remove_group(self, group):
         # Update file
-        print group
-        print self.remove_from('groups', group)
-
         for analysis_id in self['analysis']:
             analysis = Analysis(store.analysis.find_one({'_id': ObjectId(analysis_id)}))
             analysis.remove_from('groups', group)
@@ -153,11 +150,24 @@ class File(MongoDict):
                 if self['detailed_type'].lower().startswith(t.lower()):
                     self['type'] = detailed_types.get(t)
                     break
-            # Finally, look at mime types
+            # Or mime types
             else:
                 types = config.get("types")
                 if types.get(self['mime']) is not None:
                     self['type'] = types.get(self['mime'])
+
+        # Run Filetype modules, starting with the most specific ones
+        filetype_modules = dispatcher.get_filetype_modules_for(self['type'])
+        filetype_modules += dispatcher.get_filetype_modules_for('*')
+
+        for module in filetype_modules:
+            try:
+                known_type = module.recognize(self['filepath'], self['type'])
+                if known_type:
+                    self['type'] = known_type
+                    break
+            except:
+                pass
 
     def _store_file(self, filename, stream):
         self['filepath'] = u'{0}/{1}'.format(self['sha256'], filename)

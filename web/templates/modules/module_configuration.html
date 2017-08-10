@@ -43,6 +43,16 @@
                                 <p class="help-block">The queue defines which workers will be executing this module. "unix" is the default queue.</p>
                             </div>
                         </div>
+                    {% elif data.module.type == "Filetype" %}
+                        <hr />
+
+                        <div class="form-group">
+                            <label for="acts_on" class="col-sm-2 control-label">Acts On</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="acts_on" value="{{data.module.acts_on|smart_join}}">
+                                <p class="help-block">Comma-delimited list of types that this module is able to handle (ex: word,excel).</p>
+                            </div>
+                        </div>
                     {% endif %}
 
                     {% if data.module.config %}

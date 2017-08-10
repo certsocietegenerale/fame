@@ -114,6 +114,9 @@ class ModulesView(FlaskView, UIView):
                 ],
                 "Threat Intelligence": [
                     ...
+                ],
+                "Filetype": [
+                    ...
                 ]
             }
 
@@ -158,7 +161,8 @@ class ModulesView(FlaskView, UIView):
             'Reporting': [],
             'Threat Intelligence': [],
             'Antivirus': [],
-            'Virtualization': []
+            'Virtualization': [],
+            'Filetype': []
         }
 
         for module in ModuleInfo.get_collection().find():
@@ -296,7 +300,10 @@ class ModulesView(FlaskView, UIView):
         module['readme'] = module.get_readme()
 
         if request.method == "POST":
-            if module['type'] == 'Processing':
+            if module['type'] == 'Filetype':
+                if 'acts_on' in request.form:
+                    module.update_setting_value('acts_on', request.form.get('acts_on', ''))
+            elif module['type'] == 'Processing':
                 if 'acts_on' in request.form:
                     module.update_setting_value('acts_on', request.form.get('acts_on', ''))
 

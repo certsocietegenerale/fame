@@ -64,6 +64,8 @@ class ModuleInfo(MongoDict):
 
             self._update_diffed_value('acts_on', new_info['acts_on'])
             self._update_diffed_value('triggered_by', new_info['triggered_by'])
+        elif self['type'] == 'Filetype':
+            self._update_diffed_value('acts_on', new_info['acts_on'])
 
         self['description'] = new_info['description']
         self['config'] = apply_config_update(self['config'], new_info['config'])
@@ -918,6 +920,40 @@ class AntivirusModule(Module):
             "name": cls.name,
             "description": cls.description,
             "type": "Antivirus",
+            "config": cls.config,
+            "diffs": {},
+        }
+
+        init_config_values(info)
+
+        return ModuleInfo(info)
+
+
+class FiletypeModule(Module):
+    """Base class for Filetype Modules"""
+
+    acts_on = []
+
+    def recognize(filepath, current_type):
+        """To implement. Checks the file in order to determine more accurate
+        type.
+
+        Args:
+            filepath (string): full path of the file to analyze.
+            current_type (string): the file's current type.
+
+        Returns:
+            The name of the FAME type that was recognized (string), or None.
+        """
+        pass
+
+    @classmethod
+    def static_info(cls):
+        info = {
+            "name": cls.name,
+            "description": cls.description,
+            "acts_on": iterify(cls.acts_on),
+            "type": "Filetype",
             "config": cls.config,
             "diffs": {},
         }

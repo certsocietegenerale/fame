@@ -21,7 +21,8 @@ class ModuleDispatcher(object):
             'Reporting': [],
             'Antivirus': [],
             'Threat Intelligence': [],
-            'Virtualization': []
+            'Virtualization': [],
+            'Filetype': {}
         }
         self._direct_transforms = {}
         self._transforms = {}
@@ -93,6 +94,12 @@ class ModuleDispatcher(object):
     def get_antivirus_modules(self):
         return self._modules['Antivirus']
 
+    def get_filetype_modules_for(self, current_type):
+        if current_type in self._modules['Filetype']:
+            return self._modules['Filetype'][current_type]
+        else:
+            return []
+
     def get_virtualization_module(self, name):
         for m in self._modules['Virtualization']:
             if m.name == name and m.info['enabled']:
@@ -117,6 +124,28 @@ class ModuleDispatcher(object):
         if m:
             m.info = module
             self._modules['Virtualization'].append(m)
+
+    def add_filetype_module(self, module):
+        def add_one(acts_on, module):
+            if acts_on not in self._modules['Filetype']:
+                self._modules['Filetype'][acts_on] = []
+
+            self._modules['Filetype'][acts_on].append(module)
+
+        m = get_class(module['path'], module['class'])
+
+        if m:
+            m.info = module
+            try:
+                m = m()
+                if m and m.initialize():
+                    if len(module['acts_on']) == 0:
+                        add_one('*', m)
+                    else:
+                        for acts_on in module['acts_on']:
+                            add_one(acts_on, m)
+            except Exception, e:
+                print "Could not initialize module '{0}': {1}".format(module['name'], e)
 
     def add_processing_module(self, module):
         m = get_class(module['path'], module['class'])
@@ -195,6 +224,8 @@ class ModuleDispatcher(object):
                 self.add_processing_module(module)
             elif module['type'] == "Virtualization":
                 self.add_virtualization_module(module)
+            elif module['type'] == "Filetype":
+                self.add_filetype_module(module)
             else:
                 self.add_module(module)
 
