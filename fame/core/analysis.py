@@ -1,7 +1,7 @@
 import os
 import requests
 import datetime
-from shutil import move
+from shutil import copy
 from hashlib import md5
 from urlparse import urljoin
 
@@ -78,7 +78,7 @@ class Analysis(MongoDict):
         self.queue_modules(dispatcher.triggered_by("_generated_file(%s)" % file_type))
 
     def add_extracted_file(self, filepath):
-        self.log('debug', "Adding extracted file '{}".format(filepath))
+        self.log('debug', "Adding extracted file '{}'".format(filepath))
 
         fd = open(filepath, 'rb')
         filename = os.path.basename(filepath)
@@ -121,7 +121,7 @@ class Analysis(MongoDict):
             except:
                 pass
 
-            move(filepath, dstfilepath)
+            copy(filepath, dstfilepath)
 
         if module_name not in self['support_files']:
             self['support_files'][module_name] = []
