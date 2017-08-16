@@ -5,8 +5,7 @@ from flask_login import current_user
 from werkzeug.exceptions import Forbidden
 from functools import wraps
 from os.path import basename
-
-
+from subprocess import call
 from fame.common.utils import is_iterable
 
 
@@ -80,11 +79,14 @@ def user_if_enabled(user):
     return None
 
 
-def file_download(filepath):
-    with open(filepath, 'rb') as fd:
+def file_download(filepath, password='malware'):
+    filename = basename(filepath)
+    zipfile = '/tmp/{}.zip'.format(filename)
+    call(['7z', 'a', '-p{}'.format(password), '-y', zipfile, filepath])
+    with open(zipfile, 'rb') as fd:
         response = make_response(fd.read())
 
-    response.headers["Content-Disposition"] = u"attachment; filename='{0}'".format(basename(filepath)).encode('latin-1', errors='ignore')
+    response.headers["Content-Disposition"] = u"attachment; filename='{0}.zip'".format(filename).encode('latin-1', errors='ignore')
 
     return response
 
