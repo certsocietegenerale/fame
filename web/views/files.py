@@ -14,6 +14,19 @@ from web.views.helpers import file_download, get_or_404, requires_permission, cl
 from web.views.mixins import UIView
 
 
+def return_file(file):
+    analyses = list(current_user.analyses.find({'_id': {'$in': file['file']['analysis']}}))
+    file['av_modules'] = [m.name for m in dispatcher.get_antivirus_modules()]
+
+    for analysis in analyses:
+        if 'analyst' in analysis:
+            analyst = store.users.find_one({'_id': analysis['analyst']})
+            analysis['analyst'] = clean_users(analyst)
+
+    file['file']['analysis'] = clean_analyses(analyses)
+    return render(file, 'files/show.html', ctx={'data': file, 'options': dispatcher.options})
+
+
 class FilesView(FlaskView, UIView):
     def index(self):
         """Get the list of objects.
@@ -60,16 +73,46 @@ class FilesView(FlaskView, UIView):
         :>json dict antivirus: dict with antivirus names as keys.
         """
         file = {'file': clean_files(get_or_404(current_user.files, _id=id))}
-        analyses = list(current_user.analyses.find({'_id': {'$in': file['file']['analysis']}}))
-        file['av_modules'] = [m.name for m in dispatcher.get_antivirus_modules()]
+        return return_file(file)
 
-        for analysis in analyses:
-            if 'analyst' in analysis:
-                analyst = store.users.find_one({'_id': analysis['analyst']})
-                analysis['analyst'] = clean_users(analyst)
+    @route('/md5/<md5>', methods=["GET"])
+    def get_md5(self, md5):
+        """Get the object with `md5`.
 
-        file['file']['analysis'] = clean_analyses(analyses)
-        return render(file, 'files/show.html', ctx={'data': file, 'options': dispatcher.options})
+        .. :quickref: File; Get an object by MD5
+
+        :param md5: md5 of the object.
+
+        :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
+        """
+        file = {'file': clean_files(get_or_404(current_user.files, md5=md5))}
+        return return_file(file)
+
+    @route('/sha1/<sha1>', methods=["GET"])
+    def get_sha1(self, sha1):
+        """Get the object with `sha1`.
+
+        .. :quickref: File; Get an object by SHA1
+
+        :param sha1: sha1 of the object.
+
+        :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
+        """
+        file = {'file': clean_files(get_or_404(current_user.files, sha1=sha1))}
+        return return_file(file)
+
+    @route('/sha256/<sha256>', methods=["GET"])
+    def get_sha256(self, sha256):
+        """Get the object with `sha256`.
+
+        .. :quickref: File; Get an object by SHA256
+
+        :param sha256: sha256 of the object.
+
+        :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
+        """
+        file = {'file': clean_files(get_or_404(current_user.files, sha256=sha256))}
+        return return_file(file)
 
     @requires_permission('worker')
     def post(self):
