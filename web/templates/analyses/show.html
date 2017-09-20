@@ -5,7 +5,7 @@
 {% macro support_files(module) -%}
     {% if 'support_files' in analysis %}
         {% for support_file in analysis.support_files[module] %}
-            <li><a href="{{url_for('AnalysesView:download_support_file', id=analysis._id, filename=support_file[1])}}" target="_blank"><i class="pe-7s-link"></i> Download {{support_file[0]}}</a></li>
+            <li><a href="{{url_for('AnalysesView:download_support_file', id=analysis._id, module=module, filename=support_file[1])}}" target="_blank"><i class="pe-7s-link"></i> Download {{support_file[0]}}</a></li>
             {{name}}
         {% endfor %}
     {% endif %}

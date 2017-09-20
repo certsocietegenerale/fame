@@ -109,10 +109,10 @@ class Analysis(MongoDict):
         self.log('debug', "Adding support file '{}' at '{}'".format(name, filepath))
 
         if fame_config.remote:
-            response = send_file_to_remote(filepath, '/analyses/{}/support_file'.format(self['_id']))
+            response = send_file_to_remote(filepath, '/analyses/{}/support_file/{}'.format(self['_id'], module_name))
             dstfilepath = response.json()['path']
         else:
-            dirpath = os.path.join(fame_config.storage_path, 'support_files', str(self['_id']))
+            dirpath = os.path.join(fame_config.storage_path, 'support_files', module_name, str(self['_id']))
             dstfilepath = os.path.join(dirpath, os.path.basename(filepath))
 
             # Create parent dirs if they don't exist

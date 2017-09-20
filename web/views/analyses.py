@@ -346,22 +346,32 @@ class AnalysesView(FlaskView, UIView):
         return jsonify({'path': filepath})
 
     @requires_permission('worker')
-    @route('/<id>/support_file', methods=['POST'])
-    def add_support_file(self, id):
-        filepath = self._save_analysis_file(id, os.path.join(fame_config.storage_path, 'support_files'))
+    @route('/<id>/support_file/<module>', methods=['POST'])
+    def add_support_file(self, id, module):
+        filepath = self._save_analysis_file(id, os.path.join(fame_config.storage_path, 'support_files', module))
 
         return jsonify({'path': filepath})
 
-    @route('/<id>/download/<filename>')
-    def download_support_file(self, id, filename):
+    @route('/<id>/download/<module>/<filename>')
+    def download_support_file(self, id, module, filename):
         """Download a support file.
 
         .. :quickref: Analysis; Download a support file.
 
         :param id: id of the analysis.
+        :param module: name of the module.
         :param filename: name of the file to download.
         """
         analysis = get_or_404(current_user.analyses, _id=id)
-        filepath = os.path.join(fame_config.storage_path, 'support_files', str(analysis['_id']), secure_filename(filename))
 
-        return file_download(filepath)
+        filepath = os.path.join(fame_config.storage_path, 'support_files', module, str(analysis['_id']), secure_filename(filename))
+        if os.path.isfile(filepath):
+            return file_download(filepath)
+        else:
+            # This code is here for compatibility
+            # with older analyses
+            filepath = os.path.join(fame_config.storage_path, 'support_files', str(analysis['_id']), secure_filename(filename))
+            if os.path.isfile(filepath):
+                return file_download(filepath)
+            else:
+                abort(404)
