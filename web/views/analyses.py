@@ -275,6 +275,8 @@ class AnalysesView(FlaskView, UIView):
                     return redirect(clean_files(f), url_for('FilesView:get', id=f['_id']))
                 else:
                     analysis = {'analysis': clean_analyses(f.analyze(groups, current_user['_id'], module, options))}
+                    analysis['analysis']['file'] = clean_files(f)
+
                     return redirect(analysis, url_for('AnalysesView:get', id=analysis['analysis']['_id']))
             else:
                 return render_template('analyses/new.html', options=dispatcher.options)
