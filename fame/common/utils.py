@@ -55,6 +55,16 @@ def list_value(list_of_values):
     return list(result)
 
 
+def ordered_list_value(list_of_values):
+    result = []
+
+    for value in list_of_values.split(','):
+        value = value.strip()
+        result.append(value)
+
+    return result
+
+
 def send_file_to_remote(file, url):
     if isinstance(file, basestring):
         file = open(file, 'rb')
