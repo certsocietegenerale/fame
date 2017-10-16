@@ -37,7 +37,11 @@ class Store:
             self.db.authenticate(fame_config.mongo_user, quote_plus(fame_config.mongo_password), mechanism='SCRAM-SHA-1')
 
         # Create indexes
+        self.files.create_index('md5')
+        self.files.create_index('sha1')
+        self.files.create_index('sha256')
         self.files.create_index([("$**", TEXT)], background=True)
+        self.analysis.create_index('date')
         self.analysis.create_index([("$**", TEXT)], background=True)
 
     def collection(self, name):

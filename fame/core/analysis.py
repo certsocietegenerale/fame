@@ -46,6 +46,7 @@ class Analysis(MongoDict):
         self['probable_names'] = []
         self['options'] = {}
         self['date'] = datetime.datetime.now()
+        self['end_date'] = None
         self['groups'] = []
         self['analyst'] = []
         MongoDict.__init__(self, values)
@@ -322,6 +323,7 @@ class Analysis(MongoDict):
 
     def _mark_as_finished(self):
         self.update_value('status', self.STATUS_FINISHED)
+        self.update_value('end_date', datetime.datetime.now())
         self._reporting_hook('done')
 
     def _get_module(self, module_name):
