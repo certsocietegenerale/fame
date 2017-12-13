@@ -1,6 +1,9 @@
 import os
 import requests
 import datetime
+import fcntl
+import errno
+import time
 from shutil import copy
 from hashlib import md5
 from urlparse import urljoin
@@ -260,7 +263,17 @@ class Analysis(MongoDict):
         if fame_config.remote:
             pathhash = md5(path.encode('utf-8')).hexdigest()
             local_path = os.path.join(fame_config.storage_path, pathhash)
-            if not os.path.isfile(local_path):
+            lockname = os.path.expanduser('~') + '/' + pathhash
+            lockfile = open(lockname, 'w+')
+            locked = False
+            while not locked:
+                try:
+                    fcntl.flock(lockfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    locked = True
+                except:
+                    time.sleep(1)
+
+            if locked and not os.path.isfile(local_path):
                 # Make sure fame_config.storage_path exists
                 try:
                     os.makedirs(fame_config.storage_path)
@@ -273,8 +286,14 @@ class Analysis(MongoDict):
                 f = open(local_path, 'ab')
                 for chunk in response.iter_content(1024):
                     f.write(chunk)
-
                 f.close()
+
+            try:
+                os.remove(lockname)
+            except:
+                pass
+            fcntl.flock(lockfile, fcntl.LOCK_UN)
+            lockfile.close()
 
             return local_path
         else:
