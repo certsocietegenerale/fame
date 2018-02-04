@@ -15,11 +15,12 @@ auth = Blueprint('auth', __name__, template_folder='templates')
 def create_user():
     from fame.core.store import store
     if not store.users.count():
-        user = Sure({
+        user = User({
             'name': "admin",
             'email': "admin@fame",
             'groups': ['*'],
             'permissions': ['*']
+            'enabled': True
         })
         user.save()
         user.generate_avatar()
