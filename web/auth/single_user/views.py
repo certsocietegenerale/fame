@@ -18,7 +18,8 @@ def create_user():
         user = User({
             'name': "admin",
             'email': "admin@fame",
-            'groups': ['*'],
+            'groups': ['admin','*'],
+            'default_sharing' : ['admin'],
             'permissions': ['*'],
             'enabled': True
         })
