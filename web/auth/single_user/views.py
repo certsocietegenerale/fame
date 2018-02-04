@@ -43,4 +43,5 @@ def login():
 
 @auth.route('/logout')
 def logout():
-    pass
+    redir = '/'
+    return redirect(redir)
