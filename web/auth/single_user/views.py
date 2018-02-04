@@ -19,7 +19,7 @@ def create_user():
             'name': "admin",
             'email': "admin@fame",
             'groups': ['*'],
-            'permissions': ['*']
+            'permissions': ['*'],
             'enabled': True
         })
         user.save()
