@@ -137,6 +137,7 @@ def perform_local_installation(context):
     context['fame_url'] = user_input("FAME's URL for users (e.g. https://fame.yourdomain/)")
     print "[+] Creating configuration file ..."
     context['secret_key'] = os.urandom(64).encode('hex')
+    context['auth'] = 'single_user'
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'local_fame.conf', context)
 
     generate_ssh_key()
