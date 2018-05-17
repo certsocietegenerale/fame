@@ -120,6 +120,7 @@ class File(MongoDict):
         self['names'] = [os.path.basename(self['filepath'])]
         self['detailed_type'] = magic.from_file(self['filepath'])
         self['mime'] = magic.from_file(self['filepath'], mime=True)
+        self['size'] = os.path.getsize(self['filepath'])
         self['analysis'] = []
 
         # Init antivirus status

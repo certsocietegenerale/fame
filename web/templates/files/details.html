@@ -37,6 +37,12 @@
                     <div class="col-sm-2 text-right"><strong>SHA256</strong></div>
                     <div class="col-sm-10">{{file.sha256}}</div>
                 </div>
+                {% if file.size %}
+                  <div class="row">
+                      <div class="col-sm-2 text-right"><strong>Size</strong></div>
+                      <div class="col-sm-10">{{file.size}} bytes</div>
+                  </div>
+                {% endif %}
                 {% endif %}
                 <div class="row">
                     <div class="col-sm-2 text-right"><strong>Type</strong></div>
