@@ -95,8 +95,14 @@ def create_virustotal_configuration():
                     'description': 'VirusTotal Intelligence API key.',
                     'type': 'str',
                     'value': None
-                }
-            ]})
+                },
+                {
+                    'name': 'http_proxy',
+                    'description': 'HTTP Proxy Server (http://<host>:<port>)',
+                    'type': 'str',
+                    'default': '',
+                    'value': None
+                }]})
 
         vt.save()
 

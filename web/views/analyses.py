@@ -179,7 +179,11 @@ class AnalysesView(FlaskView, UIView):
                     config = config.get_values()
 
                     params = {'apikey': config.api_key, 'hash': hash}
-                    response = requests.get('https://www.virustotal.com/vtapi/v2/file/download', params=params)
+                    proxies = {}
+                    if config.http_proxy is not None and config.http_proxy != "":
+                        proxies = { "http": config.http_proxy, "https": config.http_proxy }
+
+                    response = requests.get('https://www.virustotal.com/vtapi/v2/file/download', params=params, proxies=proxies)
                     if response.status_code == 403:
                         flash('This requires a valid API key.', 'danger')
                     elif response.status_code == 404:
