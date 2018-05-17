@@ -1,5 +1,4 @@
 import os
-import pip
 import sys
 import signal
 import argparse
@@ -12,6 +11,11 @@ from shutil import move, rmtree
 from uuid import uuid4
 from time import time, sleep
 from subprocess import Popen, check_output, STDOUT, CalledProcessError
+
+try:
+    from pip._internal import main as pipmain
+except ImportError:
+    from pip import main as pipmain
 
 from fame.core import fame_init
 from fame.core.module import ModuleInfo
@@ -91,7 +95,7 @@ class Worker:
             print "Installing requirements for '{}' ({})".format(module['name'], requirements)
 
             output = RedirectedOutput()
-            rcode = pip.main(['install', '-r', requirements])
+            rcode = pipmain(['install', '-r', requirements])
             output = output.restore()
 
             # In case pip failed

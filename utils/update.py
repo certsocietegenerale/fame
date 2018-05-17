@@ -1,7 +1,11 @@
 import os
 import sys
-import pip
 from git import Repo
+
+try:
+    from pip._internal import main as pipmain
+except ImportError:
+    from pip import main as pipmain
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
@@ -22,7 +26,7 @@ def update_repository():
 def update_requirements():
     print "[+] Updating requirements ..."
     output = RedirectedOutput()
-    rcode = pip.main(['install', '-r', os.path.join(FAME_ROOT, 'requirements.txt')])
+    rcode = pipmain(['install', '-r', os.path.join(FAME_ROOT, 'requirements.txt')])
     output = output.restore()
 
     # In case pip failed

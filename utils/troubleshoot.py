@@ -1,10 +1,14 @@
 import os
 import sys
-import pip
 import platform
 from urllib import quote_plus
 from pymongo import MongoClient
 from pymongo.collection import Collection
+
+try:
+    from pip._internal import main as pipmain
+except ImportError:
+    from pip import main as pipmain
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
@@ -22,7 +26,7 @@ def version_info():
 
 def dependencies():
     print "########## DEPENDENCIES ###########\n"
-    pip.main(['freeze'])
+    pipmain(['freeze'])
     print "\n"
 
 

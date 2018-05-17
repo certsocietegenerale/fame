@@ -1,10 +1,15 @@
 import os
-import pip
 import sys
 import errno
 from urllib import quote_plus
 from urlparse import urljoin
 from subprocess import call
+
+try:
+    from pip._internal import main as pipmain
+except ImportError:
+    from pip import main as pipmain
+
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
@@ -200,7 +205,7 @@ def install_requirements():
     print "[+] Installing requirements ..."
 
     output = RedirectedOutput()
-    rcode = pip.main(['install', '-r', os.path.join(FAME_ROOT, 'requirements.txt')])
+    rcode = pipmain(['install', '-r', os.path.join(FAME_ROOT, 'requirements.txt')])
     output = output.restore()
 
     if rcode:
