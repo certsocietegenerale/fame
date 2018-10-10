@@ -12,17 +12,12 @@ from uuid import uuid4
 from time import time, sleep
 from subprocess import Popen, check_output, STDOUT, CalledProcessError
 
-try:
-    from pip._internal import main as pipmain
-except ImportError:
-    from pip import main as pipmain
-
 from fame.core import fame_init
 from fame.core.module import ModuleInfo
 from fame.core.internals import Internals
 from fame.common.config import fame_config
 from fame.common.constants import MODULES_ROOT
-from fame.common.output import RedirectedOutput
+from fame.common.pip import pip_install
 
 
 UNIX_INSTALL_SCRIPTS = {
@@ -94,9 +89,7 @@ class Worker:
         if requirements:
             print "Installing requirements for '{}' ({})".format(module['name'], requirements)
 
-            output = RedirectedOutput()
-            rcode = pipmain(['install', '-r', requirements])
-            output = output.restore()
+            rcode, output = pip_install('-r', requirements)
 
             # In case pip failed
             if rcode:
