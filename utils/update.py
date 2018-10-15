@@ -2,16 +2,11 @@ import os
 import sys
 from git import Repo
 
-try:
-    from pip._internal import main as pipmain
-except ImportError:
-    from pip import main as pipmain
-
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
 from utils import error
 from fame.common.constants import FAME_ROOT
-from fame.common.output import RedirectedOutput
+from fame.common.pip import pip_install
 
 
 def update_repository():
@@ -25,9 +20,8 @@ def update_repository():
 
 def update_requirements():
     print "[+] Updating requirements ..."
-    output = RedirectedOutput()
-    rcode = pipmain(['install', '-r', os.path.join(FAME_ROOT, 'requirements.txt')])
-    output = output.restore()
+
+    rcode, output = pip_install('-r', os.path.join(FAME_ROOT, 'requirements.txt'))
 
     # In case pip failed
     if rcode:
