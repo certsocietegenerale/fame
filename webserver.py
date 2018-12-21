@@ -27,6 +27,7 @@ except:
 
 app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
 app.secret_key = fame_config.secret_key
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 # Set two tempalte folders (one is for modules)
 template_loader = jinja2.ChoiceLoader([
