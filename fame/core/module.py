@@ -906,6 +906,23 @@ class ThreatIntelligenceModule(Module):
         """
         pass
 
+    def has_submit_implementation(self):
+        """
+        This method checks if one of the submission methods has been
+        overwritten from his origin class.
+
+        This way, you can know if the ThreatIntelligence module has submission
+        capability.
+        """
+        methods = [self.iocs_submission, self.ioc_submission]
+        for method in methods:
+            for cls in inspect.getmro(method.im_class):
+                if method.__name__ in cls.__dict__:
+                    if cls.__name__ != 'ThreatIntelligenceModule':
+                        return True
+        return False
+
+
     @classmethod
     def static_info(cls):
         info = {

@@ -261,12 +261,14 @@ Analysis
                             <ul>
                                 {% if current_user.has_permission('submit_iocs') %}
                                     {% for module in ti_modules %}
-                                        <li id="ioc-sent-{{module}}" {% if not analysis.threat_intelligence[module] %}class="hidden"{% endif %}>
-                                            <i class="fa fa-check text-success"></i> Sent to {{module}}
-                                        </li>
-                                        <li id="ioc-sendto-{{module}}" {% if analysis.threat_intelligence[module] %}class="hidden"{% endif %}>
-                                            <a class="ioc-submission-link" href="{{ url_for('AnalysesView:submit_iocs', id=analysis._id, module=module) }}"><i class="fa fa-send"></i> Send to {{module}}</a>
-                                        </li>
+                                        {% if module.has_submit_implementation() %}
+                                            <li id="ioc-sent-{{module.name}}" {% if not analysis.threat_intelligence[module.name] %}class="hidden"{% endif %}>
+                                                <i class="fa fa-check text-success"></i> Sent to {{module.name}}
+                                            </li>
+                                            <li id="ioc-sendto-{{module.name}}" {% if analysis.threat_intelligence[module.name] %}class="hidden"{% endif %}>
+                                                <a class="ioc-submission-link" href="{{ url_for('AnalysesView:submit_iocs', id=analysis._id, module=module.name) }}"><i class="fa fa-send"></i> Send to {{module.name}}</a>
+                                            </li>
+                                        {% endif %}
                                     {% endfor %}
                                 {% endif %}
                                 <li>
