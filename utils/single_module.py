@@ -211,6 +211,7 @@ if __name__ == '__main__':
 
     if args.test:
         module = test_mode_module(args.module, args.interactive)
+        module.initialize()
     else:
         try:
             fame_init()
