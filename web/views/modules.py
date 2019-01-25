@@ -343,7 +343,7 @@ class ModulesView(FlaskView, UIView):
         """
         modules = ModuleInfo.get_collection().find({'enabled': True, 'type': 'Processing'})
 
-        return render({'modules': clean_modules(list(modules))})
+        return render(clean_modules(list(modules)))
 
     @requires_permission('manage_modules')
     @route('/reload', methods=['POST'])

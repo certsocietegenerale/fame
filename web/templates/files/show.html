@@ -9,7 +9,20 @@
         <form action="{{ url_for('AnalysesView:post') }}" method="POST">
             <input type="hidden" name="file_id" value="{{file._id}}" />
             <div class="form-group">
-                <input class="form-control" id="typeahead-modules" name="module" type="text" placeholder="Module / Just do your magic" data-url="{{url_for('ModulesView:list')}}" />
+                <input class="form-control" id="modules-autocomplete" name="modules" type="text"
+                    placeholder="Modules / Just do your magic"
+                    data-data="{{url_for('ModulesView:list')}}" />
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox checkbox-inline">
+                    <input type="checkbox" name="options[magic_enabled]" checked data-toggle="checkbox">Enable Magic
+                </label>
+                <a class="help" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Enable Magic"
+                    data-html="true" data-content="When disabled, modules that were not specified will not be executed."
+                    data-placement="top">
+                    <i class="glyphicon glyphicon-question-sign"></i>
+                </a>
             </div>
 
             <div class="form-group">
@@ -39,42 +52,46 @@
                 <p class="category">Most recent first</p>
             </div>
             <div class="content">
-                <div class="table-responsive table-full-width">
-                    <table class="table table-hover table-striped">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Target</th>
-                                <th>Probable Names</th>
-                                <th>Extractions</th>
-                                <th>Tags</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for analysis in file.analysis %}
-                				<tr>
-                                    <td class="list-avatar avatar">
-                                        {% if analysis.analyst %}
-                                            <img class="img-circle" src="{{analysis.analyst._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.analyst.name}}" />
-                                        {% endif %}
-                                    </td>
-                					<td><a href="{{ url_for('AnalysesView:get', id=analysis._id) }}">{{analysis.date|date}}</a></td>
-                					<td>{{analysis.status}}</td>
-                					<td>{{analysis.module if analysis.module != None}}</td>
-                					<td>{{analysis.probable_names|join(', ')}}</td>
-                					<td>{{analysis.extractions|join(', ', attribute='label')}}</td>
-                                    <td>
-                                        {% for tag in analysis.tags %}
-                                            <span class="tag tag-azure">{{tag}}</span>
-                                        {% endfor %}
-                                    </td>
-                				</tr>
-                			{% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                {% if file.analysis %}
+                    <div class="table-responsive table-full-width">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Target</th>
+                                    <th>Probable Names</th>
+                                    <th>Extractions</th>
+                                    <th>Tags</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for analysis in file.analysis %}
+                                    <tr>
+                                        <td class="list-avatar avatar">
+                                            {% if analysis.analyst %}
+                                                <img class="img-circle" src="{{analysis.analyst._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.analyst.name}}" />
+                                            {% endif %}
+                                        </td>
+                                        <td><a href="{{ url_for('AnalysesView:get', id=analysis._id) }}">{{analysis.date|date}}</a></td>
+                                        <td>{{analysis.status}}</td>
+                                        <td>{{analysis.module if analysis.module != None}}</td>
+                                        <td>{{analysis.probable_names|join(', ')}}</td>
+                                        <td>{{analysis.extractions|join(', ', attribute='label')}}</td>
+                                        <td>
+                                            {% for tag in analysis.tags %}
+                                                <span class="tag tag-azure">{{tag}}</span>
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    No analyses for now. Start one with the "New Analysis" form on the left.
+                {% endif %}
             </div>
       </div>
 </div>
@@ -84,7 +101,6 @@
 </script>
 
 
-{% include "modules/templates.html" %}
-<script src="{{ url_for('static', filename='js/modules-typeahead.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modules-autocomplete.js') }}"></script>
 
 {% endblock %}

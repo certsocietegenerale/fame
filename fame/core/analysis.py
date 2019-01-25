@@ -57,8 +57,13 @@ class Analysis(MongoDict):
             self._init_threat_intelligence()
             self.save()
 
-            if self['module'] is None:
+            if self['modules']:
+                self.queue_modules(self['modules'])
+            else:
                 self._automatic()
+
+    def magic_enabled(self):
+        return ('magic_enabled' not in self['options']) or (self['options']['magic_enabled'])
 
     def add_generated_files(self, file_type, locations):
         # First, save the files to db / storage
@@ -72,14 +77,15 @@ class Analysis(MongoDict):
             else:
                 filepath = location
 
-            self.log('debug', "Adding generated file '{0}' of type '{1}'".format(filepath, file_type))
+            self.log('debug', u"Adding generated file '{0}' of type '{1}'".format(filepath, file_type))
             self.append_to(['generated_files', file_type], filepath)
 
-        # Then, trigger registered modules
-        self.queue_modules(dispatcher.triggered_by("_generated_file(%s)" % file_type))
+        # Then, trigger registered modules if magic is enabled
+        if self.magic_enabled():
+            self.queue_modules(dispatcher.triggered_by("_generated_file(%s)" % file_type))
 
     def add_extracted_file(self, filepath):
-        self.log('debug', "Adding extracted file '{}'".format(filepath))
+        self.log('debug', u"Adding extracted file '{}'".format(filepath))
 
         fd = open(filepath, 'rb')
         filename = os.path.basename(filepath)
@@ -92,7 +98,9 @@ class Analysis(MongoDict):
             else:
                 f = File(filename=os.path.basename(filepath), stream=fd)
 
-            f.analyze(self['groups'], self['analyst'], None, self['options'])
+            # Automatically analyze extracted file if magic is enabled
+            if self.magic_enabled():
+                f.analyze(self['groups'], self['analyst'], None, self['options'])
 
         fd.close()
 
@@ -102,9 +110,12 @@ class Analysis(MongoDict):
     def change_type(self, filepath, new_type):
         if self.get_main_file() == filepath:
             self._file.update_value('type', new_type)
-            self._file.analyze(self['groups'], self['analyst'], None, self['options'])
+
+            # Automatically re-analyze file if magic is enabled
+            if self.magic_enabled():
+                self._file.analyze(self['groups'], self['analyst'], None, self['options'])
         else:
-            self.log('warning', "Tried to change type of generated file '{}'".format(filepath))
+            self.log('warning', u"Tried to change type of generated file '{}'".format(filepath))
 
     def add_support_file(self, module_name, name, filepath):
         self.log('debug', "Adding support file '{}' at '{}'".format(name, filepath))
@@ -168,30 +179,25 @@ class Analysis(MongoDict):
 
     # Starts / Resumes an analysis to reach the target module
     def resume(self):
+        was_resumed = False
+
         # First, see if there is pending modules remaining
         if self._run_pending_modules():
-            return True
+            was_resumed = True
         else:
             # If not, look for a path to a waiting module
             for module in self['waiting_modules']:
                 try:
                     next_module = dispatcher.next_module(self._types_available(), module, self._tried_modules())
                     self.queue_modules(next_module)
-                    return True
+                    was_resumed = True
                 except DispatchingException:
                     self.remove_from('waiting_modules', module)
                     self.append_to('canceled_modules', module)
+                    self.log('warning', 'could not find execution path to "{}" (cancelled)'.format(module))
 
-            # Finally, look for a path to the target
-            if self['module'] is not None and self['module'] not in self['executed_modules']:
-                try:
-                    next_module = dispatcher.next_module(self._types_available(), self['module'], self._tried_modules())
-                    self.queue_modules(next_module)
-                    return True
-                except DispatchingException:
-                    self._error('Could not find execution path to target %s' % self['module'])
-
-        return False
+        if not was_resumed and self['status'] != self.STATUS_ERROR:
+            self._mark_as_finished()
 
     # Queue execution of specific module(s)
     def queue_modules(self, modules, fallback_waiting=True):
@@ -242,13 +248,14 @@ class Analysis(MongoDict):
             self.remove_from('pending_modules', module_name)
             self.remove_from('waiting_modules', module_name)
 
-        if not self.resume() and self['status'] != self.STATUS_ERROR:
-            print "Finished !"
-            self._mark_as_finished()
+        self.resume()
 
     def add_tag(self, tag):
         self.append_to('tags', tag)
-        self.queue_modules(dispatcher.triggered_by(tag))
+
+        # Queue triggered modules if magic is enabled
+        if self.magic_enabled():
+            self.queue_modules(dispatcher.triggered_by(tag))
 
     def log(self, level, message):
         message = "%s: %s: %s" % (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), level, message)
@@ -264,7 +271,7 @@ class Analysis(MongoDict):
                 # Make sure fame_config.storage_path exists
                 try:
                     os.makedirs(fame_config.storage_path)
-                except:
+                except Exception:
                     pass
 
                 url = urljoin(fame_config.remote, '/analyses/{}/get_file/{}'.format(self['_id'], pathhash))
@@ -365,8 +372,9 @@ class Analysis(MongoDict):
 
     # Automatic analysis
     def _automatic(self):
-        if len(self['pending_modules']) == 0 and self['status'] == 'pending':
-            self.queue_modules(dispatcher.general_purpose(), False)
+        if self.magic_enabled():
+            if len(self['pending_modules']) == 0 and self['status'] == 'pending':
+                self.queue_modules(dispatcher.general_purpose(), False)
 
         if len(self['pending_modules']) == 0:
             self._mark_as_finished()

@@ -39,7 +39,20 @@
                     </div>
 
                     <div class="form-group">
-                        <input class="form-control" id="typeahead-modules" name="module" type="text" placeholder="Module / Just do your magic" data-url="{{url_for('ModulesView:list')}}" />
+                        <input class="form-control" id="modules-autocomplete" name="modules" type="text"
+                                placeholder="Modules / Just do your magic"
+                                data-data="{{url_for('ModulesView:list')}}" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox checkbox-inline">
+                            <input type="checkbox" name="options[magic_enabled]" checked data-toggle="checkbox">Enable Magic
+                        </label>
+                        <a class="help" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Enable Magic"
+                            data-html="true" data-content="When disabled, modules that were not specified will not be executed."
+                            data-placement="top">
+                            <i class="glyphicon glyphicon-question-sign"></i>
+                        </a>
                     </div>
 
                     <div class="form-group">
@@ -58,12 +71,10 @@
     </div>
 </div>
 
-
 <script>
     $('.tags-input').tagsInput();
 </script>
 
-{% include "modules/templates.html" %}
-<script src="{{ url_for('static', filename='js/modules-typeahead.js') }}"></script>
-
+<script src="{{ url_for('static', filename='js/modules-autocomplete.js') }}"></script>
 {% endblock %}
+

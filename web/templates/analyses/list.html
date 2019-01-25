@@ -21,23 +21,23 @@
                         </thead>
                         <tbody>
                             {% for analysis in data['analyses'] %}
-                				<tr>
+                                <tr>
                                     <td class="list-avatar avatar">
                                         {% if analysis.analyst %}
                                             <img class="img-circle" src="{{analysis.analyst._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.analyst.name}}" />
                                         {% endif %}
                                     </td>
-                					<td><a href="{{ url_for('AnalysesView:get', id=analysis._id) }}">{{analysis.date|date}}</a></td>
-                					<td>{{analysis.status}}</td>
-                					<td>
+                                    <td><a href="{{ url_for('AnalysesView:get', id=analysis._id) }}">{{analysis.date|date}}</a></td>
+                                    <td>{{analysis.status}}</td>
+                                    <td>
                                         <div><a href="{{ url_for('AnalysesView:get', id=analysis._id) }}">{{analysis.file.md5}}</a></div>
                                         <div class="small">{{analysis.file.names|join(', ')}}</div>
                                     </td>
-                					<td>{{analysis.module if analysis.module != None}}</td>
-                					<td>{{analysis.probable_names|join(', ')}}</td>
-                					<td>{{analysis.extractions|join(', ', attribute='label')}}</td>
-                				</tr>
-                			{% endfor %}
+                                    <td>{{analysis.module if analysis.module != None}}</td>
+                                    <td>{{analysis.probable_names|join(', ')}}</td>
+                                    <td>{{analysis.extractions|join(', ', attribute='label')}}</td>
+                                </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>

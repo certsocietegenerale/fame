@@ -69,11 +69,11 @@ class File(MongoDict):
                 analysis.append_to('groups', group)
 
     # Tries to perform 'module_name' on this file
-    def analyze(self, groups, analyst, module_name=None, options={}):
+    def analyze(self, groups, analyst, modules=None, options=None):
         analysis = Analysis({
             'file': self['_id'],
-            'module': module_name,
-            'options': options,
+            'modules': modules or [],
+            'options': options or {},
             'groups': list(set(groups + self['groups'])),
             'analyst': analyst
         })

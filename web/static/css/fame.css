@@ -360,46 +360,11 @@ a#avatar-dropdown {
     display: inline;
 }
 
-.twitter-typeahead {
-  width: 100%;
-}
-
-.twitter-typeahead, .tt-hint, .tt-input, .tt-menu { width: 100%; }
-
-.tt-menu {
-    border-radius: 5px;
-    border: 1px solid #666666;
-    background-color: white;
-}
-
-.tt-cursor {
-    background-color: #23CCEF;
-    color: white;
-}
-
-.modules-empty {
-    color: black;
-    background-color: white;
-    border-radius: 5px;
-    padding: 5px;
-}
-
-.modules-result {
-    color: black;
-    padding: 5px;
-    border-bottom: 1px dashed #DDDDDD;
-    border-radius: 5px;
-}
-
-.modules-result:last-child {
-    border-bottom: 0;
-}
-
-.modules-result p {
-    text-transform: none !important;
-    font-style: italic;
-    color: #666666;
-    font-size: 12px !important;
+.flexdatalist-results span:not(:first-child):not(.highlight) {
+    padding-left: 10px;
+    display: inline-block;
+    font-size: 80%;
+    color: rgba(0, 0, 0, 0.50);
 }
 
 .admin-form label {

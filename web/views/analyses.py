@@ -38,13 +38,13 @@ def get_options():
             if option_type == 'integer':
                 try:
                     options[option] = int(value, 0)
-                except:
+                except Exception:
                     flash('{} must be an integer'.format(option), 'danger')
                     return None
             else:
                 options[option] = value
 
-    for option in dispatcher.options['bool']:
+    for option in dispatcher.options['bool'].keys() + ['magic_enabled']:
         value = request.form.get("options[{}]".format(option))
         options[option] = (value is not None) and (value not in ['0', 'False'])
 
@@ -138,12 +138,12 @@ class AnalysesView(FlaskView, UIView):
             try:
                 config.get_values()
                 hash_capable = True
-            except:
+            except Exception:
                 hash_capable = False
 
         return render_template('analyses/new.html', hash_capable=hash_capable, options=dispatcher.options)
 
-    def _validate_form(self, groups, module):
+    def _validate_form(self, groups, modules, options):
         for group in groups:
             if group in current_user['groups']:
                 break
@@ -151,9 +151,14 @@ class AnalysesView(FlaskView, UIView):
             flash('You have to at least share with one of your groups.', 'danger')
             return False
 
-        if module:
-            if not ModuleInfo.get(name=module):
-                flash('"{}" is not a valid module'.format(module), 'danger')
+        if modules:
+            for module in modules:
+                if not ModuleInfo.get(name=module):
+                    flash('"{}" is not a valid module'.format(module), 'danger')
+                    return False
+        else:
+            if not options['magic_enabled']:
+                flash('You have to select at least one module to execute when magic is disabled', 'danger')
                 return False
 
         return True
@@ -248,20 +253,20 @@ class AnalysesView(FlaskView, UIView):
         :form string option[*]: value of each enabled option.
         """
         file_id = request.form.get('file_id')
-        module = request.form.get('module') or None
+        modules = filter(None, request.form.get('modules').split(','))
         groups = request.form.get('groups', '').split(',')
-
-        valid_submission = self._validate_form(groups, module)
-        if not valid_submission:
-            return validation_error()
 
         options = get_options()
         if options is None:
             return validation_error()
+        
+        valid_submission = self._validate_form(groups, modules, options)
+        if not valid_submission:
+            return validation_error()
 
         if file_id is not None:
             f = File(get_or_404(current_user.files, _id=file_id))
-            analysis = {'analysis': f.analyze(groups, current_user['_id'], module, options)}
+            analysis = {'analysis': f.analyze(groups, current_user['_id'], modules, options)}
             return redirect(analysis, url_for('AnalysesView:get', id=analysis['analysis']['_id']))
         else:
             f = self._get_object_to_analyze()
@@ -274,7 +279,7 @@ class AnalysesView(FlaskView, UIView):
 
                     return redirect(clean_files(f), url_for('FilesView:get', id=f['_id']))
                 else:
-                    analysis = {'analysis': clean_analyses(f.analyze(groups, current_user['_id'], module, options))}
+                    analysis = {'analysis': clean_analyses(f.analyze(groups, current_user['_id'], modules, options))}
                     analysis['analysis']['file'] = clean_files(f)
 
                     return redirect(analysis, url_for('AnalysesView:get', id=analysis['analysis']['_id']))
