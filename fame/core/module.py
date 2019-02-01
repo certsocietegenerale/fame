@@ -337,12 +337,12 @@ class ProcessingModule(Module):
             new_type (string): new FAME file type."""
         self._analysis.change_type(location, new_type)
 
-    def add_extracted_file(self, location):
+    def add_extracted_file(self, location, automatic_analysis=True):
         """Create a new file that deserves its own analysis.
 
         Args:
             location (string): full path."""
-        self._analysis.add_extracted_file(location)
+        self._analysis.add_extracted_file(location, automatic_analysis)
 
     def add_support_file(self, name, location):
         """Add a support file to this analysis. A support file is a file that

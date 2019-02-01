@@ -84,7 +84,7 @@ class Analysis(MongoDict):
         if self.magic_enabled():
             self.queue_modules(dispatcher.triggered_by("_generated_file(%s)" % file_type))
 
-    def add_extracted_file(self, filepath):
+    def add_extracted_file(self, filepath, automatic_analysis=True):
         self.log('debug', u"Adding extracted file '{}'".format(filepath))
 
         fd = open(filepath, 'rb')
@@ -98,8 +98,8 @@ class Analysis(MongoDict):
             else:
                 f = File(filename=os.path.basename(filepath), stream=fd)
 
-            # Automatically analyze extracted file if magic is enabled
-            if self.magic_enabled():
+            # Automatically analyze extracted file if magic is enabled and module did not disable it
+            if self.magic_enabled() and automatic_analysis:
                 f.analyze(self['groups'], self['analyst'], None, self['options'])
 
         fd.close()
