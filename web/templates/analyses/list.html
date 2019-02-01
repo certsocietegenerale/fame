@@ -34,7 +34,7 @@
                                         <div class="small">{{analysis.file.names|join(', ')}}</div>
                                     </td>
                                     <td>{{analysis.module if analysis.module != None}}</td>
-                                    <td>{{analysis.probable_names|join(', ')}}</td>
+                                    <td>{{analysis.file.probable_names|join(', ')}}</td>
                                     <td>{{analysis.extractions|join(', ', attribute='label')}}</td>
                                 </tr>
                             {% endfor %}

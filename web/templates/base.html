@@ -108,9 +108,9 @@
                                     {{analysis.file.names|join(', ')}}
                                 </div>
 
-                                {% if analysis.probable_names %}
+                                {% if analysis.file.probable_names %}
                                     <div>
-                                        <strong>{{analysis.probable_names|join(', ')}}</strong>
+                                        <strong>{{analysis.file.probable_names|join(', ')}}</strong>
                                     </div>
                                 {% endif %}
                             </a>

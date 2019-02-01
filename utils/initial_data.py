@@ -101,10 +101,38 @@ def create_virustotal_configuration():
         vt.save()
 
 
+def create_comment_configuration():
+    comments = Config.get(name='comments')
+    if comments is None:
+        comments = Config({
+            'name': 'comments',
+            'description': 'Analysis comments configuration.',
+            'config': [
+                {
+                    'name': 'enable',
+                    'description': 'Let users add comments to an analysis.',
+                    'type': 'bool',
+                    'default': True,
+                    'value': True
+                },
+                {
+                    'name': 'minimum_length',
+                    'description': 'Define a minimal character count to be enforced when submitting an analysis',
+                    'type': 'integer',
+                    'default': 0,
+                    'value': None
+                }
+            ]
+        })
+
+        comments.save()
+
+
 def create_initial_data():
     create_types()
     create_virustotal_configuration()
     create_internals()
+    create_comment_configuration()
 
 
 if __name__ == '__main__':

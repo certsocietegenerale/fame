@@ -316,6 +316,37 @@ a#avatar-dropdown {
     border: 1px solid #d3d3d3;
 }
 
+.card .content.comments {
+    padding-top: 30px;
+}
+
+.comments hr {
+    color: #DDDDDD;
+}
+
+.comments pre {
+    background-color: unset;
+    border: unset;
+    font-family: unset;
+    font-size: unset;
+    padding: unset;
+}
+
+.comment-info {
+    font-style: italic;
+    color: #888888;
+}
+
+.comment-analyst-name {
+    padding-left: 15px;
+    font-weight: bold;
+}
+
+.comment-comment {
+    padding: 5px;
+    padding-left: 10px;
+}
+
 .tab-pills {
     margin-bottom: 5px;
 }
@@ -367,6 +398,15 @@ a#avatar-dropdown {
     color: rgba(0, 0, 0, 0.50);
 }
 
+.comment-form label {
+    font-weight: bold;
+    margin-top: 13px;
+}
+
+.comment-form .form-group {
+    margin-bottom: 5px;
+}
+
 .admin-form label {
     color: #23CCEF;
     font-weight: bold;
@@ -396,6 +436,10 @@ a#avatar-dropdown {
 
 textarea.form-control {
     height: 300px;
+}
+
+textarea.form-control.small-text {
+    height: 80px;
 }
 
 tr.user-disabled {

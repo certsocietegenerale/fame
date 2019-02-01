@@ -1,3 +1,7 @@
+{% if file.probable_names %}
+    <h4 class="probable-names">Probable Name(s): {{file.probable_names|join(', ')}}</h4>
+{% endif %}
+
 <div class="row" id="file-details">
     <div class="col-md-12">
         <div class="card">
@@ -104,5 +108,67 @@
                 </div>
             </div>
         </div>
+
+        {% if comments_enabled %}
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Comments</h4>
+            </div>
+            <div class="content row comments">
+                {% for comment in file.comments %}
+                    <div class="col-md-2 list-avatar avatar text-center">
+                        {% if comment.analyst %}
+                            <img class="img-circle" src="{{comment.analyst._id|avatar}}" />
+                            <span class="comment-analyst-name">{{comment.analyst.name}}</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-8 comment-comment">
+                        <pre class="initial">{{comment.comment}}</pre>
+
+                        {% if comment.probable_name %}
+                            <span class="comment-info">Probable Name was set to {{comment.probable_name}}.</span>
+                        {% endif %}
+                        {% if comment.analysis %}
+                            <span class="comment-info">Comment submitted on <a href="{{ url_for('AnalysesView:get', id=comment.analysis) }}">this analysis</a>.</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-2">
+                        {{comment.date|date}}
+                    </div>
+
+                    <div class="col-md-12"><hr /></div>
+                {% endfor %}
+
+                <div class="content comment-form">
+                    <form class="form-horizontal" method="post" action="{{url_for('FilesView:add_comment', id=file._id)}}">
+        
+                        {% if analysis %}
+                            <input type="hidden" name="analysis" value="{{analysis._id}}" />
+                        {% endif %}
+
+                        {% if current_user.has_permission('add_probable_name') %}
+                            <div class="form-group">
+                                <label for="probable_name" class="col-sm-2 control-label">Probable Name</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" name="probable_name" value="" placeholder="Malware family name, optional">
+                                </div>
+                            </div>
+                        {% endif %}
+        
+                        <div class="form-group">
+                            <label for="comment" class="col-sm-2 control-label">Comment</label>
+                            <div class="col-sm-8">
+                                <textarea type="text" class="form-control small-text" name="comment" placeholder="Comment" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-info btn-fill">Add Comment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>

@@ -41,6 +41,7 @@ class ModuleDispatcher(object):
             ('manage_users', 'Allows for users management (creation, modification, etc.)'),
             ('configs', 'Grants access to the "Configs" section that tracks malware configurations.'),
             ('submit_iocs', 'Allows user to send observables to Threat Intelligence modules.'),
+            ('add_probable_name', "Allows user to set an object's probable name"),
             ('see_logs', 'Allows user to access the log section of anlyses. This could reveal information on the underlying system.')
         ])
 

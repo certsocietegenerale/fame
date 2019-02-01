@@ -88,10 +88,6 @@ Analysis
 
 {% block body %}
 
-{% if analysis.probable_names %}
-    <h4 class="probable-names">Probable Name(s): {{analysis.probable_names|join(', ')}}</h4>
-{% endif %}
-
 {% with file=analysis.file %}
 {% include "files/details.html" %}
 {% endwith %}

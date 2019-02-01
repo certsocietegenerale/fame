@@ -20,7 +20,10 @@ from fame.core.analysis import Analysis
 from fame.core.module import ModuleInfo
 from web.views.negotiation import render, redirect, validation_error
 from web.views.constants import PER_PAGE
-from web.views.helpers import file_download, get_or_404, requires_permission, clean_analyses, clean_files, clean_users
+from web.views.helpers import (
+    file_download, get_or_404, requires_permission, clean_analyses,
+    clean_files, clean_users, comments_enabled, enrich_comments
+)
 from web.views.mixins import UIView
 
 
@@ -109,8 +112,8 @@ class AnalysesView(FlaskView, UIView):
         """
         analysis = {'analysis': clean_analyses(get_or_404(current_user.analyses, _id=id))}
         file = current_user.files.find_one({'_id': analysis['analysis']['file']})
-        analysis['analysis']['file'] = clean_files(file)
-        ti_modules = [m for m in dispatcher.get_threat_intelligence_modules()]
+        analysis['analysis']['file'] = enrich_comments(clean_files(file))
+        ti_modules = [m.name for m in dispatcher.get_threat_intelligence_modules()]
         av_modules = [m.name for m in dispatcher.get_antivirus_modules()]
 
         if 'extracted_files' in analysis['analysis']:
@@ -127,10 +130,12 @@ class AnalysesView(FlaskView, UIView):
             'analysis': analysis,
             'modules': modules,
             'av_modules': av_modules,
-            'ti_modules': ti_modules
+            'ti_modules': ti_modules,
+            'comments_enabled': comments_enabled()
         })
 
     def new(self):
+        # See if Hash submission is available
         config = Config.get(name="virustotal")
 
         hash_capable = False
@@ -141,7 +146,10 @@ class AnalysesView(FlaskView, UIView):
             except Exception:
                 hash_capable = False
 
-        return render_template('analyses/new.html', hash_capable=hash_capable, options=dispatcher.options)
+        return render_template(
+            'analyses/new.html',
+            hash_capable=hash_capable, comments_enabled=comments_enabled(),
+            options=dispatcher.options)
 
     def _validate_form(self, groups, modules, options):
         for group in groups:
@@ -159,6 +167,20 @@ class AnalysesView(FlaskView, UIView):
         else:
             if not options['magic_enabled']:
                 flash('You have to select at least one module to execute when magic is disabled', 'danger')
+                return False
+
+        return True
+
+    def _validate_comment(self, comment):
+        config = Config.get(name="comments")
+
+        if config:
+            config = config.get_values()
+
+            if config['enable'] and config['minimum_length'] > len(comment):
+                flash(
+                    'Comment has to contain at least {} characters'.format(config['minimum_length']),
+                    'danger')
                 return False
 
         return True
@@ -250,11 +272,13 @@ class AnalysesView(FlaskView, UIView):
         :form string hash: (optional) hash to analyze.
         :form string module: (optional) the name of the target module.
         :form string groups: a comma-separated list of groups that will have access to this analysis.
+        :form string comment: comment to add to this object.
         :form string option[*]: value of each enabled option.
         """
         file_id = request.form.get('file_id')
         modules = filter(None, request.form.get('modules').split(','))
         groups = request.form.get('groups', '').split(',')
+        comment = request.form.get('comment', '')
 
         options = get_options()
         if options is None:
@@ -269,9 +293,14 @@ class AnalysesView(FlaskView, UIView):
             analysis = {'analysis': f.analyze(groups, current_user['_id'], modules, options)}
             return redirect(analysis, url_for('AnalysesView:get', id=analysis['analysis']['_id']))
         else:
+            # When this is a new submission, validate the comment
+            if not self._validate_comment(comment):
+                return validation_error()
+
             f = self._get_object_to_analyze()
             if f is not None:
                 f.add_owners(set(current_user['groups']) & set(groups))
+                f.add_comment(current_user['_id'], comment)
 
                 if f.existing:
                     f.add_groups(groups)

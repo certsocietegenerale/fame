@@ -10,7 +10,10 @@ from fame.core.file import File
 from fame.core.module_dispatcher import dispatcher
 from web.views.negotiation import render
 from web.views.constants import PER_PAGE
-from web.views.helpers import file_download, get_or_404, requires_permission, clean_files, clean_analyses, clean_users
+from web.views.helpers import (
+    file_download, get_or_404, requires_permission, clean_files, clean_analyses, clean_users,
+    enrich_comments, comments_enabled
+)
 from web.views.mixins import UIView
 
 
@@ -24,7 +27,10 @@ def return_file(file):
             analysis['analyst'] = clean_users(analyst)
 
     file['file']['analysis'] = clean_analyses(analyses)
-    return render(file, 'files/show.html', ctx={'data': file, 'options': dispatcher.options})
+    return render(file, 'files/show.html', ctx={
+        'data': file,
+        'options': dispatcher.options,
+        'comments_enabled': comments_enabled()})
 
 
 class FilesView(FlaskView, UIView):
@@ -72,7 +78,7 @@ class FilesView(FlaskView, UIView):
         :>json list parent_analyses: list of analyses (as ObjectIds) that extracted this object.
         :>json dict antivirus: dict with antivirus names as keys.
         """
-        file = {'file': clean_files(get_or_404(current_user.files, _id=id))}
+        file = {'file': enrich_comments(clean_files(get_or_404(current_user.files, _id=id)))}
         return return_file(file)
 
     @route('/md5/<md5>', methods=["GET"])
@@ -85,7 +91,8 @@ class FilesView(FlaskView, UIView):
 
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
-        file = {'file': clean_files(get_or_404(current_user.files, md5=md5))}
+        file = {'file': enrich_comments(clean_files(get_or_404(current_user.files, md5=md5)))}
+        enrich_comments(file)
         return return_file(file)
 
     @route('/sha1/<sha1>', methods=["GET"])
@@ -98,7 +105,8 @@ class FilesView(FlaskView, UIView):
 
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
-        file = {'file': clean_files(get_or_404(current_user.files, sha1=sha1))}
+        file = {'file': enrich_comments(clean_files(get_or_404(current_user.files, sha1=sha1)))}
+        enrich_comments(file)
         return return_file(file)
 
     @route('/sha256/<sha256>', methods=["GET"])
@@ -111,7 +119,7 @@ class FilesView(FlaskView, UIView):
 
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
-        file = {'file': clean_files(get_or_404(current_user.files, sha256=sha256))}
+        file = {'file': enrich_comments(clean_files(get_or_404(current_user.files, sha256=sha256)))}
         return return_file(file)
 
     @requires_permission('worker')
@@ -183,5 +191,29 @@ class FilesView(FlaskView, UIView):
         new_type = request.form.get('type')
 
         f.update_value("type", new_type)
+
+        return redirect(request.referrer)
+
+    @route('/<id>/add_comment/', methods=["POST"])
+    def add_comment(self, id):
+        if comments_enabled():
+            f = File(get_or_404(current_user.files, _id=id))
+
+            if current_user.has_permission('add_probable_name'):
+                probable_name = request.form.get('probable_name')
+            else:
+                probable_name = None
+
+            comment = request.form.get('comment')
+            analysis_id = request.form.get('analysis')
+
+            if comment:
+                # If there is an analysis ID, make sure it is accessible
+                if analysis_id:
+                    get_or_404(current_user.analyses, _id=analysis_id)
+
+                f.add_comment(current_user['_id'], comment, analysis_id, probable_name)
+            else:
+                flash('Comment should not be empty', 'danger')
 
         return redirect(request.referrer)

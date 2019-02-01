@@ -60,6 +60,13 @@
                         <input name="groups" class="tags-input tag-azure" type="text" value="{{ current_user['default_sharing']|join(',') }}" />
                     </div>
 
+                    {% if comments_enabled %}
+                        <div class="form-group">
+                            <label for="comment">Comment: </label>
+                            <textarea type="text" class="form-control small-text" name="comment" placeholder="Comment"></textarea>
+                        </div>
+                    {% endif %}
+
                     {% include "analyses/_options.html" %}
 
                     <div class="form-group">

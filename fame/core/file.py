@@ -2,6 +2,7 @@ from bson import ObjectId
 import hashlib
 import os
 import magic
+import datetime
 
 from fame.core.store import store
 from fame.common.config import ConfigObject, fame_config
@@ -17,12 +18,14 @@ class File(MongoDict):
         # When only passing a dict
         if isinstance(values, dict):
             MongoDict.__init__(self, values)
+            self['comments'] = []
         else:
             MongoDict.__init__(self, {})
             self['probable_names'] = []
             self['parent_analyses'] = []
             self['groups'] = []
             self['owners'] = []
+            self['comments'] = []
 
             # filename should be set
             if filename is not None and stream is not None:
@@ -39,6 +42,18 @@ class File(MongoDict):
                 self._store_file(filename, stream)
                 self._compute_default_properties()
                 self.save()
+
+    def add_comment(self, analyst_id, comment, analysis_id=None, probable_name=None):
+        if probable_name:
+            self.add_probable_name(probable_name)
+
+        self.append_to('comments', {
+            'analyst': analyst_id,
+            'comment': comment,
+            'analysis': analysis_id,
+            'probable_name': probable_name,
+            'date': datetime.datetime.now()
+        })
 
     def add_probable_name(self, probable_name):
         for name in self['probable_names']:
