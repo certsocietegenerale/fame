@@ -276,7 +276,7 @@ class AnalysesView(FlaskView, UIView):
         :form string option[*]: value of each enabled option.
         """
         file_id = request.form.get('file_id')
-        modules = filter(None, request.form.get('modules').split(','))
+        modules = filter(None, request.form.get('modules', '').split(','))
         groups = request.form.get('groups', '').split(',')
         comment = request.form.get('comment', '')
 
