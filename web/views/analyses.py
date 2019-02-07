@@ -300,7 +300,9 @@ class AnalysesView(FlaskView, UIView):
             f = self._get_object_to_analyze()
             if f is not None:
                 f.add_owners(set(current_user['groups']) & set(groups))
-                f.add_comment(current_user['_id'], comment)
+
+                if comment:
+                    f.add_comment(current_user['_id'], comment)
 
                 if f.existing:
                     f.add_groups(groups)
