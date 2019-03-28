@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import os
 import jinja2
 from json import dumps
