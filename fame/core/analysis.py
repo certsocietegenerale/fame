@@ -11,6 +11,7 @@ from fame.common.mongo_dict import MongoDict
 from fame.core.store import store
 from fame.core.celeryctl import celery
 from fame.core.module_dispatcher import dispatcher, DispatchingException
+from fame.core.config import Config
 
 
 # Celery task to retrieve analysis object and run specific module on it
@@ -100,7 +101,11 @@ class Analysis(MongoDict):
 
             # Automatically analyze extracted file if magic is enabled and module did not disable it
             if self.magic_enabled() and automatic_analysis:
-                f.analyze(self['groups'], self['analyst'], None, self['options'])
+                modules = None
+                config = Config.get(name="extracted").get_values()
+                if config is not None and "modules" in config:
+                    modules = config["modules"].split()
+                f.analyze(self['groups'], self['analyst'], modules, self['options'])
 
         fd.close()
 

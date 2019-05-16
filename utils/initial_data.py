@@ -128,11 +128,34 @@ def create_comment_configuration():
         comments.save()
 
 
+def create_extracted_schedule():
+    extracted = Config.get(name="extracted")
+    if extracted is None:
+        extracted = Config({
+            "name": "extracted",
+            "description": "Define which modules are scheduled by default on extracted files",
+            "config": [
+                {
+                    "name": "modules",
+                    "type": "text",
+                    "value": """peepdf
+document_preview
+exiftool
+office_macros
+virustotal_public
+"""
+                }
+            ]
+        })
+        extracted.save()
+
+
 def create_initial_data():
     create_types()
     create_virustotal_configuration()
     create_internals()
     create_comment_configuration()
+    create_extracted_schedule()
 
 
 if __name__ == '__main__':
