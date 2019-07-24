@@ -1,0 +1,11 @@
+FROM fame-base
+
+COPY docker/fame/run.web.sh /fame/run.sh
+
+RUN utils/run.sh -m pip install --no-cache-dir -r requirements-web.txt
+
+EXPOSE 8080
+
+VOLUME [ "/fame/fame/modules", "/fame/storage", "/fame/web/static/img/avatars" ]
+
+CMD [ "/fame/run.sh" ]

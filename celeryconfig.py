@@ -23,4 +23,10 @@ def connect_to_db(**kwargs):
     fame_init()
 
 
+if fame_config.remote:
+    try:
+        from celeryconfig_worker import *
+    except ImportError:
+        pass
+
 signals.worker_process_init.connect(connect_to_db)

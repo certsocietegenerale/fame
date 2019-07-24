@@ -1,9 +1,12 @@
 import os
+from io import BytesIO
+from shutil import move, rmtree
 from time import time
 from zipfile import ZipFile
-from tempfile import mkstemp
-from flask import url_for, request, flash
+from flask import url_for, request, flash, make_response
 from flask_classy import FlaskView, route
+from uuid import uuid4
+from markdown2 import markdown
 
 from web.views.negotiation import render, redirect, validation_error
 from web.views.mixins import UIView
@@ -34,6 +37,16 @@ def get_deploy_key():
         pass
 
     return key
+
+
+def get_module_readme(module):
+    readme = module.get_file('README.md')
+
+    if readme:
+        with open(readme, 'r') as f:
+            readme = markdown(f.read(), extras=["code-friendly"])
+
+    return readme
 
 
 def update_config(settings, options=False):
@@ -84,6 +97,9 @@ class ModulesView(FlaskView, UIView):
 
             "modules": {
                 "Antivirus": [
+                    ...
+                ],
+                "Preloading": [
                     ...
                 ],
                 "Processing": [
@@ -157,6 +173,7 @@ class ModulesView(FlaskView, UIView):
             ]
         """
         types = {
+            'Preloading': [],
             'Processing': [],
             'Reporting': [],
             'Threat Intelligence': [],
@@ -231,7 +248,7 @@ class ModulesView(FlaskView, UIView):
         module.update_value('enabled', True)
         dispatcher.reload()
 
-        readme = module.get_readme()
+        readme = get_module_readme(module)
         if readme:
             flash(readme, 'persistent')
 
@@ -290,14 +307,29 @@ class ModulesView(FlaskView, UIView):
         :param id: id of the named configuration.
 
         :form acts_on: comma-delimited list of FAME types this module can act on
-            (only for Processing modules).
+            (for Processing and Preloading modules).
         :form triggered_by: comma-delimited list of triggers (only for Processing
             modules).
-        :form queue: name of the queue to use for this module (only for Processing
-            modules).
+        :form queue: name of the queue to use for this module (for Processing and
+            Preloading modules).
         """
+
+        def update_queue():
+            new_queue = request.form.get('queue')
+
+            if module['queue'] == '':
+                flash('queue cannot be empty', 'danger')
+                return validation_error()
+            else:
+                if module['queue'] != new_queue:
+                    module.update_setting_value('queue', new_queue)
+                    updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
+                    updates.update_value("last_update", time())
+
+                    flash('Workers will reload once they are done with their current tasks', 'success')
+
         module = ModuleInfo(get_or_404(ModuleInfo.get_collection(), _id=id))
-        module['readme'] = module.get_readme()
+        module['readme'] = get_module_readme(module)
 
         if request.method == "POST":
             if module['type'] == 'Filetype':
@@ -311,20 +343,16 @@ class ModulesView(FlaskView, UIView):
                     module.update_setting_value('triggered_by', request.form.get('triggered_by', ''))
 
                 if 'queue' in request.form:
-                    new_queue = request.form.get('queue')
+                    update_queue()
 
-                    if module['queue'] == '':
-                        flash('queue cannot be empty', 'danger')
-                        return validation_error()
-                    else:
-                        if module['queue'] != new_queue:
-                            module.update_setting_value('queue', new_queue)
-                            updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
-                            updates.update_value("last_update", time())
+            elif module['type'] == "Preloading":
+                if "acts_on" in request.form:
+                    module.update_setting_value('acts_on', request.form.get('acts_on', ''))
 
-                            flash('Workers will reload once they are done with their current tasks', 'success')
+                if 'queue' in request.form:
+                    update_queue()
 
-            errors = update_config(module['config'], options=(module['type'] == 'Processing'))
+            errors = update_config(module['config'], options=(module['type'] in ['Preloading', 'Processing']))
             if errors is not None:
                 return errors
 
@@ -380,9 +408,54 @@ class ModulesView(FlaskView, UIView):
         :>json Repository repository: the repository.
         """
         repository = Repository(get_or_404(Repository.get_collection(), _id=id))
-        repository.pull()
+        repository.update_files()
 
         return redirect({'repository': clean_repositories(repository)}, url_for('ModulesView:index'))
+
+    @requires_permission('worker')
+    @route('/repository/<id>/update', methods=['PUT'])
+    def repository_receive_update(self, id):
+        repository = Repository(
+            get_or_404(Repository.get_collection(), _id=id))
+
+        backup_path = os.path.join(fame_config.temp_path, 'modules_backup_{}'.format(uuid4()))
+
+        # make sure, the path exists before we backup things;
+        # prevents errors if the repository was not installed
+        # prior to this 'update' request
+        try:
+            os.makedirs(repository.path())
+        except OSError:
+            pass
+        move(repository.path(), backup_path)
+
+        try:
+            with ZipFile(BytesIO(request.data), 'r') as zipf:
+                zipf.extractall(repository.path())
+
+            rmtree(backup_path)
+
+            repository['status'] = 'active'
+            repository['error_msg'] = ''
+            repository.save()
+
+            dispatcher.update_modules(repository)
+
+            updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
+            updates.update_value("last_update", time())
+
+            return make_response('', 204)  # no response
+        except Exception, e:
+            print "[E] Could not update repository {}: {}".format(
+                repository['name'], e)
+            print "[E] Restoring previous version"
+            rmtree(repository.path())
+            move(backup_path, repository.path())
+
+            repository['status'] = 'error'
+            repository['error_msg'] = \
+                "could not update repository: '{}'".format(e)
+            return validation_error()
 
     @requires_permission('manage_modules')
     @route('/repository/<id>/delete', methods=['POST'])
@@ -441,9 +514,9 @@ class ModulesView(FlaskView, UIView):
                 flash("Private repositories are disabled because of a problem with your installation (you do not have a deploy key in 'conf/id_rsa.pub')", 'danger')
                 return validation_error()
 
-            repository['status'] = 'cloning'
             repository.save()
-            repository.clone()
+            repository.update_files()
+
             return redirect({'repository': clean_repositories(repository)}, url_for('ModulesView:index'))
 
         return render({'repository': repository, 'deploy_key': deploy_key}, 'modules/repository_new.html')

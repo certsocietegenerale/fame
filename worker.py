@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import signal
@@ -55,10 +56,10 @@ class Worker:
                     zipf.extractall(MODULES_ROOT)
 
                 rmtree(backup_path)
-                print "Updated modules."
+                print("Updated modules.")
             except Exception, e:
-                print "Could not update modules: '{}'".format(e)
-                print "Restoring previous version"
+                print("Could not update modules: '{}'".format(e))
+                print("Restoring previous version")
                 move(backup_path, MODULES_ROOT)
 
         self.update_module_requirements()
@@ -72,12 +73,12 @@ class Worker:
 
             if module['type'] == "Processing":
                 should_update = (module['queue'] in self.queues)
-            elif module['type'] in ["Threat Intelligence", "Reporting", "Filetype"]:
+            elif module['type'] in ["Preloading", "Threat Intelligence", "Reporting", "Filetype"]:
                 should_update = True
             else:
                 should_update = (not fame_config.remote)
 
-            if should_update:
+            if should_update and module['enabled']:
                 self.update_python_requirements(module)
                 self.launch_install_scripts(module)
 
@@ -87,7 +88,7 @@ class Worker:
         requirements = self._module_requirements(module)
 
         if requirements:
-            print "Installing requirements for '{}' ({})".format(module['name'], requirements)
+            print("Installing requirements for '{}' ({})".format(module['name'], requirements))
 
             rcode, output = pip_install('-r', requirements)
 
@@ -100,7 +101,7 @@ class Worker:
 
         for script in scripts:
             try:
-                print "Launching installation script '{}'".format(' '.join(script))
+                print("Launching installation script '{}'".format(' '.join(script)))
                 check_output(script, stderr=STDOUT)
             except CalledProcessError, e:
                 self._module_installation_error(' '.join(script), module, e.output)
@@ -113,7 +114,7 @@ class Worker:
         module['enabled'] = False
         module['error'] = errors
 
-        print errors
+        print(errors)
 
     def _module_requirements(self, module):
         return module.get_file('requirements.txt')
@@ -194,7 +195,8 @@ class Worker:
                     pass
 
     def _new_celery_worker(self):
-        return Popen(['celery', '-A', 'fame.core.celeryctl', 'worker', '-Q', ','.join(self.queues)] + self.celery_args)
+        return Popen(['celery', '-A', 'fame.core.celeryctl', 'worker', '-Q', ','.join(self.queues)] + self.celery_args,
+                     stdout=sys.stdout, stderr=sys.stderr)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Launches a FAME worker.')
@@ -216,9 +218,9 @@ if __name__ == '__main__':
         else:
             queues = ['unix']
 
-    # A local worker should also take care of updates
-    if not fame_config.remote:
-        queues.append('updates')
+    # ensure workers also listen to update requests if *nix
+    if "unix" in queues:
+        queues.append("updates")
 
     fame_init()
     Worker(queues, args.celery_args, args.refresh_interval).start()

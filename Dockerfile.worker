@@ -1,0 +1,7 @@
+FROM fame-base
+
+COPY docker/fame/run.worker.sh /fame/run.sh
+
+RUN utils/run.sh -m pip install --no-cache-dir -r requirements-worker.txt
+
+CMD [ "/fame/run.sh" ]

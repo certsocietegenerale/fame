@@ -83,24 +83,6 @@ def create_internals():
         updates.save()
 
 
-def create_virustotal_configuration():
-    vt = Config.get(name='virustotal')
-    if vt is None:
-        vt = Config({
-            'name': 'virustotal',
-            'description': 'VirusTotal API configuration, in order to be able to submit hashes.',
-            'config': [
-                {
-                    'name': 'api_key',
-                    'description': 'VirusTotal Intelligence API key.',
-                    'type': 'str',
-                    'value': None
-                }
-            ]})
-
-        vt.save()
-
-
 def create_comment_configuration():
     comments = Config.get(name='comments')
     if comments is None:
@@ -152,7 +134,6 @@ virustotal_public
 
 def create_initial_data():
     create_types()
-    create_virustotal_configuration()
     create_internals()
     create_comment_configuration()
     create_extracted_schedule()

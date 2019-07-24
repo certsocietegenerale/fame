@@ -96,7 +96,7 @@ Analysis
     <div class="col-md-12">
         <div class="card">
             <div class="header">
-                {% if analysis.status == 'running' or analysis.status == 'pending' %}
+                {% if analysis.status in ('running', 'pending', 'preloading') %}
                     <div class="sharing-groups">
                         <label class="checkbox checkbox-inline"><input type="checkbox" checked data-toggle="checkbox" id="auto-refresh" /> Auto-update</label>
                     </div>
@@ -137,7 +137,7 @@ Analysis
                     <div class="stats">
                         <ul>
                             <li>Status:
-                                {% if analysis.status == 'running' %}
+                                {% if analysis.status in ('running', 'preloading') %}
                                     <i class="fa fa-refresh text-info spinner"></i>
                                 {% elif analysis.status == 'finished' %}
                                     <i class="fa fa-check text-success"></i>
@@ -382,7 +382,7 @@ Analysis
     $('.tags-input').tagsInput();
 </script>
 
-{% if analysis.status == 'pending' or analysis.status == 'running' %}
+{% if analysis.status in ('pending', 'running', 'preloading') %}
 <script>
     auto_update("{{ url_for('AnalysesView:get', id=analysis._id) }}", 3000, '.auto-update');
     enable_checkboxes();

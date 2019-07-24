@@ -17,6 +17,7 @@ class DispatchingException(Exception):
 class ModuleDispatcher(object):
     def reload(self):
         self._modules = {
+            'Preloading': {},
             'Processing': {},
             'Reporting': [],
             'Antivirus': [],
@@ -47,11 +48,26 @@ class ModuleDispatcher(object):
 
         self.load_all_modules()
 
+    def get_module(self, module_name):
+        return (
+            self.get_preloading_module(module_name) or
+            self.get_processing_module(module_name) or
+            None
+        )
+
     def get_processing_module(self, module_name):
         if module_name in self._modules['Processing']:
             return self._modules['Processing'][module_name]()
 
         return None
+
+    def get_preloading_module(self, module_name):
+        for modules in self._modules['Preloading'].values():
+            for module in modules:
+                if module.info['name'] == module_name:
+                    return module()
+        else:
+            return None
 
     # Get all modules triggered by a specific tag
     def triggered_by(self, tag):
@@ -82,6 +98,26 @@ class ModuleDispatcher(object):
             else:
                 return self._shortest_path_to_module(types_available, module, excluded_modules)
 
+    def get_next_preloading_module(self, types_available, excluded_modules):
+        candidate_modules = []
+        for type_ in types_available:
+            candidate_modules += self.get_preloading_modules_for(type_)
+
+        result = []
+
+        for module in candidate_modules:
+            if module.info['name'] in excluded_modules:
+                continue
+
+            for acts_on in module.info['acts_on']:
+                if acts_on in types_available:
+                    result.append(module.info['name'])
+
+        if len(result) > 0:
+            return result[0]
+        else:
+            return ""
+
     # Get all generale purpose modules
     def general_purpose(self):
         return self._general
@@ -98,6 +134,12 @@ class ModuleDispatcher(object):
     def get_filetype_modules_for(self, current_type):
         if current_type in self._modules['Filetype']:
             return self._modules['Filetype'][current_type]
+        else:
+            return []
+
+    def get_preloading_modules_for(self, current_type):
+        if current_type in self._modules['Preloading']:
+            return self._modules['Preloading'][current_type]
         else:
             return []
 
@@ -172,6 +214,23 @@ class ModuleDispatcher(object):
                     for source_type in iterify(module['acts_on']):
                         self._add_trigger(self._triggers, "_generated_file(%s)" % source_type, module)
 
+    def add_preloading_module(self, module):
+        def add_one(acts_on, module):
+            if acts_on not in self._modules['Preloading']:
+                self._modules['Preloading'][acts_on] = []
+
+            self._modules['Preloading'][acts_on].append(module)
+
+        m = get_class(module['path'], module['class'])
+        if m:
+            m.info = module
+
+            self._add_module_options(module)
+
+            if module['acts_on']:
+                for source_type in iterify(module['acts_on']):
+                    add_one(source_type, m)
+
     def _add_module_permissions(self, module):
         module = self._modules['Processing'][module['name']]
         for permission in module.permissions:
@@ -227,6 +286,8 @@ class ModuleDispatcher(object):
                 self.add_virtualization_module(module)
             elif module['type'] == "Filetype":
                 self.add_filetype_module(module)
+            elif module['type'] == "Preloading":
+                self.add_preloading_module(module)
             else:
                 self.add_module(module)
 

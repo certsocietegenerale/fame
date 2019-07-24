@@ -39,7 +39,12 @@ class ConfigObject:
 
 
 def get_fame_config():
-    fame_config = ConfigObject(filename="fame").get('fame')
+    worker = (os.getenv("FAME_WORKER") == "1")
+    if worker:
+        fame_config = ConfigObject(filename="fame-worker").get("fame")
+    else:
+        fame_config = ConfigObject(filename="fame").get('fame')
+
     if fame_config is None:
         fame_config = Dictionary()
         fame_config['mongo_host'] = 'localhost'
@@ -48,5 +53,6 @@ def get_fame_config():
         fame_config['auth'] = 'user_password'
 
     return fame_config
+
 
 fame_config = get_fame_config()

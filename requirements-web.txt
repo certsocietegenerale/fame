@@ -1,0 +1,9 @@
+-r requirements.txt
+Flask~=1.0.2
+Flask-Classy~=0.6.10
+Flask-Login==0.3.2
+Flask-Negotiation~=0.1.9
+flask-paginate~=0.5.1
+markdown2~=2.3.5
+zxcvbn==1.0
+git+https://github.com/g2p/rfc6266#egg=rfc6266

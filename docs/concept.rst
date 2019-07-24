@@ -59,6 +59,7 @@ FAME relies on modules to add functionality. Modules are actually Python classes
 
 Several kind of modules can be created:
 
+* ``PreloadingModule``: these modules can be used to preload the information provided to FAME for analysis. This, for example, includes downloading a sample file when only a hash could was provided to FAME.
 * ``ProcessingModule``: this is where FAME's magic is. A ``ProcessingModule`` should define some automated analysis that can be performed on some types of files / analysis information.
 * ``ReportingModule``: this kind of module enables reporting options, such as send analysis results by email, or post a Slack notification when the analysis is finished.
 * ``ThreatIntelligenceModule``: this kind of modules acts on IOCs. a ``ThreatIntelligenceModule`` has two roles:
@@ -79,8 +80,8 @@ FAME relies on three components:
 
 .. image:: /images/concept-architecture.png
 
-Components can all be on the same server, or split across multiple servers.
+Components can all be on the same server, or split across multiple servers. A dockerized version of FAME is also available.
 
 The web server is where antivirus modules and threat intelligence modules are executed.
 
-Everything else (processing modules, reporting modules and intelligence modules lookups) is executed on workers.
+Everything else (preloading modules, processing modules, reporting modules and intelligence modules lookups) is executed on workers.

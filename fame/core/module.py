@@ -2,14 +2,20 @@ import os
 import inspect
 import requests
 import traceback
+
 from time import sleep
 from urlparse import urljoin
-from markdown2 import markdown
 from datetime import datetime, timedelta
 
 from fame.common.constants import MODULES_ROOT
-from fame.common.exceptions import ModuleInitializationError, ModuleExecutionError, MissingConfiguration
-from fame.common.utils import iterify, is_iterable, list_value, save_response, ordered_list_value
+from fame.common.utils import (
+    iterify, is_iterable, list_value, save_response,
+    ordered_list_value
+)
+from fame.common.exceptions import (
+    ModuleInitializationError, ModuleExecutionError,
+    MissingConfiguration
+)
 from fame.common.mongo_dict import MongoDict
 from fame.core.config import Config, apply_config_update, incomplete_config
 from fame.core.internals import Internals
@@ -39,22 +45,11 @@ class ModuleInfo(MongoDict):
 
         return None
 
-    def get_readme(self):
-        readme = self.get_file('README.md')
-
-        if readme:
-            with open(readme, 'r') as f:
-                readme = markdown(f.read(), extras=["code-friendly"])
-
-        return readme
-
     def details_template(self):
         return '/'.join(self['path'].split('.')[2:-1]) + '/details.html'
 
     def update_config(self, new_info):
-        if self['type'] == 'Processing':
-            self['generates'] = new_info['generates']
-
+        def _update_queue():
             self['queue'] = new_info['queue']
             if 'queue' in self['diffs']:
                 if self['diffs']['queue'] == new_info['queue']:
@@ -62,13 +57,22 @@ class ModuleInfo(MongoDict):
                 else:
                     self['queue'] = self['diffs']['queue']
 
+        if self['type'] == 'Processing':
+            self['generates'] = new_info['generates']
+            _update_queue()
             self._update_diffed_value('acts_on', new_info['acts_on'])
             self._update_diffed_value('triggered_by', new_info['triggered_by'])
+
+        elif self['type'] == 'Preloading':
+            self._update_diffed_value('acts_on', new_info['acts_on'])
+            _update_queue()
+
         elif self['type'] == 'Filetype':
             self._update_diffed_value('acts_on', new_info['acts_on'])
 
         self['description'] = new_info['description']
-        self['config'] = apply_config_update(self['config'], new_info['config'])
+        self['config'] = apply_config_update(
+            self['config'], new_info['config'])
 
         if self['enabled'] and incomplete_config(self['config']):
             self['enabled'] = False
@@ -491,11 +495,12 @@ class ProcessingModule(Module):
 
             return self.each_with_type(target, file_type)
         except ModuleExecutionError, e:
+            self.log("debug", traceback.format_exc())
             self.log("error", "Could not run on %s: %s" % (target, e))
             return False
-        except:
-            tb = traceback.format_exc()
-            self.log("error", "Could not run on %s.\n %s" % (target, tb))
+        except Exception, e:
+            self.log("debug", traceback.format_exc())
+            self.log("error", "Could not run on %s.\n %s" % (target, e))
             return False
 
     @classmethod
@@ -1070,7 +1075,7 @@ class VirtualizationModule(Module):
             r = requests.get(self.agent_url, timeout=1)
 
             return r.status_code == 200
-        except:
+        except Exception:
             return False
 
     def restore(self, should_raise=True):
@@ -1103,6 +1108,76 @@ class VirtualizationModule(Module):
             "type": "Virtualization",
             "config": cls.config,
             "diffs": {},
+        }
+
+        init_config_values(info)
+
+        return ModuleInfo(info)
+
+
+class PreloadingModule(Module):
+    """ PreloadingModules can be used to perform any steps to
+        the analysis that need to be done prior to running the
+        analysis.
+        This for example involves downloading the sample
+        binary from e.g. VirusTotal before queueing any
+        processing modules if only a hash was passed. Having
+        these ProcessingModules allows to update the Analysis
+        object with the new data and run the analysis from
+        these instead.
+    """
+
+    acts_on = []
+    queue = 'unix'
+
+    def __init__(self, with_config=True):
+        Module.__init__(self, with_config)
+        self.results = None
+        self.tags = []
+
+    def preload(self, target):
+        """ To implement.
+
+        Args:
+            target (string): the information submitted to FAME which
+                             needs to be preprocessed (e.g. hash).
+        Raises:
+            ModuleExecutionError: Preloading the analysis failed (e.g.
+                                  no file for a given hash was found).
+        """
+        raise NotImplementedError
+
+    def add_preloaded_file(self, filepath, fd):
+        self._analysis.add_preloaded_file(filepath, fd)
+
+    def init_options(self, options):
+        for option in options:
+            setattr(self, option, options[option])
+
+    def execute(self, analysis):
+        self._analysis = analysis
+        self.init_options(analysis['options'])
+        return self.preload(self._analysis.get_main_file())
+
+    def log(self, level, message):
+        """Add a log message to the analysis
+
+        Args:
+            level: string to define the log level (``debug``, ``info``, ``warning`` or ``error``).
+            message: free text message containing the log information.
+        """
+        self._analysis.log(level, "%s: %s" % (self.name, message))
+
+    @classmethod
+    def static_info(cls):
+        info = {
+            "name": cls.name,
+            "description": cls.description,
+            "type": "Preloading",
+            "config": cls.config,
+            "diffs": {},
+            "acts_on": iterify(cls.acts_on),
+            "queue": cls.queue
         }
 
         init_config_values(info)

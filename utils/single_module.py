@@ -36,7 +36,7 @@ class Dispatcher:
                 except:
                     pass
 
-    def get_processing_module(self, name):
+    def get_module(self, name):
         if name in self.modules:
             module = self.modules[name](with_config=False)
             module.info = module.static_info()
@@ -178,7 +178,7 @@ class TestAnalysis(dict):
 def test_mode_module(name, interactive):
     print "[+] Enabling test mode."
     dispatcher = Dispatcher(interactive)
-    module = dispatcher.get_processing_module(name)
+    module = dispatcher.get_module(name)
 
     if not module:
         error("Could not find module '{}'".format(name))
@@ -215,7 +215,7 @@ if __name__ == '__main__':
     else:
         try:
             fame_init()
-            module = dispatcher.get_processing_module(args.module)
+            module = dispatcher.get_module(args.module)
             module.initialize()
         except:
             module = test_mode_module(args.module, args.interactive)

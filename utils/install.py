@@ -1,6 +1,7 @@
 import os
 import sys
 import errno
+from argparse import ArgumentParser
 from urllib import quote_plus
 from urlparse import urljoin
 from subprocess import call
@@ -49,9 +50,17 @@ def test_mongodb_connection(db):
 def define_mongo_connection(context):
     from pymongo import MongoClient
 
-    context['mongo_host'] = user_input("MongoDB host", "localhost")
-    context['mongo_port'] = int(user_input("MongoDB port", "27017"))
-    context['mongo_db'] = user_input("MongoDB database", "fame")
+    context['mongo_host'] = os.getenv("MONGO_HOST")
+    if not context['mongo_host']:
+        context['mongo_host'] = user_input("MongoDB host", "localhost")
+
+    context['mongo_port'] = int(os.getenv("MONGO_PORT", "-1"))
+    if context['mongo_port'] == -1:
+        context['mongo_port'] = int(user_input("MongoDB port", "27017"))
+
+    context['mongo_db'] = os.getenv("MONGO_DB", "")
+    if not context['mongo_db']:
+        context['mongo_db'] = user_input("MongoDB database", "fame")
 
     try:
         mongo = MongoClient(context['mongo_host'], context['mongo_port'], serverSelectionTimeoutMS=10000)
@@ -64,10 +73,16 @@ def define_mongo_connection(context):
     context['mongo_user'] = ''
     context['mongo_password'] = ''
     if not test_mongodb_connection(db):
-        context['mongo_user'] = user_input("MongoDB username")
-        context['mongo_password'] = user_input("MongoDB password")
+        context['mongo_user'] = os.getenv("MONGO_USERNAME", "")
+        if not context['mongo_user']:
+            context['mongo_user'] = user_input("MongoDB user name")
+
+        context['mongo_password'] = os.getenv("MONGO_PASSWORD", "")
+        if not context['mongo_password']:
+            context['mongo_password'] = user_input("MongoDB password")
+
         try:
-            db.authenticate(context['mongo_user'], quote_plus(context['mongo_password']))
+            db.authenticate(context['mongo_user'], context['mongo_password'])
         except:
             error("Could not connect to MongoDB (invalid credentials).")
 
@@ -80,7 +95,10 @@ def define_installation_type(context):
     print " - 1: Web server + local worker"
     print " - 2: Remote worker\n"
 
-    itype = user_input("Installation type", "1", ["1", "2"])
+    itype = os.getenv("FAME_INSTALLATION_TYPE", "")
+    if not itype:
+        itype = user_input("Installation type", "1", ["1", "2"])
+
     if itype == "1":
         context['installation_type'] = 'local'
     else:
@@ -126,16 +144,19 @@ def add_community_repository():
             'status': 'cloning'
         })
         repo.save()
-        repo.do_clone()
+        repo.update_files()
 
 
 def perform_local_installation(context):
     templates = Templates()
 
-    context['fame_url'] = user_input("FAME's URL for users (e.g. https://fame.yourdomain/)")
+    context['fame_url'] = os.getenv("FAME_URL", "")
+    if not context['fame_url']:
+        context['fame_url'] = user_input("FAME's URL for users (e.g. https://fame.yourdomain/)")
     print "[+] Creating configuration file ..."
     context['secret_key'] = os.urandom(64).encode('hex')
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'local_fame.conf', context)
+    templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame-worker.conf'), 'remote_fame.conf', context)
 
     generate_ssh_key()
 
@@ -167,7 +188,9 @@ def create_user_for_worker(context):
 def get_fame_url(context):
     import requests
 
-    context['fame_url'] = user_input("FAME's URL for worker")
+    context['fame_url'] = os.getenv("FAME_URL", "")
+    if not context['fame_url']:
+        context['fame_url'] = user_input("FAME's URL for worker")
 
     url = urljoin(context['fame_url'], '/modules/download')
     try:
@@ -178,21 +201,20 @@ def get_fame_url(context):
         error("Could not connect to FAME.")
 
 
-def perform_remote_installation(context):
+def generate_remote_worker_configuration(context):
     templates = Templates()
+    fame_url_save = context['fame_url']
 
-    # Create a temporary configuration file
     context['api_key'] = None
-    context['fame_url'] = None
-    templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'remote_fame.conf', context)
 
-    from fame.core import fame_init
-    fame_init()
     create_user_for_worker(context)
-    get_fame_url(context)
 
-    # Create definitive configuration file (with api key and URL)
-    templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'remote_fame.conf', context)
+    fame_url = os.getenv("FAME_WORKER_ENDPOINT", "")
+    if fame_url:
+        context['fame_url'] = fame_url
+    templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame-worker.conf'), 'remote_fame.conf', context)
+
+    context['fame_url'] = fame_url_save
 
 
 def install_requirements():
@@ -214,10 +236,8 @@ def main():
 
     create_conf_directory()
     define_installation_type(context)
-    if context['installation_type'] == 'local':
-        perform_local_installation(context)
-    else:
-        perform_remote_installation(context)
+    perform_local_installation(context)
+    generate_remote_worker_configuration(context)
 
 
 if __name__ == '__main__':

@@ -3,7 +3,46 @@ Installation
 ************
 
 .. note::
-    This page documents how to install FAME on Ubuntu 16.04. FAME being written in Python, you can install it on the system of your choice.
+    FAME provides Dockerfiles and a preconfigured ``docker-compose.yml`` for deploying FAME via Docker.
+
+.. _docker:
+
+======
+Docker
+======
+
+This part of the page presents information on how to run FAME via Docker.
+
+Preliminaries
+=============
+
+First, you need to have a running docker environment on your machine (preferably including ``docker-compose``). The Docker community provides information on how to install Docker for different operating systems: https://docs.docker.com/install/
+
+.. note::
+    The docker installation method was only tested on Ubuntu 18.04 LTS. By the nature of Docker it should work on all supported platforms but **any other platform than Ubuntu 18.04 LTS is untested**.
+
+Once you have Docker running, spinning up a working FAME environment is as simple as ``docker-compose up -d``. FAME will listen internally on ``http://fame-web:8080`` so you a required to have a properly configured web server accessible within the FAME stack to be able to access FAME from within your local network.
+
+Serving FAME in Docker
+======================
+
+We recommend using Traefik (https://traefik.io) for serving the FAME web interface. The provided ``docker-compose.yml`` file includes all necessary information for Traefik to serve FAME properly (depending on your configuration of Traefik this also includes serving FAME via TLS).
+
+Docker networking
+=================
+
+The default configuration creates an internal network for all FAME containers. If you use your own Docker network stack, it is strongly recommended to put all FAME containers into the same dedicated Docker network to achieve container isolation.
+
+.. note::
+    The worker containers need to have a working internet connection to be able to install module requirements. The web interface is not required to have a working internet connection since it only needs the internet connection to download profile avatars.
+
+
+=======================
+Bare-Metal Installation
+=======================
+
+.. note::
+    This part of the page documents how to install FAME on Ubuntu 16.04. FAME being written in Python, you can install it on the system of your choice.
 
 Dependencies
 ============

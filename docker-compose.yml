@@ -1,0 +1,76 @@
+version: '2'
+
+networks:
+  fame_internal:
+    internal: true
+  
+  gateway:
+  
+  traefik_default:
+    external: 
+      name: traefik_default
+
+services:
+  fame-mongo:
+    image: fame-mongo
+    environment:
+      MONGO_INITDB_DATABASE: "fame"
+    container_name: fame-mongo
+    restart: unless-stopped
+    volumes:
+      - /opt/fame-mongo:/data/db:z
+    command: --auth
+    networks:
+      - "fame_internal"
+
+  fame-web:
+    image: fame-web
+    container_name: fame-web
+    depends_on: 
+      - fame-mongo
+    environment:
+      FAME_URL: "http://localhost/"
+      FAME_WORKER: "0"
+      FAME_WORKER_ENDPOINT: "http://fame-web:8080/"
+      FAME_ADMIN_FULLNAME: "The Admin"
+      FAME_ADMIN_EMAIL: "admin@example.com"
+      FAME_ADMIN_GROUPS: "cert"
+      FAME_ADMIN_DEFAULT_SHARING: ""
+      FAME_ADMIN_PERMISSIONS: ""
+      FAME_ADMIN_PASSWORD: "tercespot"
+      MONGO_HOST: "fame-mongo"
+      MONGO_PORT: "27017"
+      MONGO_DB: "fame"
+      MONGO_USERNAME: "fame" 
+      MONGO_PASSWORD: "super-secret-password"
+    volumes:
+      - /opt/fame:/fame/conf:z
+      - /opt/fame-modules:/fame/fame/modules:z
+      - /opt/fame-storage:/fame/storage:z
+      - /opt/fame-avatars:/fame/web/static/img/avatars:z
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_default"
+      - "traefik.port=8080"
+      - "traefik.frontend.rule=Host: fame.example.com"
+    networks:
+      - "fame_internal"
+      - "traefik_default"
+    ports:
+     - "80:8080"
+    restart: unless-stopped
+    hostname: fame-web
+
+  fame-worker:
+    image: fame-worker
+    container_name: fame-worker
+    depends_on: 
+      - fame-mongo
+      - fame-web
+    volumes:
+      - /opt/fame:/fame/conf:z
+    environment:
+      FAME_WORKER: "1"
+    networks:
+      - "fame_internal"
+      - "gateway"

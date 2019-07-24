@@ -1,0 +1,19 @@
+FROM python:2-slim-stretch
+
+RUN apt-get update && apt-get install -y python python-dev python-pip git && \
+    useradd -M -s /bin/false -U fame && \
+    pip install --no-cache-dir virtualenv && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY . /fame
+COPY docker/fame/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+WORKDIR /fame
+RUN utils/run.sh -m pip install --no-cache-dir -r requirements.txt
+
+ENV FAME_INSTALLATION_TYPE=1
+
+VOLUME [ "/fame/conf" ]
+
+ENTRYPOINT [ "docker-entrypoint.sh" ]
+CMD [ "/bin/bash" ]

@@ -5,7 +5,7 @@ from fame.common.exceptions import MissingConfiguration
 from fame.common.mongo_dict import MongoDict
 
 
-def config_to_dict(config):
+def _config_to_dict(config):
     result = {}
 
     for setting in config:
@@ -17,7 +17,7 @@ def config_to_dict(config):
 # We will keep configured values, only if they have the same name and type
 def apply_config_update(config, config_update):
     new_config = []
-    config = config_to_dict(config)
+    config = _config_to_dict(config)
 
     for setting in config_update:
         new_setting = copy(setting)

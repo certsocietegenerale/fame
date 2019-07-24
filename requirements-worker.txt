@@ -1,0 +1,2 @@
+-r requirements.txt
+GitPython~=2.1.9
