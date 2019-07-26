@@ -12,7 +12,7 @@ from fame.core.config import Config
 
 from fame.common.email_utils import EmailServer
 
-notification_body_tpl = """Hi,
+notification_body_tpl = u"""Hi,
 
 {0} has written the following comment on analysis {1}:
 
