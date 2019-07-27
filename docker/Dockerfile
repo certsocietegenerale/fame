@@ -31,7 +31,7 @@ RUN apt-get update && apt-get install -y \
     docker-ce \
     docker-ce-cli \
     containerd.io \
-    mongodb-org #official package
+    mongodb-org
 
 RUN pip install virtualenv && \
     git clone https://github.com/certsocietegenerale/fame
