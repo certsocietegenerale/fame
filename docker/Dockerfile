@@ -32,8 +32,11 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
 RUN apt-get update && apt-get install -y \
     docker-ce \
     docker-ce-cli \
-    containerd.io \
+    containerd.io
+    
+RUN apt-get update && apt-get install -y \
     mongodb-org
+
 
 RUN pip install virtualenv && \
     git clone https://github.com/certsocietegenerale/fame
