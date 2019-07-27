@@ -1,5 +1,5 @@
 
-FROM debian:latest
+FROM debian:stretch
 
 WORKDIR /opt
 
@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y \
     docker-ce \
     docker-ce-cli \
     containerd.io
-    
+
 RUN apt-get update && apt-get install -y \
     mongodb-org
 
