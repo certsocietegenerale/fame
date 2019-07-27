@@ -41,5 +41,6 @@ RUN apt-get update && apt-get install -y \
 RUN pip install virtualenv && \
     git clone https://github.com/certsocietegenerale/fame
 
-ENTRYPOINT ["/opt/fame/docker/launch.sh"]
+WORKDIR /opt/fame/docker
+ENTRYPOINT ["launch.sh"]
 EXPOSE 4200
