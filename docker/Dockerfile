@@ -38,6 +38,5 @@ RUN pip install virtualenv && \
 
 
 COPY launch.sh /opt/fame
-WORKDIR /opt/fame
 ENTRYPOINT ["/opt/fame/docker/launch.sh"]
 EXPOSE 4200
