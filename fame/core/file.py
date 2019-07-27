@@ -10,6 +10,15 @@ from fame.common.mongo_dict import MongoDict
 from fame.core.module_dispatcher import dispatcher
 from fame.core.config import Config
 
+from fame.common.email_utils import EmailServer
+
+notification_body_tpl = u"""Hi,
+
+{0} has written the following comment on analysis {1}:
+
+\t{2}
+
+Best regards"""
 
 class File(MongoDict):
     collection_name = 'files'
@@ -17,8 +26,8 @@ class File(MongoDict):
     def __init__(self, values=None, filename=None, stream=None, create=True):
         # When only passing a dict
         if isinstance(values, dict):
-            MongoDict.__init__(self, values)
             self['comments'] = []
+            MongoDict.__init__(self, values)
         else:
             MongoDict.__init__(self, {})
             self['probable_names'] = []
@@ -43,7 +52,7 @@ class File(MongoDict):
                 self._compute_default_properties()
                 self.save()
 
-    def add_comment(self, analyst_id, comment, analysis_id=None, probable_name=None):
+    def add_comment(self, analyst_id, comment, analysis_id=None, probable_name=None, notify=None):
         if probable_name:
             self.add_probable_name(probable_name)
 
@@ -54,6 +63,33 @@ class File(MongoDict):
             'probable_name': probable_name,
             'date': datetime.datetime.now()
         })
+        if notify is not None and analysis_id is not None:
+            self.notify_new_comment(analysis_id, analyst_id, comment)
+
+    def notify_new_comment(self, analysis_id, commentator_id, comment):
+        commentator = store.users.find_one({'_id': commentator_id})
+        analysis = store.analysis.find_one({'_id': ObjectId(analysis_id)})
+        analyst_id = analysis['analyst']
+        recipients = set()
+        # First let's add submiter analyst and check if he is not commentator
+        if commentator_id != analyst_id:
+            analyst = store.users.find_one({'_id': analysis['analyst']})
+            recipients.add(analyst['email'])
+        # iter on commentators and add them as recipient
+        for comment in self['comments']:
+            if comment['analyst'] not in [analyst_id, commentator_id]:
+                recipient = store.users.find_one({'_id': comment['analyst']})
+                recipients.add(recipient['email'])
+        if len(recipients):
+            config = Config.get(name="email").get_values()
+            analysis_url = "{0}/analyses/{1}".format(fame_config.fame_url, analysis_id)
+            body = notification_body_tpl.format(commentator['name'],
+                                                analysis_url,
+                                                comment['comment'])
+            email_server = EmailServer()
+            if email_server.is_connected:
+                msg = email_server.new_message("[FAME] New comment on analysis", body)
+                msg.send(list(recipients))
 
     def add_probable_name(self, probable_name):
         for name in self['probable_names']:
