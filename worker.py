@@ -22,7 +22,7 @@ from fame.common.pip import pip_install
 
 
 UNIX_INSTALL_SCRIPTS = {
-    "install.sh": ["sh", "{}"],
+    "install.sh": ["bash", "{}"],
     "install.py": ["python", "{}"]
 }
 
