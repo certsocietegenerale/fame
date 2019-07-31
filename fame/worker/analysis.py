@@ -32,8 +32,25 @@ class Analysis(CoreAnalysis):
             location, '/analyses/{}/generated_file'.format(self['_id']))
         return response.json()['path']
 
-    def _get_file_from_path(self, filepath, fd=None):
+    def _get_file_from_filepath(self, filepath, fd=None):
         response = send_file_to_remote(filepath, '/files/')
+        return File(json_util.loads(response.text)['file'])
+
+    def _store_preloaded_file(self, filepath=None, fd=None):
+        if not filepath and not fd:
+            raise ValueError(
+                "Please provide either the path to the file or a file-like "
+                "object containing the data.")
+
+        if filepath and fd:
+            self.log("debug",
+                     "Please provide either the path to the file or a "
+                     "file-like object containing the data, not both. "
+                     "Chosing the file-like object for now.")
+            response = send_file_to_remote(fd, '/files/')
+        else:
+            response = send_file_to_remote(filepath, '/files/')
+
         return File(json_util.loads(response.text)['file'])
 
     def _store_support_file(self, filepath, module_name):

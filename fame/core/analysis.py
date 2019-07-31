@@ -88,7 +88,7 @@ class Analysis(MongoDict):
         f = File(filename=filename, stream=fd, create=False)
 
         if not f.existing:
-            f = self._get_file_from_path(filepath, fd)
+            f = self._get_file_from_filepath(filepath, fd)
 
             # Automatically analyze extracted file if magic is enabled and module did not disable it
             if self.magic_enabled() and automatic_analysis:
@@ -175,8 +175,12 @@ class Analysis(MongoDict):
         self.collection.update_one({'_id': self['_id'], 'iocs.value': value},
                                    {'$addToSet': {'iocs.$.sources': source}})
 
+    # can/will be overridden by the worker implementation
+    def _store_preloaded_file(self, filepath, fd):
+        return File(filename=os.path.basename(filepath), stream=fd)
+
     def add_preloaded_file(self, filepath, fd):
-        f = self._get_file_from_filepath(filepath, fd)
+        f = self._store_preloaded_file(filepath, fd)
         f.add_parent_analysis(self)
 
         self['file'] = f['_id']
