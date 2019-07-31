@@ -116,7 +116,7 @@ class AnalysesView(FlaskView, UIView):
         analysis = {'analysis': clean_analyses(get_or_404(current_user.analyses, _id=id))}
         file = current_user.files.find_one({'_id': analysis['analysis']['file']})
         analysis['analysis']['file'] = enrich_comments(clean_files(file))
-        ti_modules = [m.name for m in dispatcher.get_threat_intelligence_modules()]
+        ti_modules = [m for m in dispatcher.get_threat_intelligence_modules()]
         av_modules = [m.name for m in dispatcher.get_antivirus_modules()]
 
         if 'extracted_files' in analysis['analysis']:
