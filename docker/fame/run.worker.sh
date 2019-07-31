@@ -25,4 +25,4 @@ if [ "$?" -ne "0" ]; then
     exit 1
 fi
 
-exec su fame -s /bin/bash -c 'utils/run.sh worker.py -r 5'
+exec utils/run.sh worker.py -r 5 -c -- '--uid fame --gid fame'
