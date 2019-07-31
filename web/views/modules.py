@@ -427,13 +427,12 @@ class ModulesView(FlaskView, UIView):
             os.makedirs(repository.path())
         except OSError:
             pass
-        move(repository.path(), backup_path)
 
         try:
+            move(repository.path(), backup_path)
+
             with ZipFile(BytesIO(request.data), 'r') as zipf:
                 zipf.extractall(repository.path())
-
-            rmtree(backup_path)
 
             repository['status'] = 'active'
             repository['error_msg'] = ''
@@ -443,6 +442,8 @@ class ModulesView(FlaskView, UIView):
 
             updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
             updates.update_value("last_update", time())
+
+            rmtree(backup_path)
 
             return make_response('', 204)  # no response
         except Exception, e:
@@ -455,6 +456,10 @@ class ModulesView(FlaskView, UIView):
             repository['status'] = 'error'
             repository['error_msg'] = \
                 "could not update repository: '{}'".format(e)
+
+            import traceback
+            traceback.print_exc()
+
             return validation_error()
 
     @requires_permission('manage_modules')
