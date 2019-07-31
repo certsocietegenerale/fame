@@ -50,7 +50,7 @@ def refresh_repository(repository_id):
 
                     # path contains .git folder -> pull
                     if os.path.exists(git_folder) and os.path.isdir(git_folder):  # noqa
-                        print "[+] Pulling"
+                        print "[+] Pulling latest changes"
                         repository['status'] = 'pulling'
                         repository.save()
                         repository.do_pull(path=repo_path)
