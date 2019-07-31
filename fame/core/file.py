@@ -29,9 +29,9 @@ class File(MongoDict):
                  hash=""):
         # When only passing a dict
         if isinstance(values, dict):
-            MongoDict.__init__(self, values)
             self['needs_preloading'] = False
             self['comments'] = []
+            MongoDict.__init__(self, values)
 
         elif hash:
             MongoDict.__init__(self, {})

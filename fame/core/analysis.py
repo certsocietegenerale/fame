@@ -42,7 +42,6 @@ class Analysis(MongoDict):
         self['end_date'] = None
         self['groups'] = []
         self['analyst'] = []
-        self['needs_preloading'] = False
         MongoDict.__init__(self, values)
 
         self._file = File(store.files.find_one({'_id': self['file']}))
