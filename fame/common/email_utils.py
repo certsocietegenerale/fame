@@ -68,7 +68,7 @@ class EmailMessage:
     def __init__(self, server, subject):
         self.server = server
 
-        self.msg = MIMEMultipart('alternative')
+        self.msg = MIMEMultipart()
         self.msg['Subject'] = subject
         self.msg['From'] = server.config.from_address
         self.msg['Reply-to'] = server.config.replyto or server.config.from_address
@@ -83,11 +83,16 @@ class EmailMessage:
             filename = os.path.basename(filepath)
 
         with open(filepath, "rb") as f:
+            '''
             self.msg.attach(MIMEApplication(
                 f.read(),
                 Content_Disposition='attachment; filename="{}"'.format(filename),
                 Name=filename
             ))
+            '''
+            part = MIMEApplication(f.read(), Name=os.path.basename(filepath))
+            part['Content-Disposition'] = 'attachment; filename="{0}"'.format(filename)
+            self.msg.attach(part)            
 
     def send(self, to, cc=[], bcc=[]):
         recipients = to + cc + bcc
