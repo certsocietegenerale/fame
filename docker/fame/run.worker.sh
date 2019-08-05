@@ -9,6 +9,9 @@ echo "[+] Setting up git user and email"
 git config --global user.name "FAME Web"
 git config --global user.email "fame-web@example.com"
 
+echo "[+] Ensuring presence of temp dir"
+mkdir -p temp && chown fame:fame temp/
+
 TIMEOUT=60
 
 echo "[+] Waiting $TIMEOUT seconds for MongoDB to come up"
