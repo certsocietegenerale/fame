@@ -230,7 +230,7 @@ class UsersView(FlaskView, UIView):
                 break
         else:
             flash('You have to at least keep one of your groups.', 'danger')
-            return redirect(request.referrer)
+            return redirect({'user': clean_users(user)}, request.referrer)
 
         user.update_value('default_sharing', groups)
 
