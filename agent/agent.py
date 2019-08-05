@@ -169,7 +169,7 @@ class Worker:
             module = import_module('module')
 
         for _, obj in inspect.getmembers(module, inspect.isclass):
-            if obj.name and obj.name == name:
+            if hasattr(obj, "name") and obj.name == name:
                 self.queue = Queue()
                 self.module = obj()
 
