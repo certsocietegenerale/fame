@@ -208,6 +208,10 @@ class ModulesView(FlaskView, UIView):
         """
         module = ModuleInfo(get_or_404(ModuleInfo.get_collection(), _id=id))
         module.update_value('enabled', False)
+
+        updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
+        updates.update_value("last_update", time())
+
         dispatcher.reload()
 
         return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
@@ -246,6 +250,10 @@ class ModulesView(FlaskView, UIView):
                 return validation_error(url_for('ModulesView:configure', id=module['_id']))
 
         module.update_value('enabled', True)
+
+        updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
+        updates.update_value("last_update", time())
+
         dispatcher.reload()
 
         readme = get_module_readme(module)
