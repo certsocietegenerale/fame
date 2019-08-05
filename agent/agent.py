@@ -115,10 +115,11 @@ class IsolatedModule:
                 return self.each_with_type(target, target_type)
             except IsolatedExceptions.ModuleExecutionError, e:
                 self.log("error", "Could not run on %s: %s" % (target, e))
+                self.log("debug", traceback.format_exc())
                 return False
-            except:
-                tb = traceback.format_exc()
-                self.log("error", "Could not run on %s.\n %s" % (target, tb))
+            except Exception:
+                self.log("error", "Could not run on %s.\n" % (target,))
+                self.log("debug", traceback.format_exc())
                 return False
 
 
@@ -133,6 +134,7 @@ def fake_module(path, klass):
         sys.modules['.'.join(path_parts[0:i])] = FakePackage
 
     sys.modules[path] = klass
+
 
 fake_module('fame.core.module', IsolatedModule)
 fake_module('fame.common.exceptions', IsolatedExceptions)
