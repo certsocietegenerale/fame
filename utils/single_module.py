@@ -8,12 +8,14 @@ import importlib
 import datetime
 import argparse
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
+fame_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+sys.path.append(fame_dir)
 
 from utils import error, user_input
 from fame.core import fame_init
 from fame.core import module as module_classes
 from fame.common.objects import Dictionary
+from fame.common.config import fame_config
 from fame.common.constants import MODULES_ROOT
 from fame.common.utils import iterify, u
 from fame.core.module import ProcessingModule
@@ -79,7 +81,7 @@ class Dispatcher:
         if setting['type'] == 'integer':
             value = int(value)
         elif setting['type'] == 'bool':
-            value = bool(value)
+            value = value.lower() in ['true', '1']
 
         return value
 
@@ -127,7 +129,7 @@ class TestAnalysis(dict):
     def add_generated_files(self, file_type, location):
         self['generated_files'].append({'type': file_type, 'path': location})
 
-    def add_extracted_file(self, location):
+    def add_extracted_file(self, location, automatic_analysis=True):
         self['extracted_files'].append(location)
 
     def add_support_file(self, module, name, location):
@@ -177,6 +179,11 @@ class TestAnalysis(dict):
 
 def test_mode_module(name, interactive):
     print "[+] Enabling test mode."
+
+    if 'temp_path' not in fame_config:
+        fame_config.temp_path = os.path.join(fame_dir, "temp")
+        print "[+] Setting temp_path to {}".format(fame_config.temp_path)
+
     dispatcher = Dispatcher(interactive)
     module = dispatcher.get_module(name)
 
