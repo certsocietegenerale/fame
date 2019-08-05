@@ -1,7 +1,7 @@
 FROM python:2-slim-stretch
 
 RUN apt-get update && apt-get install -y python python-dev python-pip git && \
-    useradd -M -s /bin/false -U fame && \
+    useradd -s /bin/false -U fame -m && \
     pip install --no-cache-dir virtualenv && \
     rm -rf /var/lib/apt/lists/*
 
