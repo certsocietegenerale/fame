@@ -89,8 +89,6 @@ class Worker:
                 self.launch_install_scripts(module)
                 self.update_python_requirements(module)
 
-            module.save()
-
     def update_python_requirements(self, module):
         requirements = self._module_requirements(module)
 
@@ -120,6 +118,7 @@ class Worker:
 
         module['enabled'] = False
         module['error'] = errors
+        module.save()
 
         print(errors)
 
