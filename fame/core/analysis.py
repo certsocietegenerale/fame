@@ -238,7 +238,7 @@ class Analysis(MongoDict):
     def log(self, level, message):
         message = "%s: %s: %s" % (
             datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), level, message)
-        self.append_to('logs', message)
+        self.append_to('logs', message, set_=False)
 
     def filepath(self, path):
         return path
