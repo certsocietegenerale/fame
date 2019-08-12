@@ -77,13 +77,10 @@ class Worker:
             if 'error' in module:
                 del(module['error'])
 
-            if module['type'] in ("Processing", "Preloading"):
+            if module['type'] in ("Processing", "Preloading", "Virtualization") and 'queue' in module:
                 should_update = (module['queue'] in self.queues)
-            elif module['type'] in ("Virtualization", "Threat Intelligence",
-                                    "Reporting", "Filetype"):
-                should_update = True
             else:
-                should_update = (not fame_config.remote)
+                should_update = True
 
             if should_update and module['enabled']:
                 self.launch_install_scripts(module)
