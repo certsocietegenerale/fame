@@ -11,11 +11,6 @@ from fame.core.module import ModuleInfo
 class Repository(MongoDict):
     collection_name = 'repositories'
 
-    def __init__(self, values={}):
-        keyfile = os.path.join(FAME_ROOT, "conf", "id_rsa")
-        self['ssh_cmd'] = "ssh -o StrictHostKeyChecking=no -i {}".format(keyfile)
-        MongoDict.__init__(self, values)
-
     def delete(self):
         # First, remove modules from database
         for module in ModuleInfo.find():

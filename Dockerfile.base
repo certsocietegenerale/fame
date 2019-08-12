@@ -11,7 +11,7 @@ COPY docker/fame/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 WORKDIR /fame
 RUN utils/run.sh -m pip install --no-cache-dir -r requirements.txt
 
-ENV FAME_INSTALLATION_TYPE=1
+ENV FAME_DOCKER=1
 
 VOLUME [ "/fame/conf" ]
 

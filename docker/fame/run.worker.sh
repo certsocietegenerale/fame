@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 
-if [ ! -f conf/fame.conf ]; then
-    echo "[-] Cannot find config file: $PWD/conf/fame.conf"
-    exit 1
-fi
-
 echo "[+] Setting up git user and email"
 git config --global user.name "FAME Web"
 git config --global user.email "fame-web@example.com"
 
 echo "[+] Ensuring presence of temp dir"
 mkdir -p temp && chown fame:fame temp/
+
+if [ -f /run/secrets/ssh_priv_key ]; then
+    echo "[+] Copying SSH private key"
+    mkdir -p config
+    cp /run/secrets/ssh_priv_key conf/id_rsa
+    chown fame:fame conf -R
+    chmod 600 conf/id_rsa
+fi
 
 TIMEOUT=60
 

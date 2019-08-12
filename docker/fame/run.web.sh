@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-if [ ! -f conf/fame.conf ]; then
-    utils/run.sh utils/install.py
-fi
+utils/run.sh utils/install_docker.py
 
 echo "[+] Ensuring presence of uwsgi"
 utils/run.sh -m pip install uwsgi > /dev/null

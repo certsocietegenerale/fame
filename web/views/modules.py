@@ -27,6 +27,10 @@ def get_name(module):
 
 
 def get_deploy_key():
+    # Public key comes as an env var when running as docker container
+    if os.getenv("FAME_DOCKER", "0") == "1":
+        return os.getenv("FAME_PUBLIC_KEY")
+
     keyfile = os.path.join(FAME_ROOT, "conf", "id_rsa.pub")
 
     key = None

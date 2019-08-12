@@ -19,7 +19,7 @@ from fame.core.internals import Internals
 from fame.common.config import fame_config
 from fame.common.constants import MODULES_ROOT
 from fame.common.pip import pip_install
-
+from fame.core.user import User
 
 UNIX_INSTALL_SCRIPTS = {
     "install.sh": ["bash", "{}"],
@@ -38,15 +38,21 @@ class Worker:
         self.celery_args = [arg for arg in celery_args.split(' ') if arg]
         self.refresh_interval = refresh_interval
 
+        worker_user = User.get(email="worker@fame")
+        if worker_user:
+            fame_config.api_key = worker_user['api_key']
+        else:
+            raise Exception("Worker user (worker@fame) does not exist")
+
     def update_modules(self):
         # Module updates are only needed for remote workers
-        if fame_config.remote:
+        if fame_config.is_worker:
             # First, backup current code
             backup_path = os.path.join(fame_config.temp_path, 'modules_backup_{}'.format(uuid4()))
             move(MODULES_ROOT, backup_path)
 
             # Replace current code with code fetched from web server
-            url = urljoin(fame_config.remote, '/modules/download')
+            url = urljoin(fame_config.fame_url, '/modules/download')
             try:
                 response = requests.get(url, stream=True, headers={'X-API-KEY': fame_config.api_key})
                 response.raise_for_status()

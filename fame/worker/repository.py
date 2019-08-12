@@ -20,7 +20,7 @@ def refresh_repository(repository_id):
     repository = Repository.get(_id=repository_id)
 
     # load current module blob from remote
-    url = urljoin(fame_config.remote, '/modules/download')
+    url = urljoin(fame_config.fame_url, '/modules/download')
     try:
         print "[+] Get current modules"
         response = requests.get(
@@ -79,7 +79,7 @@ def refresh_repository(repository_id):
 
             print "[+] Putting files to web server"
             url = urljoin(
-                fame_config.remote,
+                fame_config.fame_url,
                 '/modules/repository/{}/update'.format(repository['_id']))
             tempf.seek(0)
             resp = requests.put(
@@ -102,10 +102,10 @@ def refresh_repository(repository_id):
 
 class Repository(CoreRepository):
     def __init__(self, values={}):
-        super(Repository, self).__init__(values)
+        keyfile = os.path.join(FAME_ROOT, "conf", "id_rsa")
+        self['ssh_cmd'] = "ssh -o StrictHostKeyChecking=no -i {}".format(keyfile)
 
-    def path(self):
-        return os.path.join(FAME_ROOT, 'fame', 'modules', self['name'])
+        super(Repository, self).__init__(values)
 
     def do_clone(self, path=None):
         print "[+] Cloning '{}'".format(self['name'])

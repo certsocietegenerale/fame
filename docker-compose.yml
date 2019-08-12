@@ -1,4 +1,4 @@
-version: '2'
+version: '3.4'
 
 networks:
   fame_internal:
@@ -9,6 +9,17 @@ networks:
   traefik_default:
     external: 
       name: traefik_default
+
+x-mongo-env: &mongo_env
+  MONGO_HOST: "fame-mongo"
+  MONGO_PORT: "27017"
+  MONGO_DB: "fame"
+  MONGO_USERNAME: "fame" 
+  MONGO_PASSWORD: "super-secret-password"
+
+secrets:
+  ssh_priv_key:
+    file: ./ssh/id_rsa
 
 services:
   fame-mongo:
@@ -29,22 +40,18 @@ services:
     depends_on: 
       - fame-mongo
     environment:
+      <<: *mongo_env
+      FAME_INSTALL_COMMUNITY_REPO: "1"
       FAME_URL: "http://localhost/"
-      FAME_WORKER: "0"
-      FAME_WORKER_ENDPOINT: "http://fame-web:8080/"
       FAME_ADMIN_FULLNAME: "The Admin"
       FAME_ADMIN_EMAIL: "admin@example.com"
       FAME_ADMIN_GROUPS: "cert"
       FAME_ADMIN_DEFAULT_SHARING: ""
       FAME_ADMIN_PERMISSIONS: ""
       FAME_ADMIN_PASSWORD: "tercespot"
-      MONGO_HOST: "fame-mongo"
-      MONGO_PORT: "27017"
-      MONGO_DB: "fame"
-      MONGO_USERNAME: "fame" 
-      MONGO_PASSWORD: "super-secret-password"
+      FAME_PUBLIC_KEY: "ssh-rsa [...]"
+      FAME_SECRET_KEY: ""  # cat /dev/urandom | head -c 256 | sha512sum
     volumes:
-      - /opt/fame:/fame/conf:z
       - /opt/fame-modules:/fame/fame/modules:z
       - /opt/fame-storage:/fame/storage:z
       - /opt/fame-avatars:/fame/web/static/img/avatars:z
@@ -67,10 +74,11 @@ services:
     depends_on: 
       - fame-mongo
       - fame-web
-    volumes:
-      - /opt/fame:/fame/conf:z
     environment:
-      FAME_WORKER: "1"
+      <<: *mongo_env
+      FAME_URL: "http://fame-web:8080/"
     networks:
       - "fame_internal"
       - "gateway"
+    secrets:
+      - ssh_priv_key

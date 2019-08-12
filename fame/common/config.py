@@ -37,11 +37,30 @@ class ConfigObject:
         except AttributeError:
             return None
 
+    @classmethod
+    def from_env(cls):
+        config = Dictionary()
+        config['mongo_host'] = os.getenv("MONGO_HOST", "localhost")
+        config['mongo_port'] = int(os.getenv("MONGO_PORT", "27017"))
+        config['mongo_db'] = os.getenv("MONGO_DB", "fame")
+        config['mongo_user'] = os.getenv("MONGO_USERNAME", "")
+        config['mongo_password'] = os.getenv("MONGO_PASSWORD", "")
+        config['auth'] = 'user_password'
+
+        config['fame_url'] = os.getenv("FAME_URL", "http://localhost/")
+        config['is_worker'] = os.getenv("FAME_WORKER", "0")
+
+        config['storage_path'] = os.getenv("FAME_STORAGE_PATH", "{root:s}/storage").format(root=FAME_ROOT)
+        config['temp_path'] = os.getenv("FAME_TEMP_PATH", "{root:s}/temp").format(root=FAME_ROOT)
+        config['secret_key'] = os.getenv("FAME_SECRET_KEY", "")
+
+        return config
+
 
 def get_fame_config():
-    worker = (os.getenv("FAME_WORKER") == "1")
-    if worker:
-        fame_config = ConfigObject(filename="fame-worker").get("fame")
+    docker = (os.getenv("FAME_DOCKER") == "1")
+    if docker:
+        fame_config = ConfigObject.from_env()
     else:
         fame_config = ConfigObject(filename="fame").get('fame')
 

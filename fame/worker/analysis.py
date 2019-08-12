@@ -125,7 +125,7 @@ class Analysis(CoreAnalysis):
                 pass
 
             url = urljoin(
-                fame_config.remote, '/analyses/{}/get_file/{}'.format(
+                fame_config.fame_url, '/analyses/{}/get_file/{}'.format(
                     self['_id'], pathhash))
 
             response = requests.get(url, stream=True,
