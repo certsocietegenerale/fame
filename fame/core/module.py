@@ -3,6 +3,7 @@ import inspect
 import requests
 import traceback
 
+from copy import copy
 from time import sleep
 from urlparse import urljoin
 from datetime import datetime, timedelta
@@ -125,7 +126,7 @@ class ModuleInfo(MongoDict):
 
     def _update_diffed_value(self, name, value):
         self._init_list_diff(name)
-        self[name] = value
+        self[name] = copy(value)
 
         if name in self['diffs']:
             new_removed = []
