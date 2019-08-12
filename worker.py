@@ -101,10 +101,10 @@ class Worker:
     def launch_install_scripts(self, module):
         scripts = self._module_install_scripts(module)
 
-        for script in scripts:
+        for script, cwd in scripts:
             try:
                 print("Launching installation script '{}'".format(' '.join(script)))
-                check_output(script, stderr=STDOUT)
+                check_output(script, stderr=STDOUT, cwd=cwd)
             except CalledProcessError, e:
                 self._module_installation_error(' '.join(script), module, e.output)
             except Exception, e:
@@ -138,7 +138,7 @@ class Worker:
                 for arg in INSTALL_SCRIPTS[filename]:
                     cmdline.append(arg.format(filepath))
 
-                results.append(cmdline)
+                results.append((cmdline, os.path.dirname(filepath)))
 
         return results
 
