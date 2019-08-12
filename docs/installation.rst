@@ -34,7 +34,7 @@ Docker networking
 The default configuration creates an internal network for all FAME containers. If you use your own Docker network stack, it is strongly recommended to put all FAME containers into the same dedicated Docker network to achieve container isolation.
 
 .. note::
-    The worker containers need to have a working internet connection to be able to install module requirements. The web interface is not required to have a working internet connection since it only needs the internet connection to download profile avatars.
+    The worker containers need to have a working internet connection to be able to install module requirements. The web interface is not required to have a working internet connection in general. Only if you like fancy profile avatars or want to use antivirus modules a working internet connection is required. Threat intel modules only need to be able to connect to their target instance and thus an internet/network connection is only required if the target instance is not available within the FAME network.
 
 
 =======================
