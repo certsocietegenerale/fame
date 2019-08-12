@@ -381,7 +381,7 @@ class ModulesView(FlaskView, UIView):
 
         :>json list modules: list of enabled modules.
         """
-        modules = ModuleInfo.get_collection().find({'enabled': True, 'type': 'Processing'})
+        modules = ModuleInfo.get_collection().find({'enabled': True, 'type': {'$in': ['Processing', 'Preloading']}})
 
         return render(clean_modules(list(modules)))
 
