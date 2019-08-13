@@ -75,7 +75,7 @@ class EmailMessage:
         self.msg['Return-path'] = server.config.replyto or server.config.from_address
         self.msg.preamble = subject
 
-    def add_content(self, text, content_type="text"):
+    def add_content(self, text, content_type="plain"):
         self.msg.attach(MIMEText(text, content_type, "utf-8"))
 
     def add_attachment(self, filepath, filename=None):
@@ -83,16 +83,9 @@ class EmailMessage:
             filename = os.path.basename(filepath)
 
         with open(filepath, "rb") as f:
-            '''
-            self.msg.attach(MIMEApplication(
-                f.read(),
-                Content_Disposition='attachment; filename="{}"'.format(filename),
-                Name=filename
-            ))
-            '''
             part = MIMEApplication(f.read(), Name=os.path.basename(filepath))
             part['Content-Disposition'] = 'attachment; filename="{0}"'.format(filename)
-            self.msg.attach(part)            
+            self.msg.attach(part)
 
     def send(self, to, cc=[], bcc=[]):
         recipients = to + cc + bcc
@@ -139,7 +132,7 @@ class EmailServer:
 
     def new_message(self, subject, body):
         msg = EmailMessage(self, subject)
-        msg.add_content(body, 'text')
+        msg.add_content(body)
 
         return msg
 
