@@ -67,8 +67,11 @@ def unique_for_key(l, key):
     return {d[key]: d for d in l}.values()
 
 
-def tempdir():
-    tempdir = os.path.join(fame_config.temp_path, str(uuid4()).replace('-', ''))
+def tempdir(prefix=None):
+    if not prefix:
+        prefix = fame_config.temp_path
+
+    tempdir = os.path.join(prefix, str(uuid4()).replace('-', ''))
 
     try:
         os.makedirs(tempdir)

@@ -21,6 +21,9 @@ secrets:
   ssh_priv_key:
     file: ./ssh/id_rsa
 
+volumes:
+  fame-share:
+
 services:
   fame-mongo:
     image: fame-mongo
@@ -77,6 +80,10 @@ services:
     environment:
       <<: *mongo_env
       FAME_URL: "http://fame-web:8080/"
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:z
+      - fame-share:/fame/docker-storage:z
     networks:
       - "fame_internal"
       - "gateway"

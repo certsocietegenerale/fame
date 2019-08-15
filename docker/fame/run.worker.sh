@@ -15,6 +15,13 @@ if [ -f /run/secrets/ssh_priv_key ]; then
     chmod 600 conf/id_rsa
 fi
 
+if [ -e /var/run/docker.sock ]; then
+    gid="$(stat -c %g /var/run/docker.sock)"
+    echo "[+] Creating docker_fame group with gid $gid and adding user 'fame' to it"
+    groupadd -g $gid docker_fame
+    usermod -aG docker_fame fame
+fi
+
 TIMEOUT=60
 
 echo "[+] Waiting $TIMEOUT seconds for MongoDB to come up"
