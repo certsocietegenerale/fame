@@ -39,7 +39,6 @@ Preloading modules are used to transform a given information (e.g. sample hash) 
 A preloading module can currently use the following inputs:
 
 * The hash of binary to analyze
-* The analysis itself to re-analyze a hash
 
 The preloading module might produce data that can be analyzed by FAME (e.g. sample binary).
 

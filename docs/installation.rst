@@ -23,6 +23,28 @@ First, you need to have a running docker environment on your machine (preferably
 
 Once you have Docker running, spinning up a working FAME environment is as simple as ``docker-compose up -d``. FAME will listen internally on ``http://fame-web:8080`` so you a required to have a properly configured web server accessible within the FAME stack to be able to access FAME from within your local network.
 
+Configuration
+=============
+
+The Docker container can be configures by environment variables only. All available environment variables are described below.
+
+:FAME_INSTALL_COMMUNITY_REPO: (web only) Defines whether or not to install the community module repository when spawning a fresh instance.
+:FAME_URL: (worker/web) On the *worker*, this defines the (internal) base URL of the fame-web container (e.g. ``http://fame-web:8080/``). For the *web* container, this defines at which URL the web interface will be available to the users (e.g. ``http://fame.example.com/``)
+:FAME_ADMIN_FULLNAME: (web only) The full name of the admin user (e.g. ``FAME Admin``).
+:FAME_ADMIN_EMAIL: (web only) The email address of the admin user (e.g. ``admin@fame.example.com``). **Note**: this must be a valid email address. Otherwise logging in through the web interface will not be possible.
+:FAME_ADMIN_GROUPS: (web only) The default list of groups for the admin user (e.g. ``cert``).
+:FAME_ADMIN_DEFAULT_SHARING: (web only)
+:FAME_ADMIN_PERMISSIONS: (web only)
+:FAME_ADMIN_PASSWORD: (web only) The password of the admin user account.
+:FAME_PUBLIC_KEY: (web only) The SSH *public* which is shown to the admins when a private repository is to be cloned (e.g. ``ssh-rsa [..] FAME deploy key``).
+:FAME_SECRET_KEY: (web only) The Flask secret to use for session encryption. Should be generated randomly (e.g. via ``cat /dev/urandom | head -c 32 | xxd -p | tr -d '\n'``).
+:DOCKER_HOST: (worker only) The address of the docker daemon (e.g. ``unix:///var/run/docker.sock``). Please refer to the official Docker documentation of this variable for all allowed values.
+:MONGO_HOST: (worker/web) The (internal) hostname of the MongoDB instance that powers FAME.
+:MONGO_PORT: (worker/web) The port of the MongoDB instance that powers FAME.
+:MONGO_DB: (worker/web) The database name which FAME should use.
+:MONGO_USERNAME: The username of the FAME MongoDB user (**note**: this value must match the user defined in ``docker/mongo/adduser.js``).
+:MONGO_PASSWORD: The password of the FAME MongoDB user (**note**: this value must match the password defined in ``docker/mongo/adduser.js``).
+
 Serving FAME in Docker
 ======================
 
