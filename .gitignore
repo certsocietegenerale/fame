@@ -77,3 +77,6 @@ vendor/*
 
 # Agent
 agent/module.py
+
+# Editors
+.vscode
