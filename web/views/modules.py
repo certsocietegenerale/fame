@@ -218,7 +218,7 @@ class ModulesView(FlaskView, UIView):
 
         dispatcher.reload()
 
-        return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
+        return redirect({'module': clean_modules(module)}, url_for('ModulesView:index', _anchor=module['name']))
 
     @requires_permission('manage_modules')
     @route('/<id>/enable', methods=['POST'])
@@ -264,7 +264,7 @@ class ModulesView(FlaskView, UIView):
         if readme:
             flash(readme, 'persistent')
 
-        return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
+        return redirect({'module': clean_modules(module)}, url_for('ModulesView:index', _anchor=module['name']))
 
     @requires_permission('manage_modules')
     @route('/<id>/configuration', methods=['GET', 'POST'])
@@ -370,7 +370,7 @@ class ModulesView(FlaskView, UIView):
 
             module.save()
             dispatcher.reload()
-            return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
+            return redirect({'module': clean_modules(module)}, url_for('ModulesView:index', _anchor=module['name']))
         else:
             return render({'module': clean_modules(module)}, 'modules/module_configuration.html')
 

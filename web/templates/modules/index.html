@@ -109,7 +109,7 @@
                 </div>
                 <div class="content module-list">
                     {% for module in data.modules['Preloading'] %}
-                        <div class="module-info">
+                        <div class="module-info" id="{{module.name}}">
                             <div class="row">
                                 <div class="col-sm-8">
                                     <h5>{{module.name}}</h5>
@@ -175,7 +175,7 @@
                 </div>
                 <div class="content module-list">
                     {% for module in data.modules['Processing'] %}
-                        <div class="module-info">
+                        <div class="module-info" id="{{module.name}}">
                             <div class="row">
                                 <div class="col-sm-8">
                                     <h5>{{module.name}}</h5>
@@ -245,7 +245,7 @@
                 </div>
                 <div class="content module-list">
                     {% for module in data.modules['Filetype'] %}
-                        <div class="module-info">
+                        <div class="module-info" id="{{module.name}}">
                             <div class="row">
                                 <div class="col-sm-8">
                                     <h5>{{module.name}}</h5>
@@ -309,7 +309,7 @@
                 </div>
                 <div class="content module-list">
                     {% for module in data.modules[type] %}
-                        <div class="module-info">
+                        <div class="module-info" id="{{module.name}}">
                             <div class="row">
                                 <div class="col-sm-8">
                                     <h5>{{module.name}}</h5>
