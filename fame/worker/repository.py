@@ -35,6 +35,8 @@ def refresh_repository(repository_id):
         print "[+] Constructing git repository path"
         repo_path = os.path.join(module_tempdir, repository['name'])
 
+        success = False
+
         if os.path.exists(repo_path):
             # path exists
             if os.path.isdir(repo_path):
@@ -43,7 +45,7 @@ def refresh_repository(repository_id):
                     print "[+] Cloning into existing directory"
                     repository['status'] = 'cloning'
                     repository.save()
-                    repository.do_clone(path=repo_path)
+                    success = repository.do_clone(path=repo_path)
 
                 else:
                     git_folder = os.path.join(repo_path, ".git")
@@ -53,7 +55,7 @@ def refresh_repository(repository_id):
                         print "[+] Pulling latest changes"
                         repository['status'] = 'pulling'
                         repository.save()
-                        repository.do_pull(path=repo_path)
+                        success = repository.do_pull(path=repo_path)
                     else:
                         raise "Took unexpected path in program logic!"
 
@@ -64,7 +66,12 @@ def refresh_repository(repository_id):
             print "[+] Cloning new repository"
             repository['status'] = 'cloning'
             repository.save()
-            repository.do_clone(path=repo_path)
+            success = repository.do_clone(path=repo_path)
+
+        if not success:
+            # Error was set by do_pull/do_clone
+            print "[E] Could not update repository"
+            return
 
         print "[+] Zipping files up"
         with TemporaryFile() as tempf:
@@ -116,13 +123,15 @@ class Repository(CoreRepository):
             else:
                 Repo.clone_from(self['address'], path or self.path())
 
+            internals = Internals.get(name="updates")
+            internals.update_value("last_update", time())
+            return True
+
         except Exception, e:
             self['status'] = 'error'
             self['error_msg'] = 'Could not clone repository, probably due to authentication issues.\n{}'.format(e)  # noqa
             self.save()
-
-        internals = Internals.get(name="updates")
-        internals.update_value("last_update", time())
+            return False
 
     def do_pull(self, path=None):
         print "[+] Pulling '{}'".format(self['name'])
@@ -144,10 +153,11 @@ class Repository(CoreRepository):
                         print "Deleting orphan file '{}'".format(f)
                         os.remove(f)
 
+            updates = Internals.get(name="updates")
+            updates.update_value("last_update", time())
+            return True
         except Exception, e:
             self['status'] = 'error'
             self['error_msg'] = 'Could not update repository.\n{}'.format(e)
             self.save()
-
-        updates = Internals.get(name="updates")
-        updates.update_value("last_update", time())
+            return False
