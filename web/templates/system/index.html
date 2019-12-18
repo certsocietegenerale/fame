@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h4 class="title">Pending Analyses</h4>
+                </div>
+            </div>
+            <div class="content">
+                {% if not data['pending_analyses'] %}
+                <span>No pending analyses.</span>
+                {% else %}
+                <div class="table-responsive table-full-width">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Filename(s)</th>
+                                <th>MD5</th>
+                                <th>Created At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for analysis in data['pending_analyses'] %}
+                            <tr>
+                                <td><a href="{{ url_for('AnalysesView:get', id=analysis._id) }}">{{ analysis._id|e }}</a></td>
+                                <td>{{ analysis.file.names|join(', ')|e }}</td>
+                                <td>{{ analysis.file.md5|e }}</td>
+                                <td>{{ analysis.date|e }}</td>
+                                <td class="user-actions">
+                                    <form method="POST" action="{{ url_for('SystemView:resume', id=analysis._id) }}" onsubmit="return confirm('Warning: this action may break the analysis! Continue?')">
+                                        <button type="submit" class="btn btn-danger btn-xs btn-fill">Resume</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h4 class="title">Stale Analyses</h4>
+                </div>
+            </div>
+            <div class="content">
+                {% if not data['stale_analyses'] %}
+                <span>No stale analyses.</span>
+                {% else %}
+                <div class="table-responsive table-full-width">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Filename(s)</th>
+                                <th>MD5</th>
+                                <th>Created At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for analysis in data['stale_analyses'] %}
+                            <tr>
+                                <td><a href="{{ url_for('AnalysesView:get', id=analysis._id) }}">{{ analysis._id|e }}</a></td>
+                                <td>{{ analysis.file.names|join(', ')|e }}</td>
+                                <td>{{ analysis.file.md5|e }}</td>
+                                <td>{{ analysis.date|e }}</td>
+                                <td class="user-actions">
+                                    <form method="POST" action="{{ url_for('SystemView:resume', id=analysis._id) }}" onsubmit="return confirm('Warning: this action may break the analysis! Continue?')">
+                                        <button type="submit" class="btn btn-danger btn-xs btn-fill">Resume</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

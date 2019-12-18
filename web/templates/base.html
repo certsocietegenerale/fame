@@ -182,6 +182,9 @@
                               {% if current_user.has_permission('manage_users') %}
                                 <li><a href="{{ url_for('UsersView:index') }}">Users</a></li>
                               {% endif %}
+                              {% if current_user.has_permission('system') %}
+                                <li><a href="{{ url_for('SystemView:index') }}">System</a></li>
+                              {% endif %}
                               <li><a href="/logout">Logout</a></li>
                             </ul>
                         </li>
