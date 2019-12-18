@@ -51,9 +51,12 @@ services:
       FAME_ADMIN_GROUPS: "cert"
       FAME_ADMIN_DEFAULT_SHARING: ""
       FAME_ADMIN_PERMISSIONS: ""
-      FAME_ADMIN_PASSWORD: "tercespot"
-      FAME_PUBLIC_KEY: "ssh-rsa [...]"
-      FAME_SECRET_KEY: ""  # cat /dev/urandom | head -c 256 | sha512sum
+      FAME_AUTHENTICATION_TYPE: "ldap"
+      LDAP_URI: "ldap://example.com"
+      LDAP_USER: "ldap-user"
+      LDAP_PASSWORD: "ldap-password"
+      LDAP_FILTER_EMAIL: "(&(objectCategory=Person)(sAMAccountName=*)(mail={})"
+      LDAP_FILTER_DN: "OU=People,DC=example,DC=com"
     volumes:
       - /opt/fame-modules:/fame/fame/modules:z
       - /opt/fame-storage:/fame/storage:z

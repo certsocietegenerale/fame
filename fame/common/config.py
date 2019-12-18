@@ -45,7 +45,14 @@ class ConfigObject:
         config['mongo_db'] = os.getenv("MONGO_DB", "fame")
         config['mongo_user'] = os.getenv("MONGO_USERNAME", "")
         config['mongo_password'] = os.getenv("MONGO_PASSWORD", "")
-        config['auth'] = 'user_password'
+
+        config['ldap_uri'] = os.getenv("LDAP_URI", "")
+        config['ldap_user'] = os.getenv("LDAP_USER", "")
+        config['ldap_password'] = os.getenv("LDAP_PASSWORD", "")
+        config['ldap_filter_email'] = os.getenv("LDAP_FILTER_EMAIL", "")
+        config['ldap_filter_dn'] = os.getenv("LDAP_FILTER_DN", "")
+
+        config['auth'] = os.getenv("FAME_AUTHENTICATION_TYPE", "user_password")
 
         config['fame_url'] = os.getenv("FAME_URL", "http://localhost/")
         config['is_worker'] = os.getenv("FAME_WORKER", "0")
