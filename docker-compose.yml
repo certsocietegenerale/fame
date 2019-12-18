@@ -69,8 +69,6 @@ services:
     networks:
       - "fame_internal"
       - "traefik_default"
-    # ports:
-    #  - "80:8080"
     restart: unless-stopped
     hostname: fame-web
 
