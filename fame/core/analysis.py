@@ -181,7 +181,7 @@ class Analysis(MongoDict):
 
     def add_preloaded_file(self, filepath, fd):
         f = self._store_preloaded_file(filepath, fd)
-        f.add_parent_analysis(self)
+        f.append_to('analysis', self['_id'])
 
         if f['names'] == ['file']:
             f['names'] = self._file['names']

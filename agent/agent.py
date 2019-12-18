@@ -288,7 +288,8 @@ def get_file(task_id):
     with open(filepath, 'rb') as fd:
         response = make_response(fd.read())
 
-    response.headers["Content-Disposition"] = "attachment; filename='{0}'".format(os.path.basename(filepath))
+    response.headers["Content-Disposition"] = \
+        "attachment; filename={0}".format(os.path.basename(filepath))
 
     return response
 

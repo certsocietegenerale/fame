@@ -267,7 +267,7 @@ class ModuleDispatcher(object):
 
     def _add_transforms(self, module):
         if not module['acts_on']:
-            for generated_type in iterify(module.generates):
+            for generated_type in iterify(module['generates']):
                 if generated_type not in self._direct_transforms:
                     self._direct_transforms[generated_type] = []
                 self._direct_transforms[generated_type].append(module['name'])
@@ -403,7 +403,7 @@ class ModuleDispatcher(object):
 
         for destination_type in iterify(target_module.info['acts_on']):
             module, length = self._shortest_path_to_type(types_available, destination_type, excluded_modules + [target_module.info['name']])
-            if path_length is None or length < path_length:
+            if path_length is None or (length is not None and length < path_length):
                 path_length = length
                 next_module = module
 

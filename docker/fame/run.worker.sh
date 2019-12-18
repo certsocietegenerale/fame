@@ -9,7 +9,7 @@ mkdir -p temp && chown fame:fame temp/
 
 if [ -f /run/secrets/ssh_priv_key ]; then
     echo "[+] Copying SSH private key"
-    mkdir -p config
+    mkdir -p conf
     cp /run/secrets/ssh_priv_key conf/id_rsa
     chown fame:fame conf -R
     chmod 600 conf/id_rsa

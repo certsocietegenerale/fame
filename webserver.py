@@ -134,7 +134,7 @@ def avatar(user_id):
     if os.path.exists(os.path.join(AVATARS_ROOT, "{}.png".format(user_id))):
         return url_for('static', filename="img/avatars/{}.png".format(user_id))
     else:
-        return url_for('static', filename="img/avatars/default.png")
+        return url_for('static', filename="img/default_avatar.png")
 
 
 @app.template_global()

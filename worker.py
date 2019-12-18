@@ -6,7 +6,7 @@ import argparse
 import requests
 from urlparse import urljoin
 from socket import gethostname
-from StringIO import StringIO
+from BytesIO import BytesIO
 from zipfile import ZipFile
 from shutil import move, rmtree
 from uuid import uuid4
@@ -58,7 +58,7 @@ class Worker:
                 response.raise_for_status()
 
                 os.makedirs(MODULES_ROOT)
-                with ZipFile(StringIO(response.content), 'r') as zipf:
+                with ZipFile(BytesIO(response.raw.read()), 'r') as zipf:
                     zipf.extractall(MODULES_ROOT)
 
                 rmtree(backup_path)
@@ -76,6 +76,7 @@ class Worker:
 
             if 'error' in module:
                 del(module['error'])
+                module.save()
 
             if module['type'] in ("Processing", "Preloading", "Virtualization") and 'queue' in module:
                 should_update = (module['queue'] in self.queues)
