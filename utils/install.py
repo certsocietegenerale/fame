@@ -199,20 +199,20 @@ def perform_remote_installation(context):
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'remote_fame.conf', context)
 
 
-def install_requirements():
-    print "[+] Installing requirements ..."
+def install_requirements(what, req_file):
+    print "[+] Installing {} requirements ...".format(what)
 
-    rcode, output = pip_install('-r', os.path.join(FAME_ROOT, 'requirements.txt'))
+    rcode, output = pip_install('-r', os.path.join(FAME_ROOT, req_file))
 
     if rcode:
         print output
-        error("Could not install requirements.")
+        error("Could not install {} requirements.".format(what))
 
 
 def main():
     context = {}
 
-    install_requirements()
+    install_requirements("base", "requirements.txt")
 
     define_mongo_connection(context)
 
@@ -220,8 +220,11 @@ def main():
     define_installation_type(context)
     if context['installation_type'] == 'local':
     perform_local_installation(context)
+        install_requirements("web", "requirements-web.txt")
+        install_requirements("worker", "requirements-worker.txt")
     else:
         perform_remote_installation(context)
+        install_requirements("worker", "requirements-worker.txt")
 
 
 if __name__ == '__main__':
