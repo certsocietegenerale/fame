@@ -82,7 +82,7 @@ def define_installation_type(context):
     print " - 1: Web server + local worker"
     print " - 2: Remote worker\n"
 
-        itype = user_input("Installation type", "1", ["1", "2"])
+    itype = user_input("Installation type", "1", ["1", "2"])
 
     if itype == "1":
         context['installation_type'] = 'local'
@@ -135,7 +135,8 @@ def add_community_repository():
 def perform_local_installation(context):
     templates = Templates()
 
-        context['fame_url'] = user_input("FAME's URL for users (e.g. https://fame.yourdomain/)")
+    context['fame_url'] = user_input("FAME's URL for users (e.g. https://fame.yourdomain/)")
+
     print "[+] Creating configuration file ..."
     context['secret_key'] = os.urandom(64).encode('hex')
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'local_fame.conf', context)
@@ -171,7 +172,7 @@ def create_user_for_worker(context):
 def get_fame_url(context):
     import requests
 
-        context['fame_url'] = user_input("FAME's URL for worker")
+    context['fame_url'] = user_input("FAME's URL for worker")
 
     url = urljoin(context['fame_url'], '/modules/download')
     try:
@@ -219,7 +220,7 @@ def main():
     create_conf_directory()
     define_installation_type(context)
     if context['installation_type'] == 'local':
-    perform_local_installation(context)
+        perform_local_installation(context)
         install_requirements("web", "requirements-web.txt")
         install_requirements("worker", "requirements-worker.txt")
     else:

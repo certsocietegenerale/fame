@@ -26,7 +26,7 @@ Once you have Docker running, spinning up a working FAME environment is as simpl
 Configuration
 =============
 
-The Docker container can be configures by environment variables only. All available environment variables are described below.
+The Docker container can be configured by environment variables only. All available environment variables are described below.
 
 :FAME_INSTALL_COMMUNITY_REPO: (web only) Defines whether or not to install the community module repository when spawning a fresh instance.
 :FAME_URL: (worker/web) On the *worker*, this defines the (internal) base URL of the fame-web container (e.g. ``http://fame-web:8080/``). For the *web* container, this defines at which URL the web interface will be available to the users (e.g. ``http://fame.example.com/``)

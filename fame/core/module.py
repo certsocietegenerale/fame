@@ -1123,7 +1123,7 @@ class PreloadingModule(Module):
         This for example involves downloading the sample
         binary from e.g. VirusTotal before queueing any
         processing modules if only a hash was passed. Having
-        these ProcessingModules allows to update the Analysis
+        these PreloadingModules allows to update the Analysis
         object with the new data and run the analysis from
         these instead.
     """

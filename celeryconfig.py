@@ -21,11 +21,11 @@ CELERY_IMPORTS = ('fame.core.analysis', 'fame.core.repository')
 
 def connect_to_db(**kwargs):
     fame_init()
-    if fame_config.is_worker:
-        from fame.core.user import User
-        worker_user = User.get(email="worker@fame")
-        if worker_user:
-            fame_config.api_key = worker_user['api_key']
+
+    from fame.core.user import User
+    worker_user = User.get(email="worker@fame")
+    if worker_user:
+        fame_config.api_key = worker_user['api_key']
 
 
 if fame_config.is_worker:
