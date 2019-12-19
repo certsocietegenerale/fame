@@ -2,6 +2,11 @@ FROM fame-base
 
 ENV FAME_WORKER=1
 
+RUN apt-get update -y && apt-get install -y build-essential && \
+    rm -rf /var/lib/apt/lists/* && \
+    git config --global user.name "FAME Web" && \
+    git config --global user.email "fame-web@example.com"
+
 COPY docker/fame/run.worker.sh /fame/run.sh
 
 RUN utils/run.sh -m pip install --no-cache-dir -r requirements-worker.txt

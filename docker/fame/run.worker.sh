@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-echo "[+] Setting up git user and email"
-git config --global user.name "FAME Web"
-git config --global user.email "fame-web@example.com"
-
 echo "[+] Ensuring presence of temp dir"
 mkdir -p temp && chown fame:fame temp/
 
@@ -38,4 +34,4 @@ if [ "$?" -ne "0" ]; then
     exit 1
 fi
 
-exec utils/run.sh worker.py -r 5 -c -- '--uid fame --gid fame'
+exec utils/run.sh worker.py -r 5 -c '--uid fame --gid fame'

@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-utils/run.sh utils/install_docker.py
-
-echo "[+] Ensuring presence of uwsgi"
-utils/run.sh -m pip install uwsgi > /dev/null
-
 TIMEOUT=60
 
 echo "[+] Waiting $TIMEOUT seconds for MongoDB to come up"
@@ -14,6 +9,9 @@ if [ "$?" -ne "0" ]; then
     exit 1
 fi
 
-echo "[+] Running webserver"
+utils/run.sh utils/install_docker.py
+
 chown fame:fame /fame -R
+
+echo "[+] Running webserver"
 exec /fame/env/bin/uwsgi -H /fame/env --uid fame --http :8080 -w webserver --callable app
