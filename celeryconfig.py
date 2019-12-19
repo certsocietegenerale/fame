@@ -16,7 +16,7 @@ CELERY_RESULT_BACKEND = MONGO
 CELERY_ACCEPT_CONTENT = ['json_util']
 CELERY_TASK_SERIALIZER = 'json_util'
 
-CELERY_IMPORTS = ('fame.core.analysis', 'fame.core.repository')
+CELERY_IMPORTS = ('fame.worker.analysis', 'fame.worker.repository')
 
 
 def connect_to_db(**kwargs):
@@ -27,11 +27,5 @@ def connect_to_db(**kwargs):
     if worker_user:
         fame_config.api_key = worker_user['api_key']
 
-
-if fame_config.is_worker:
-    try:
-        from celeryconfig_worker import *
-    except ImportError:
-        pass
 
 signals.worker_process_init.connect(connect_to_db)
