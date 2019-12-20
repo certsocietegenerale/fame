@@ -61,7 +61,7 @@ class MongoDict(dict):
     def append_to(self, names, value, set_=True):
         self._local_field(names).append(value)
         if set_:
-        return self._update({'$addToSet': {self._mongo_field(names): value}})
+            return self._update({'$addToSet': {self._mongo_field(names): value}})
         else:
             return self._update({'$push': {self._mongo_field(names): value}})
 

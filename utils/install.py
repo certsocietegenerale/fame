@@ -50,9 +50,9 @@ def test_mongodb_connection(db):
 def define_mongo_connection(context):
     from pymongo import MongoClient
 
-        context['mongo_host'] = user_input("MongoDB host", "localhost")
-        context['mongo_port'] = int(user_input("MongoDB port", "27017"))
-        context['mongo_db'] = user_input("MongoDB database", "fame")
+    context['mongo_host'] = user_input("MongoDB host", "localhost")
+    context['mongo_port'] = int(user_input("MongoDB port", "27017"))
+    context['mongo_db'] = user_input("MongoDB database", "fame")
 
     try:
         mongo = MongoClient(context['mongo_host'], context['mongo_port'], serverSelectionTimeoutMS=10000)
@@ -65,8 +65,8 @@ def define_mongo_connection(context):
     context['mongo_user'] = ''
     context['mongo_password'] = ''
     if not test_mongodb_connection(db):
-            context['mongo_user'] = user_input("MongoDB user name")
-            context['mongo_password'] = user_input("MongoDB password")
+        context['mongo_user'] = user_input("MongoDB user name")
+        context['mongo_password'] = user_input("MongoDB password")
 
         try:
             db.authenticate(context['mongo_user'], context['mongo_password'])
