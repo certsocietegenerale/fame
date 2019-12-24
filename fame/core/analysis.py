@@ -347,8 +347,8 @@ class Analysis(MongoDict):
             if preloading_done and self['status'] == self.STATUS_PRELOADING:
                 self.queue_modules(dispatcher.general_purpose(), False)
 
-            if len(self['pending_modules']) == 0:
-                self._mark_as_finished()
+        if len(self['pending_modules']) == 0:
+            self._mark_as_finished()
 
     def _error_with_module(self, module, message):
         self.log("error", "{}: {}".format(module, message))
