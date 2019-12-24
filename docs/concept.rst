@@ -59,7 +59,7 @@ FAME relies on modules to add functionality. Modules are actually Python classes
 
 Several kind of modules can be created:
 
-* ``PreloadingModule``: these modules can be used to preload the information provided to FAME for analysis. This, for example, includes downloading a sample file when only a hash could was provided to FAME.
+* ``PreloadingModule``: these modules can be used to preload a given hash provided to FAME for analysis so that the sample file is available to FAME without the need of manually downloading it.
 * ``ProcessingModule``: this is where FAME's magic is. A ``ProcessingModule`` should define some automated analysis that can be performed on some types of files / analysis information.
 * ``ReportingModule``: this kind of module enables reporting options, such as send analysis results by email, or post a Slack notification when the analysis is finished.
 * ``ThreatIntelligenceModule``: this kind of modules acts on IOCs. a ``ThreatIntelligenceModule`` has two roles:

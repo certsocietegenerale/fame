@@ -65,7 +65,6 @@ class ModuleInfo(MongoDict):
             self._update_diffed_value('triggered_by', new_info['triggered_by'])
 
         elif self['type'] == 'Preloading':
-            self._update_diffed_value('acts_on', new_info['acts_on'])
             _update_queue()
 
         elif self['type'] == 'Filetype':
@@ -1117,18 +1116,15 @@ class VirtualizationModule(Module):
 
 
 class PreloadingModule(Module):
-    """ PreloadingModules can be used to perform any steps to
-        the analysis that need to be done prior to running the
-        analysis.
-        This for example involves downloading the sample
+    """ PreloadingModules can be used to download the sample
         binary from e.g. VirusTotal before queueing any
-        processing modules if only a hash was passed. Having
-        these PreloadingModules allows to update the Analysis
-        object with the new data and run the analysis from
-        these instead.
+        processing modules. Hence, PreloadingModules only work
+        on hashes. A successful execution of a PreloadingModule
+        updates the Analysis object with the new data and queues
+        the remaining modules as if the sample itself was uploaded
+        the FAME.
     """
 
-    acts_on = []
     queue = 'unix'
 
     def __init__(self, with_config=True):
@@ -1140,8 +1136,7 @@ class PreloadingModule(Module):
         """ To implement.
 
         Args:
-            target (string): the information submitted to FAME which
-                             needs to be preprocessed (e.g. hash).
+            target (string): the hash that is to be analyzed
         Raises:
             ModuleExecutionError: Preloading the analysis failed (e.g.
                                   no file for a given hash was found).
@@ -1177,7 +1172,6 @@ class PreloadingModule(Module):
             "type": "Preloading",
             "config": cls.config,
             "diffs": {},
-            "acts_on": iterify(cls.acts_on),
             "queue": cls.queue
         }
 

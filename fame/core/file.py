@@ -29,7 +29,6 @@ class File(MongoDict):
                  hash=""):
         # When only passing a dict
         if isinstance(values, dict):
-            self['needs_preloading'] = False
             self['comments'] = []
             MongoDict.__init__(self, values)
 
@@ -40,8 +39,6 @@ class File(MongoDict):
             self['groups'] = []
             self['owners'] = []
             self['comments'] = []
-
-            self['needs_preloading'] = True
 
             md5, sha1, sha256 = _hash_by_length(hash)
 
@@ -74,7 +71,6 @@ class File(MongoDict):
             self['owners'] = []
             self['comments'] = []
 
-            self['needs_preloading'] = False
 
             # filename should be set
             if filename is not None and stream is not None:
@@ -202,7 +198,6 @@ class File(MongoDict):
 
     # initialize all necessary values for hash analysis
     def _init_hash(self, hash):
-        self['needs_preloading'] = True
         self['type'] = 'hash'
         self['names'] = [hash]
         self['filepath'] = hash

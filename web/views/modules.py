@@ -319,7 +319,7 @@ class ModulesView(FlaskView, UIView):
         :param id: id of the named configuration.
 
         :form acts_on: comma-delimited list of FAME types this module can act on
-            (for Processing and Preloading modules).
+            (for Processing modules).
         :form triggered_by: comma-delimited list of triggers (only for Processing
             modules).
         :form queue: name of the queue to use for this module (for Processing and
@@ -358,9 +358,6 @@ class ModulesView(FlaskView, UIView):
                     update_queue()
 
             elif module['type'] == "Preloading":
-                if "acts_on" in request.form:
-                    module.update_setting_value('acts_on', request.form.get('acts_on', ''))
-
                 if 'queue' in request.form:
                     update_queue()
 
@@ -375,9 +372,9 @@ class ModulesView(FlaskView, UIView):
             return render({'module': clean_modules(module)}, 'modules/module_configuration.html')
 
     def list(self):
-        """List enabled Processing modules
+        """List enabled Processing and Preloading modules
 
-        .. :quickref: Module; List enabled Processing modules
+        .. :quickref: Module; List enabled Processing and Preloading modules
 
         :>json list modules: list of enabled modules.
         """

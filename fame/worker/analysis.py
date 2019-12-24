@@ -96,7 +96,7 @@ class Analysis(CoreAnalysis):
                     elif module.info['type'] == "Preloading":
                         # queue next preloading module
                         next_module = dispatcher.get_next_preloading_module(
-                            self._types_available(), self._tried_modules())
+                            self._tried_modules())
                         if next_module:
                             self.queue_modules(next_module)
 

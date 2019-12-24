@@ -6,7 +6,7 @@ FAME relies on modules to add functionality. Modules are actually Python classes
 
 Several kind of modules can be created:
 
-* ``PreloadingModule``: these modules are used to preload information prior to executing any processing module. A ``PreloadingModule`` should take the provided information from FAME and convert it to an object that can be processed by FAME (e.g. it can take a sample hash and download the corresponding sample from VirusTotal).
+* ``PreloadingModule``: these modules are used to preload the sample file prior to executing any processing module. A ``PreloadingModule`` should take the provided hash from FAME and download the corresponding sample from any source (e.g. VirusTotal).
 * ``ProcessingModule``: this is where FAME's magic is. A ``ProcessingModule`` should define some automated analysis that can be performed on some types of files / analysis information.
 * ``IsolatedProcessingModule``: this is a special ``ProcessingModule`` that will be executed inside a VM, because it contains risks of infection.
 * ``ReportingModule``: this kind of module enables reporting options, such as sending analysis results by email, or post a Slack notification when the analysis is finished.
@@ -34,21 +34,15 @@ The best practice is to do the following:
 Writing a Preloading module
 ===========================
 
-Preloading modules are used to transform a given information (e.g. sample hash) into something that FAME can analyze (e.g. sample binary).
-
-A preloading module can currently use the following inputs:
-
-* The hash of binary to analyze
-
-The preloading module might produce data that can be analyzed by FAME (e.g. sample binary).
+Preloading modules are used to download a sample file automatically to make it available to FAME.
 
 To define a new Preloading Module just create a Python class that inherits from :class:`fame.core.module.PreloadingModule` and implements :func:`fame.core.module.PreloadingModule.preload`.
 
-These methods should return a boolean indicating if the module successfully did its job. If the return value is ``True``, one thing will happen:
+These methods should return a boolean indicating if the sample was downloaded successfully. If the return value is ``True``, one thing will happen:
 
-* A tag with the module's name will automatically be added to the analysis. 
+* A tag with the module's name will automatically be added to the analysis.
 
-For example, the module `virustotal_download` has one goal: take a hash and download the sample from VirusTotal. If it could not download the sample successfully, it should return ``False`` so that the next preloading module can be scheduled.
+For example, the module `virustotal_download` takes a hash and download the sample from VirusTotal. If it could not download the sample successfully, it should return ``False`` so that the next preloading module can be scheduled.
 
 Here is the minimal code required for a preloading module::
 
@@ -62,7 +56,7 @@ Here is the minimal code required for a preloading module::
         # (optional) Describe what your module will do. This will be displayed to users.
         description = "Does nothing."
 
-        # This method will be called, with the object to preload in target
+        # This method will be called, with the hash of the sample in target
         def preload(self, target):
             return True
 
@@ -71,19 +65,10 @@ Scope
 
 It may happen that an analyst only has a hash available for analysis. In this case, FAME can download the sample from configured sample sources and trigger an analysis of the sample by its own.
 
-The most important attribute is :attr:`fame.core.module.PreloadingModule.acts_on` which defines the type of information this preloading module is designed for. As an example, here is the definition of the `virustotal_download` module::
-
-    class VirusTotalDownload(PreloadingModule):
-        name = "virustotal_download"
-        description = "Download file from VT and launch new analysis."
-        acts_on = ["hash"]
-
-Not specifying this attribute means that the module can analyze any type of information that can be submitted to FAME.
-
 Adding preloading results
 -------------------------
 
-Once the module successfully preload the information provided by FAME, it must add the result to the analysis. As soon as such result is added, FAME schedules the regular analysis based on what was added to the analysis.
+Once the module successfully preloaded the sample for FAME, it must add the result to the analysis. As soon as such result is added, FAME schedules the regular analysis based on what was added to the analysis.
 
 You can declare a preloading result by calling :func:`fame.core.module.PreloadingModule.add_preloaded_file`. The function expects a filename and a file-like object with the available data.
 

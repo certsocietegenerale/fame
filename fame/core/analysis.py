@@ -305,7 +305,7 @@ class Analysis(MongoDict):
 
     # Determine if a module could be run on the current status of analysis
     def _can_execute_module(self, module):
-        if not module.info['acts_on']:
+        if 'acts_on' not in module.info or not module.info['acts_on']:
             return True
         else:
             for source_type in iterify(module.info['acts_on']):
@@ -330,17 +330,13 @@ class Analysis(MongoDict):
     def _automatic(self, preloading_done=False):
         if self.magic_enabled():
             if len(self['pending_modules']) == 0 and self['status'] == self.STATUS_PENDING:
-                if self._file['needs_preloading']:
+                if self._file['type'] == "hash":
                     self['status'] = self.STATUS_PRELOADING
                     self.save()
-                    preloading_modules = dispatcher.get_preloading_modules_for(self._file['type'])
-                    preloading_module_names = [module.info['name'] for module in preloading_modules]
 
-                    # we just start with the first one, other preloading modules
-                    # will be scheduled on demand if the currently running module
-                    # does not return True
-                    if len(preloading_module_names) > 0:
-                        self.queue_modules(preloading_module_names[0], False)
+                    preloading_module = dispatcher.get_next_preloading_module()
+                    if preloading_module:
+                        self.queue_modules(preloading_module, False)
                 else:
                     self.queue_modules(dispatcher.general_purpose(), False)
 
