@@ -52,9 +52,7 @@ class ModuleInfo(MongoDict):
         return '/'.join(self['path'].split('.')[2:-1]) + '/details.html'
 
     def update_config(self, new_info):
-        if self['type'] == 'Processing':
-            self['generates'] = new_info['generates']
-
+        def _update_queue():
             self['queue'] = new_info['queue']
             if 'queue' in self['diffs']:
                 if self['diffs']['queue'] == new_info['queue']:
@@ -62,8 +60,15 @@ class ModuleInfo(MongoDict):
                 else:
                     self['queue'] = self['diffs']['queue']
 
+        if self['type'] == 'Processing':
+            self['generates'] = new_info['generates']
+            _update_queue()
             self._update_diffed_value('acts_on', new_info['acts_on'])
             self._update_diffed_value('triggered_by', new_info['triggered_by'])
+
+        elif self['type'] == 'Preloading':
+            _update_queue()
+
         elif self['type'] == 'Filetype':
             self._update_diffed_value('acts_on', new_info['acts_on'])
 
@@ -1103,6 +1108,71 @@ class VirtualizationModule(Module):
             "type": "Virtualization",
             "config": cls.config,
             "diffs": {},
+        }
+
+        init_config_values(info)
+
+        return ModuleInfo(info)
+
+
+class PreloadingModule(Module):
+    """ PreloadingModules can be used to download the sample
+        binary from e.g. VirusTotal before queueing any
+        processing modules. Hence, PreloadingModules only work
+        on hashes. A successful execution of a PreloadingModule
+        updates the Analysis object with the new data and queues
+        the remaining modules as if the sample itself was uploaded
+        the FAME.
+    """
+
+    queue = 'unix'
+
+    def __init__(self, with_config=True):
+        Module.__init__(self, with_config)
+        self.results = None
+        self.tags = []
+
+    def preload(self, target):
+        """ To implement.
+
+        Args:
+            target (string): the hash that is to be analyzed
+        Raises:
+            ModuleExecutionError: Preloading the analysis failed (e.g.
+                                  no file for a given hash was found).
+        """
+        raise NotImplementedError
+
+    def add_preloaded_file(self, filepath, fd):
+        self._analysis.add_preloaded_file(filepath, fd)
+
+    def init_options(self, options):
+        for option in options:
+            setattr(self, option, options[option])
+
+    def execute(self, analysis):
+        self._analysis = analysis
+        self.init_options(analysis['options'])
+        return self.preload(self._analysis.get_main_file())
+
+    def log(self, level, message):
+        """Add a log message to the analysis
+
+        Args:
+            level: string to define the log level (``debug``, ``info``, ``warning`` or ``error``).
+            message: free text message containing the log information.
+        """
+        self._analysis.log(level, "%s: %s" % (self.name, message))
+
+    @classmethod
+    def static_info(cls):
+        info = {
+            "name": cls.name,
+            "description": cls.description,
+            "type": "Preloading",
+            "config": cls.config,
+            "diffs": {},
+            "queue": cls.queue
         }
 
         init_config_values(info)

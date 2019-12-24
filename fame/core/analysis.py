@@ -1,6 +1,7 @@
 import os
 import requests
 import datetime
+import traceback
 from shutil import copy
 from hashlib import md5
 from urlparse import urljoin
@@ -25,6 +26,7 @@ def run_module(analysis_id, module):
 class Analysis(MongoDict):
     STATUS_ERROR = 'error'
     STATUS_PENDING = 'pending'
+    STATUS_PRELOADING = 'preloading'
     STATUS_RUNNING = 'running'
     STATUS_FINISHED = 'finished'
 
@@ -197,6 +199,40 @@ class Analysis(MongoDict):
         self.collection.update_one({'_id': self['_id'], 'iocs.value': value},
                                    {'$addToSet': {'iocs.$.sources': source}})
 
+    def _store_preloaded_file(self, filepath=None, fd=None):
+        if fame_config.remote:
+            if not filepath and not fd:
+                raise ValueError(
+                    "Please provide either the path to the file or a file-like "
+                    "object containing the data.")
+
+            if filepath and fd:
+                self.log("debug",
+                        "Please provide either the path to the file or a "
+                        "file-like object containing the data, not both. "
+                        "Chosing the file-like object for now.")
+                response = send_file_to_remote(fd, '/files/')
+            else:
+                response = send_file_to_remote(filepath, '/files/')
+
+            return File(json_util.loads(response.text)['file'])
+        else:
+            return File(filename=os.path.basename(filepath), stream=fd)
+
+    def add_preloaded_file(self, filepath, fd):
+        f = self._store_preloaded_file(filepath, fd)
+        f.append_to('analysis', self['_id'])
+
+        if f['names'] == ['file']:
+            f['names'] = self._file['names']
+            f.save()
+
+        self['file'] = f['_id']
+        self._file = f
+        self.save()
+
+        self._automatic(preloading_done=True)
+
     # Starts / Resumes an analysis to reach the target module
     def resume(self):
         was_resumed = False
@@ -241,7 +277,7 @@ class Analysis(MongoDict):
 
         # This test prevents multiple execution of the same module
         if self.append_to('executed_modules', module_name):
-            module = self._get_module(module_name)
+            module = dispatcher.get_module(module_name)
 
             if module is None:
                 self._error_with_module(module_name, "module has been removed or disabled.")
@@ -249,7 +285,10 @@ class Analysis(MongoDict):
                 try:
                     module.initialize()
 
-                    self.update_value('status', self.STATUS_RUNNING)
+                    if module.info['type'] == "Preloading":
+                        self.update_value('status', self.STATUS_PRELOADING)
+                    else:
+                        self.update_value('status', self.STATUS_RUNNING)
 
                     if module.execute(self):
                         # Save results, if any
@@ -263,9 +302,17 @@ class Analysis(MongoDict):
 
                         self.add_tag(module_name)
 
+                    elif module.info['type'] == "Preloading":
+                        # queue next preloading module
+                        next_module = dispatcher.get_next_preloading_module(
+                            self._tried_modules())
+                        if next_module:
+                            self.queue_modules(next_module)
+
                     self.log('debug', "Done with {0}".format(module_name))
-                except Exception, e:
-                    self._error_with_module(module_name, str(e))
+                except Exception:
+                    tb = traceback.format_exc()
+                    self._error_with_module(module_name, tb)
 
             self.remove_from('pending_modules', module_name)
             self.remove_from('waiting_modules', module_name)
@@ -310,7 +357,10 @@ class Analysis(MongoDict):
             return path
 
     def get_main_file(self):
-        return self.filepath(self._file['filepath'])
+        filepath = self._file['filepath']
+        if self._file['type'] == "hash":
+            return filepath
+        return self.filepath(filepath)
 
     def get_files(self, file_type):
         results = []
@@ -371,7 +421,7 @@ class Analysis(MongoDict):
 
     # Determine if a module could be run on the current status of analysis
     def _can_execute_module(self, module):
-        if not module.info['acts_on']:
+        if 'acts_on' not in module.info or not module.info['acts_on']:
             return True
         else:
             for source_type in iterify(module.info['acts_on']):
@@ -393,9 +443,20 @@ class Analysis(MongoDict):
         return self['executed_modules'] + self['canceled_modules']
 
     # Automatic analysis
-    def _automatic(self):
+    def _automatic(self, preloading_done=False):
         if self.magic_enabled():
-            if len(self['pending_modules']) == 0 and self['status'] == 'pending':
+            if len(self['pending_modules']) == 0 and self['status'] == self.STATUS_PENDING:
+                if self._file['type'] == "hash":
+                    self['status'] = self.STATUS_PRELOADING
+                    self.save()
+
+                    preloading_module = dispatcher.get_next_preloading_module()
+                    if preloading_module:
+                        self.queue_modules(preloading_module, False)
+                else:
+                    self.queue_modules(dispatcher.general_purpose(), False)
+
+            if preloading_done and self['status'] == self.STATUS_PRELOADING:
                 self.queue_modules(dispatcher.general_purpose(), False)
 
         if len(self['pending_modules']) == 0:
