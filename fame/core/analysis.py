@@ -245,7 +245,7 @@ class Analysis(MongoDict):
         for module_name in iterify(modules):
             self.log("debug", "Trying to queue module '{0}'".format(module_name))
             if module_name not in self['executed_modules'] and module_name not in self['pending_modules']:
-                module = self._get_module(module_name)
+                module = dispatcher.get_module(module_name)
 
                 if self._can_execute_module(module):
                     if self.append_to('pending_modules', module_name):
@@ -387,9 +387,6 @@ class Analysis(MongoDict):
         self.update_value('status', self.STATUS_FINISHED)
         self.update_value('end_date', datetime.datetime.now())
         self._reporting_hook('done')
-
-    def _get_module(self, module_name):
-        return dispatcher.get_processing_module(module_name)
 
     def _error(self, reason):
         self.log('error', reason)
