@@ -4,7 +4,10 @@ from StringIO import StringIO
 from shutil import copyfileobj
 from hashlib import md5
 from pymongo import DESCENDING
-from flask import render_template, url_for, request, flash, make_response, abort, jsonify
+from flask import (
+    render_template, url_for, request, flash,
+    make_response, abort, jsonify
+)
 from flask_login import current_user
 from flask_classy import FlaskView, route
 from flask_paginate import Pagination
@@ -135,21 +138,7 @@ class AnalysesView(FlaskView, UIView):
         })
 
     def new(self):
-        # See if Hash submission is available
-        config = Config.get(name="virustotal")
-
-        hash_capable = False
-        if config:
-            try:
-                config.get_values()
-                hash_capable = True
-            except Exception:
-                hash_capable = False
-
-        return render_template(
-            'analyses/new.html',
-            hash_capable=hash_capable, comments_enabled=comments_enabled(),
-            options=dispatcher.options)
+        return render_template('analyses/new.html', options=dispatcher.options, comments_enabled=comments_enabled())
 
     def _validate_form(self, groups, modules, options):
         for group in groups:
@@ -200,23 +189,7 @@ class AnalysesView(FlaskView, UIView):
                 f.update_value('type', 'url')
                 f.update_value('names', [url])
         elif hash:
-            config = Config.get(name="virustotal")
-            if config:
-                try:
-                    config = config.get_values()
-
-                    params = {'apikey': config.api_key, 'hash': hash}
-                    response = requests.get('https://www.virustotal.com/vtapi/v2/file/download', params=params)
-                    if response.status_code == 403:
-                        flash('This requires a valid API key.', 'danger')
-                    elif response.status_code == 404:
-                        flash('No file found with this hash.', 'danger')
-                    elif response.status_code == 200:
-                        f = File(filename='{}.bin'.format(hash), stream=StringIO(response.content))
-                except MissingConfiguration:
-                    flash("VirusTotal is not properly configured.", 'danger')
-            else:
-                flash("There seems to be a problem with your installation (no 'virustotal' configuration)", 'danger')
+            f = File(hash=hash)
         else:
             flash('You have to submit a file, a URL or a hash', 'danger')
 
@@ -351,7 +324,7 @@ class AnalysesView(FlaskView, UIView):
             for filepath in analysis['generated_files'][file_type]:
                 filepath = filepath.encode('utf-8')
                 if filehash == md5(filepath).hexdigest():
-                    return file_download(filehash)
+                    return file_download(filepath)
 
         filepath = analysis._file['filepath'].encode('utf-8')
         if filehash == md5(filepath).hexdigest():
@@ -368,7 +341,7 @@ class AnalysesView(FlaskView, UIView):
         # Create parent dirs if they don't exist
         try:
             os.makedirs(dirpath)
-        except:
+        except OSError:
             pass
 
         with open(filepath, "wb") as fd:
