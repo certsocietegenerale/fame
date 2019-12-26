@@ -87,7 +87,7 @@
                         <li>
                             <a href="{{ url_for('AnalysesView:get', id=analysis._id) }}">
                                 <div class="last-analyses-status">
-                                    {% if analysis.status == 'running' %}
+                                    {% if analysis.status in ('running', 'preloading') %}
                                         <i class="fa fa-refresh text-warning spinner"></i>
                                     {% elif analysis.status == 'finished' %}
                                         <i class="fa fa-check text-success"></i>

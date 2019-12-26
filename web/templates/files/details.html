@@ -84,7 +84,9 @@
                     <hr>
                     <div class="stats">
                         <ul>
-                            <li><a href="{{ url_for('FilesView:download', id=file._id) }}"><i class="pe-7s-cloud-download"></i> Download</a></li>
+                            {% if file.type != 'hash' %}
+                                <li><a href="{{ url_for('FilesView:download', id=file._id) }}"><i class="pe-7s-cloud-download"></i> Download</a></li>
+                            {% endif %}
                             {% if request.endpoint == 'AnalysesView:get' %}
                                 <li><a href="{{ url_for('FilesView:get', id=file._id)}}"><i class="pe-7s-note2"></i> All analyses</a></li>
                             {% endif %}
