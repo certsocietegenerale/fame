@@ -257,6 +257,15 @@ class Module(object):
             if config['value'] is None:
                 setattr(self, config['name'], config['default'])
 
+    def log(self, level, message):
+        """Add a log message to the analysis
+
+        Args:
+            level: string to define the log level (``debug``, ``info``, ``warning`` or ``error``).
+            message: free text message containing the log information.
+        """
+        self._analysis.log(level, "%s: %s" % (self.name, message))
+
     @classmethod
     def named_config(cls, name):
         config = {
@@ -316,15 +325,6 @@ class ProcessingModule(Module):
         Module.__init__(self, with_config)
         self.results = None
         self.tags = []
-
-    def log(self, level, message):
-        """Add a log message to the analysis
-
-        Args:
-            level: string to define the log level (``debug``, ``info``, ``warning`` or ``error``).
-            message: free text message containing the log information.
-        """
-        self._analysis.log(level, "%s: %s" % (self.name, message))
 
     def register_files(self, file_type, locations):
         """Add a generated file to the analysis.
@@ -1154,15 +1154,6 @@ class PreloadingModule(Module):
         self._analysis = analysis
         self.init_options(analysis['options'])
         return self.preload(self._analysis.get_main_file())
-
-    def log(self, level, message):
-        """Add a log message to the analysis
-
-        Args:
-            level: string to define the log level (``debug``, ``info``, ``warning`` or ``error``).
-            message: free text message containing the log information.
-        """
-        self._analysis.log(level, "%s: %s" % (self.name, message))
 
     @classmethod
     def static_info(cls):
