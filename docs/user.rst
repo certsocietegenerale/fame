@@ -36,7 +36,7 @@ This page will enable you to analyze a new object.
 You can analyze several types of objects: a file ``(1)``, an URL ``(2)`` or a Hash ``(3)``. You should note the following:
 
 * When what you really want is to analyze a file that is available at a certain URL, you can submit the URL and specify the `url_download` module.
-* Submitting a Hash will try to fetch the file from VirusTotal. This option is only available when you have a VirusTotal Intelligence account configured.
+* Submitting a Hash will try to run all available preloading modules sequentially until one of them could provide the sample.
 
 Once you have selected the object you would like to analyze, you can select the module that should be executed ``(4)``. Leaving this field empty (by default) will perform a :ref:`concept-magic` analysis. This will most likely fit your needs. If you want to do a :ref:`concept-targeted`, you can type and select the module of your choice in this field.
 
