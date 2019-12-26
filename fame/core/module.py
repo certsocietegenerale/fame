@@ -1137,9 +1137,9 @@ class PreloadingModule(Module):
 
         Args:
             target (string): the hash that is to be analyzed
-        Raises:
-            ModuleExecutionError: Preloading the analysis failed (e.g.
-                                  no file for a given hash was found).
+        Returns:
+            A boolean indicating whether or not a file could be downloaded
+            for the given hash
         """
         raise NotImplementedError
 
