@@ -145,9 +145,6 @@
                             {% endif %}
 
                             <ul>
-                                {% if module.acts_on %}
-                                    <li><span class="label">Acts On</span> {{module.acts_on|smart_join}}</li>
-                                {% endif %}
                                 <li><span class="label">Queue</span> {{module.queue}}</li>
                                 {% if module.enabled %}
                                     <li><i class="fa fa-check text-success"></i> enabled</li>
