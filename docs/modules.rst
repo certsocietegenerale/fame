@@ -65,17 +65,12 @@ Scope
 
 It may happen that an analyst only has a hash available for analysis. In this case, FAME can download the sample from configured sample sources and trigger an analysis of the sample by its own.
 
-Adding preloading results
--------------------------
+Adding the preloading result
+----------------------------
 
-Once the module successfully preloaded the sample for FAME, it must add the result to the analysis. As soon as such result is added, FAME schedules the regular analysis based on what was added to the analysis.
+Once the module successfully preloaded the sample for FAME, it must add the file to the analysis. Based on what type the file is, FAME then schedules suitable processing modules (if magic mode is enabled).
 
-You can declare a preloading result by calling :func:`fame.core.module.PreloadingModule.add_preloaded_file`. The function expects a filename and a file-like object with the available data.
-
-Testing Preloading Modules
---------------------------
-
-See :ref:`testing_processing_modules`.
+You can add a preloaded file by calling :func:`fame.core.module.PreloadingModule.add_preloaded_file`. The function expects either a path to a file or a file-like object with the available data (file-like objects have precedence if both are provided).
 
 Writing a Processing module
 ===========================
