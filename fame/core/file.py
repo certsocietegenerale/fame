@@ -42,61 +42,67 @@ class File(MongoDict):
             MongoDict.__init__(self, values)
 
         elif hash:
-            MongoDict.__init__(self, {})
-            self['probable_names'] = []
-            self['parent_analyses'] = []
-            self['groups'] = []
-            self['owners'] = []
-            self['comments'] = []
-
-            md5, sha1, sha256 = _hash_by_length(hash)
-
-            self.existing = False
-
-            existing_file = (
-                (
-                    # search for existing samples first
-                    self.collection.find_one({'sha256': sha256}) if sha256 else
-                    self.collection.find_one({'sha1': sha1}) if sha1 else
-                    self.collection.find_one({'md5': md5}) if md5 else None
-                )
-                # otherwise, try the hash as filename (aka hash submission)
-                or self.collection.find_one({'names': [hash]})
-            )
-
-            if existing_file:
-                self.existing = True
-                self.update(existing_file)
-            else:
-                self._compute_default_properties(hash_only=True)
-                self._init_hash(hash)
-                self.save()
+            self._init_with_hash(hash)
 
         else:
-            MongoDict.__init__(self, {})
-            self['probable_names'] = []
-            self['parent_analyses'] = []
-            self['groups'] = []
-            self['owners'] = []
-            self['comments'] = []
+            self._init_with_file(filename, stream, create)
 
-            # filename should be set
-            if filename is not None and stream is not None:
-                self._compute_hashes(stream)
+    def _init_with_hash(self, hash):
+        MongoDict.__init__(self, {})
+        self['probable_names'] = []
+        self['parent_analyses'] = []
+        self['groups'] = []
+        self['owners'] = []
+        self['comments'] = []
 
-            # If the file already exists in the database, update it
-            self.existing = False
-            existing_file = self.collection.find_one({'sha256': self['sha256']})
+        md5, sha1, sha256 = _hash_by_length(hash)
 
-            if existing_file:
-                self._add_to_previous(existing_file, filename)
-                self.existing = True
+        self.existing = False
 
-            # Otherwise, compute default properties and save
-            elif create:
-                self._store_file(filename, stream)
-                self._compute_default_properties()
-                self.save()
+        existing_file = (
+            (
+                # search for existing samples first
+                self.collection.find_one({'sha256': sha256}) if sha256 else
+                self.collection.find_one({'sha1': sha1}) if sha1 else
+                self.collection.find_one({'md5': md5}) if md5 else None
+            )
+            # otherwise, try the hash as filename (aka hash submission)
+            or self.collection.find_one({'names': [hash]})
+        )
+
+        if existing_file:
+            self.existing = True
+            self.update(existing_file)
+        else:
+            self._compute_default_properties(hash_only=True)
+            self._init_hash(hash)
+            self.save()
+
+    def _init_with_file(self, filename, stream, create):
+        MongoDict.__init__(self, {})
+        self['probable_names'] = []
+        self['parent_analyses'] = []
+        self['groups'] = []
+        self['owners'] = []
+        self['comments'] = []
+
+        # filename should be set
+        if filename is not None and stream is not None:
+            self._compute_hashes(stream)
+
+        # If the file already exists in the database, update it
+        self.existing = False
+        existing_file = self.collection.find_one({'sha256': self['sha256']})
+
+        if existing_file:
+            self._add_to_previous(existing_file, filename)
+            self.existing = True
+
+        # Otherwise, compute default properties and save
+        elif create:
+            self._store_file(filename, stream)
+            self._compute_default_properties()
+            self.save()
 
     def add_comment(self, analyst_id, comment, analysis_id=None, probable_name=None, notify=None):
         if probable_name:
