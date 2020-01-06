@@ -1156,11 +1156,13 @@ class PreloadingModule(Module):
             self.init_options(analysis['options'])
             return self.preload(self._analysis.get_main_file())
         except ModuleExecutionError, e:
-            self.log("error", "Could not run on %s: %s" % (target, e))
+            self.log("error", "Could not run on %s: %s" % (
+                self._analysis.get_main_file(), e))
             return False
         except:
             tb = traceback.format_exc()
-            self.log("error", "Exception occurred while execting module on %s.\n %s" % (target, tb))
+            self.log("error", "Exception occurred while execting module on %s.\n %s" % (
+                self._analysis.get_main_file(), tb))
             return False
 
     @classmethod
