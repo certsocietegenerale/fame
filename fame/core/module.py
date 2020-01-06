@@ -1151,9 +1151,17 @@ class PreloadingModule(Module):
             setattr(self, option, options[option])
 
     def execute(self, analysis):
-        self._analysis = analysis
-        self.init_options(analysis['options'])
-        return self.preload(self._analysis.get_main_file())
+        try:
+            self._analysis = analysis
+            self.init_options(analysis['options'])
+            return self.preload(self._analysis.get_main_file())
+        except ModuleExecutionError, e:
+            self.log("error", "Could not run on %s: %s" % (target, e))
+            return False
+        except:
+            tb = traceback.format_exc()
+            self.log("error", "Exception occurred while execting module on %s.\n %s" % (target, tb))
+            return False
 
     @classmethod
     def static_info(cls):
