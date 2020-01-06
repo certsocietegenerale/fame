@@ -208,9 +208,9 @@ class Analysis(MongoDict):
 
             if filepath and fd:
                 self.log("debug",
-                        "Please provide either the path to the file or a "
-                        "file-like object containing the data, not both. "
-                        "Chosing the file-like object for now.")
+                         "Please provide either the path to the file or a "
+                         "file-like object containing the data, not both. "
+                         "Choosing the file-like object for now.")
                 response = send_file_to_remote(fd, '/files/')
             else:
                 response = send_file_to_remote(filepath, '/files/')
