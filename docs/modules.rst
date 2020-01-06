@@ -29,48 +29,7 @@ The best practice is to do the following:
 * Create a directory for your module inside one of the repositories.
 * Make sure your directory is a valid Python package (do not use spaces, make sure every directory in the path as a ``__init__.py`` file).
 * Create a python file inside your directory for your module.
-* Inside your python file, create a class that inherits from :class:`fame.core.module.PreloadingModule`, :class:`fame.core.module.ProcessingModule`, :class:`fame.core.module.ReportingModule`, :class:`fame.core.module.ThreatIntelligenceModule` or :class:`fame.core.module.AntivirusModule`.
-
-Writing a Preloading module
-===========================
-
-Preloading modules are used to download a sample file automatically to make it available to FAME.
-
-To define a new Preloading Module just create a Python class that inherits from :class:`fame.core.module.PreloadingModule` and implements :func:`fame.core.module.PreloadingModule.preload`.
-
-These methods should return a boolean indicating if the sample was downloaded successfully. If the return value is ``True``, one thing will happen:
-
-* A tag with the module's name will automatically be added to the analysis.
-
-For example, the module `virustotal_download` takes a hash and download the sample from VirusTotal. If it could not download the sample successfully, it should return ``False`` so that the next preloading module can be scheduled.
-
-Here is the minimal code required for a preloading module::
-
-    from fame.core.module import PreloadingModule
-
-
-    class Dummy(PreloadingModule):
-        # You have to give your module a name, and this name should be unique.
-        name = "dummy"
-
-        # (optional) Describe what your module will do. This will be displayed to users.
-        description = "Does nothing."
-
-        # This method will be called, with the hash of the sample in target
-        def preload(self, target):
-            return True
-
-Scope
------
-
-It may happen that an analyst only has a hash available for analysis. In this case, FAME can download the sample from configured sample sources and trigger an analysis of the sample by its own.
-
-Adding the preloading result
-----------------------------
-
-Once the module successfully preloaded the sample for FAME, it must add the file to the analysis. Based on what type the file is, FAME then schedules suitable processing modules (if magic mode is enabled).
-
-You can add a preloaded file by calling :func:`fame.core.module.PreloadingModule.add_preloaded_file`. The function expects either a path to a file or a file-like object with the available data (file-like objects have precedence if both are provided).
+* Inside your python file, create a class that inherits from :class:`fame.core.module.ProcessingModule`, :class:`fame.core.module.PreloadingModule`, :class:`fame.core.module.ReportingModule`, :class:`fame.core.module.ThreatIntelligenceModule` or :class:`fame.core.module.AntivirusModule`.
 
 Writing a Processing module
 ===========================
@@ -356,6 +315,47 @@ When it comes to testing your processing modules during development, you have tw
 * Use a full FAME instance and test your module by launching new analyses using the web interface. You will need a running worker to execute your module. Note that the workers will not automatically reload modified code, so you should make sure to click on the `Reload` button on :ref:`admin-configuration`.
 * The simpler option is to use the :ref:`single_module` utility. This way, you don't need a webserver, a worker or even a MongoDB instance.
 * An ``IsolatedProcessingModule`` can also be tested with the :ref:`single_module` utility. By default, it will execute inside a Virtual Machine (as it should). If you want to test your module without this overhead (if you are already inside the VM for example), you can use the ``-l, --local`` switch.
+
+Writing a Preloading module
+===========================
+
+Preloading modules are used to download a sample file automatically to make it available to FAME.
+
+To define a new Preloading Module just create a Python class that inherits from :class:`fame.core.module.PreloadingModule` and implements :func:`fame.core.module.PreloadingModule.preload`.
+
+These methods should return a boolean indicating if the sample was downloaded successfully. If the return value is ``True``, one thing will happen:
+
+* A tag with the module's name will automatically be added to the analysis.
+
+For example, the module `virustotal_download` takes a hash and download the sample from VirusTotal. If it could not download the sample successfully, it should return ``False`` so that the next preloading module can be scheduled.
+
+Here is the minimal code required for a preloading module::
+
+    from fame.core.module import PreloadingModule
+
+
+    class Dummy(PreloadingModule):
+        # You have to give your module a name, and this name should be unique.
+        name = "dummy"
+
+        # (optional) Describe what your module will do. This will be displayed to users.
+        description = "Does nothing."
+
+        # This method will be called, with the hash of the sample in target
+        def preload(self, target):
+            return True
+
+Scope
+-----
+
+It may happen that an analyst only has a hash available for analysis. In this case, FAME can download the sample from configured sample sources and trigger an analysis of the sample by its own.
+
+Adding the preloading result
+----------------------------
+
+Once the module successfully preloaded the sample for FAME, it must add the file to the analysis. Based on what type the file is, FAME then schedules suitable processing modules (if magic mode is enabled).
+
+You can add a preloaded file by calling :func:`fame.core.module.PreloadingModule.add_preloaded_file`. The function expects either a path to a file or a file-like object with the available data (file-like objects have precedence if both are provided).
 
 Common module features
 ======================
