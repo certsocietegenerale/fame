@@ -327,7 +327,7 @@ These methods should return a boolean indicating if the sample was downloaded su
 
 * A tag with the module's name will automatically be added to the analysis.
 
-For example, the module `virustotal_download` takes a hash and download the sample from VirusTotal. If it could not download the sample successfully, it should return ``False`` so that the next preloading module can be scheduled.
+For example, the module `virustotal_download` takes a hash and download the sample from VirusTotal. If it could not download the sample successfully, it should return ``False`` so that the next preloading module can be scheduled.  In that case the module should print a log message showing what went wrong.
 
 Here is the minimal code required for a preloading module::
 
