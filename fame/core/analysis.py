@@ -361,7 +361,7 @@ class Analysis(MongoDict):
         filepath = self._file['filepath']
         if self._file['type'] == "hash":
             return filepath
-        return self.filepath(filehash)
+        return self.filepath(filepath)
 
     def get_files(self, file_type):
         results = []
