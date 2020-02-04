@@ -210,12 +210,14 @@ class Analysis(MongoDict):
             self.log("debug", "Trying to queue module '{0}'".format(module_name))
             if module_name not in self['executed_modules'] and module_name not in self['pending_modules']:
                 module = self._get_module(module_name)
-
-                if self._can_execute_module(module):
-                    if self.append_to('pending_modules', module_name):
-                        run_module.apply_async((self['_id'], module_name), queue=module.info['queue'])
-                elif fallback_waiting:
-                    self.append_to('waiting_modules', module_name)
+                if module is None:
+                    self._error_with_module(module_name, "module has been removed or disabled.")
+                else:
+                    if self._can_execute_module(module):
+                        if self.append_to('pending_modules', module_name):
+                            run_module.apply_async((self['_id'], module_name), queue=module.info['queue'])
+                    elif fallback_waiting:
+                        self.append_to('waiting_modules', module_name)
 
     # Run specific module, should only be executed on celery worker
     def run(self, module_name):
