@@ -283,7 +283,7 @@ class AnalysesView(FlaskView, UIView):
         options = get_options()
         if options is None:
             return validation_error()
-        
+
         valid_submission = self._validate_form(groups, modules, options)
         if not valid_submission:
             return validation_error()
@@ -413,3 +413,16 @@ class AnalysesView(FlaskView, UIView):
                 return file_download(filepath)
             else:
                 abort(404)
+
+    @route('/<id>/refresh-iocs')
+    def refresh_iocs(self, id):
+        """Refresh IOCs with Threat Intel modules
+
+        .. :quickref: Analysis; Refresh IOCs with Threat Intel modules.
+
+        :param id: id of the analysis.
+        """
+        analysis = Analysis(get_or_404(current_user.analyses, _id=id))
+        analysis.refresh_iocs()
+
+        return redirect(analysis, url_for('AnalysesView:get', id=analysis["_id"]))

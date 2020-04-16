@@ -157,6 +157,21 @@ class Analysis(MongoDict):
             self._file.add_probable_name(probable_name)
             self.append_to('probable_names', probable_name)
 
+    def refresh_iocs(self):
+        for ioc in self["iocs"]:
+            value = ioc["value"]
+            ti_tags, ti_indicators = self._lookup_ioc(value)
+            if ti_tags:
+                self.collection.update_one({'_id': self['_id'], 'iocs.value': value},
+                                           {'$set': {'iocs.$.ti_tags': ti_tags}})
+
+            if ti_indicators:
+                self.collection.update_one({'_id': self['_id'], 'iocs.value': value},
+                                           {'$set': {'iocs.$.ti_indicators': ti_indicators}})
+
+            ioc["ti_tags"] = ti_tags
+            ioc["ti_indicators"] = ti_indicators
+
     def add_ioc(self, value, source, tags=[]):
         # First, we need to make sure there is a record for this IOC
         r = self.collection.update_one({'_id': self['_id'], 'iocs.value': {'$ne': value}},
