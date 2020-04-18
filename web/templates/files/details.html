@@ -80,25 +80,29 @@
 
                 <div class="footer">
                     <br />
-                    {% if file.type != 'url' %}
                     <hr>
                     <div class="stats">
                         <ul>
                             {% if file.type != 'hash' %}
                                 <li><a href="{{ url_for('FilesView:download', id=file._id) }}"><i class="pe-7s-cloud-download"></i> Download</a></li>
                             {% endif %}
+
                             {% if request.endpoint == 'AnalysesView:get' %}
                                 <li><a href="{{ url_for('FilesView:get', id=file._id)}}"><i class="pe-7s-note2"></i> All analyses</a></li>
                             {% endif %}
+                            {% if file.type != 'url' %}
 
-                            {% for module in av_modules %}
+                                <li><a href="{{ url_for('FilesView:download', id=file._id) }}"><i class="pe-7s-cloud-download"></i> Download</a></li>
+
+                                {% for module in av_modules %}
                                 <li id="av-sent-{{module}}" {% if not file.antivirus[module] %}class="hidden"{% endif %} {% if file.antivirus[module] is string %}data-toggle="tooltip" data-placement="top" title="{{file.antivirus[module]}}"{% endif %}>
                                     <i class="fa fa-check text-success"></i> {{module}}
                                 </li>
                                 <li id="av-sendto-{{module}}" {% if file.antivirus[module] %}class="hidden"{% endif %}>
                                     <a class="av-submission-link" href="{{ url_for('FilesView:submit_to_av', id=file._id, module=module) }}" data-module="{{module}}"><i class="fa fa-send"></i> Send to {{module}}</a>
                                 </li>
-                            {% endfor %}
+                                {% endfor %}
+                            {% endif %}
 
                             <script src="{{ url_for('static', filename='js/fame-file.js') }}"></script>
                             <script>
@@ -106,7 +110,6 @@
                             </script>
                         </ul>
                     </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -143,7 +146,7 @@
 
                 <div class="content comment-form">
                     <form class="form-horizontal" method="post" action="{{url_for('FilesView:add_comment', id=file._id)}}">
-        
+
                         {% if analysis %}
                             <input type="hidden" name="analysis" value="{{analysis._id}}" />
                         {% endif %}
@@ -156,16 +159,30 @@
                                 </div>
                             </div>
                         {% endif %}
-        
+
                         <div class="form-group">
                             <label for="comment" class="col-sm-2 control-label">Comment</label>
                             <div class="col-sm-8">
                                 <textarea type="text" class="form-control small-text" name="comment" placeholder="Comment" required></textarea>
                             </div>
                         </div>
-
+			<div class="form-group text-center">
+			  <label class="checkbox checkbox-inline" style="padding-top:2px">
+			    <input type="checkbox" name="notify" unchecked data-toggle="checkbox">Notify
+			  </label>
+			  <a class="help" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Notify"
+			     data-html="true" data-content="When enabled, analyst will be notified by mail about the new comment."
+			     data-placement="top">
+			    <i class="glyphicon glyphicon-question-sign"></i>
+			  </a>
+			</div>
+			<script>
+			  $(function () {
+			  $('[data-toggle="popover"]').popover()
+			  })
+			</script>
                         <div class="form-group text-center">
-                            <button type="submit" class="btn btn-info btn-fill">Add Comment</button>
+                          <button type="submit" class="btn btn-info btn-fill">Add Comment</button>
                         </div>
                     </form>
                 </div>

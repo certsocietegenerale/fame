@@ -974,7 +974,7 @@ class FiletypeModule(Module):
 
     acts_on = []
 
-    def recognize(filepath, current_type):
+    def recognize(self, filepath, current_type):
         """To implement. Checks the file in order to determine more accurate
         type.
 
