@@ -200,36 +200,45 @@ class Analysis(MongoDict):
                                    {'$addToSet': {'iocs.$.sources': source}})
 
     def _store_preloaded_file(self, filepath=None, fd=None):
+        if not filepath and not fd:
+            raise ValueError(
+                "Please provide either the path to the file or a file-like "
+                "object containing the data.")
+
+        if filepath and fd:
+            self.log(
+                "debug",
+                "Please provide either the path to the file or a "
+                "file-like object containing the data, not both."
+                "Choosing the filepath for now.")
+
         if fame_config.remote:
-            if not filepath and not fd:
-                raise ValueError(
-                    "Please provide either the path to the file or a file-like "
-                    "object containing the data.")
-
-            if filepath and fd:
-                self.log("debug",
-                         "Please provide either the path to the file or a "
-                         "file-like object containing the data, not both. "
-                         "Choosing the file-like object for now.")
-                response = send_file_to_remote(fd, '/files/')
-            else:
+            if filepath:
                 response = send_file_to_remote(filepath, '/files/')
+            else:
+                response = send_file_to_remote(fd, '/files/')
 
-            return File(json_util.loads(response.text)['file'])
+            return File(response.json()['file'])
         else:
-            return File(filename=os.path.basename(filepath), stream=fd)
+            if filepath:
+                with open(filepath, 'rb') as f:
+                    return File(filename=os.path.basename(filepath), stream=f)
+            else:
+                return File(filename='file', stream=fd)
 
     def add_preloaded_file(self, filepath, fd):
         f = self._store_preloaded_file(filepath, fd)
-        f.append_to('analysis', self['_id'])
 
-        if f['names'] == ['file']:
-            f['names'] = self._file['names']
-            f.save()
+        if f['_id'] != self['file']:
+            f.append_to('analysis', self['_id'])
 
-        self['file'] = f['_id']
-        self._file = f
-        self.save()
+            if f['names'] == ['file']:
+                f['names'] = self._file['names']
+                f.save()
+
+            self['file'] = f['_id']
+            self._file = f
+            self.save()
 
         self._automatic(preloading_done=True)
 

@@ -1143,7 +1143,7 @@ class PreloadingModule(Module):
         """
         raise NotImplementedError
 
-    def add_preloaded_file(self, filepath, fd):
+    def add_preloaded_file(self, filepath=None, fd=None):
         self._analysis.add_preloaded_file(filepath, fd)
 
     def init_options(self, options):

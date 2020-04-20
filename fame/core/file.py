@@ -20,12 +20,13 @@ notification_body_tpl = u"""Hi,
 
 Best regards"""
 
+
 def _hash_by_length(hash):
     _map = {
         # hashlength: (md5, sha1, sha256)
-        32: (hash, "", ""),
-        40: ("", hash, ""),
-        64: ("", "", hash),
+        32: (hash.lower(), "", ""),
+        40: ("", hash.lower(), ""),
+        64: ("", "", hash.lower()),
     }
 
     return _map.get(len(hash), (None, None, None))
@@ -41,34 +42,40 @@ class File(MongoDict):
             self['comments'] = []
             MongoDict.__init__(self, values)
 
-        elif hash:
-            self._init_with_hash(hash)
-
         else:
-            self._init_with_file(filename, stream, create)
+            MongoDict.__init__(self, {})
+            self['probable_names'] = []
+            self['parent_analyses'] = []
+            self['groups'] = []
+            self['owners'] = []
+            self['comments'] = []
+            self['analysis'] = []
+
+            if hash:
+                self._init_with_hash(hash)
+            else:
+                self._init_with_file(filename, stream, create)
 
     def _init_with_hash(self, hash):
-        MongoDict.__init__(self, {})
-        self['probable_names'] = []
-        self['parent_analyses'] = []
-        self['groups'] = []
-        self['owners'] = []
-        self['comments'] = []
-
         md5, sha1, sha256 = _hash_by_length(hash)
 
         self.existing = False
 
-        existing_file = (
-            (
-                # search for existing samples first
-                self.collection.find_one({'sha256': sha256}) if sha256 else
-                self.collection.find_one({'sha1': sha1}) if sha1 else
-                self.collection.find_one({'md5': md5}) if md5 else None
-            )
+        # Set hash and look for existing files
+        existing_file = None
+
+        if sha256:
+            self['sha256'] = sha256
+            existing_file = self.collection.find_one({'sha256': sha256})
+        elif sha1:
+            self['sha1'] = sha1
+            existing_file = self.collection.find_one({'sha1': sha1})
+        elif md5:
+            self['md5'] = md5
+            existing_file = self.collection.find_one({'md5': md5})
+        else:
             # otherwise, try the hash as filename (aka hash submission)
-            or self.collection.find_one({'names': [hash]})
-        )
+            self.collection.find_one({'names': [hash]})
 
         if existing_file:
             self.existing = True
@@ -79,27 +86,24 @@ class File(MongoDict):
             self.save()
 
     def _init_with_file(self, filename, stream, create):
-        MongoDict.__init__(self, {})
-        self['probable_names'] = []
-        self['parent_analyses'] = []
-        self['groups'] = []
-        self['owners'] = []
-        self['comments'] = []
-
         # filename should be set
         if filename is not None and stream is not None:
             self._compute_hashes(stream)
 
         # If the file already exists in the database, update it
         self.existing = False
-        existing_file = self.collection.find_one({'sha256': self['sha256']})
+        existing_file = (
+            self.collection.find_one({'sha256': self['sha256']}) or
+            self.collection.find_one({'sha1': self['sha1']}) or
+            self.collection.find_one({'md5': self['md5']})
+        )
 
         if existing_file:
             self._add_to_previous(existing_file, filename)
             self.existing = True
 
-        # Otherwise, compute default properties and save
-        elif create:
+        # If the file doesn't exist, or exists as a hash submission, compute default properties and save
+        if create and ((existing_file is None) or (self['type'] == 'hash')):
             self._store_file(filename, stream)
             self._compute_default_properties()
             self.save()
@@ -223,8 +227,6 @@ class File(MongoDict):
     # Compute default properties
     # For now, just 'name' and 'type'
     def _compute_default_properties(self, hash_only=False):
-        self['analysis'] = []
-
         if not hash_only:
             self['names'] = [os.path.basename(self['filepath'])]
             self['detailed_type'] = magic.from_file(self['filepath'])
