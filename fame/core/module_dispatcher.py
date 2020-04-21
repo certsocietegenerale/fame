@@ -97,17 +97,20 @@ class ModuleDispatcher(object):
             else:
                 return self._shortest_path_to_module(types_available, module, excluded_modules)
 
-    def get_next_preloading_module(self, excluded_modules=[]):
+    def next_preloading_module(self, selected_modules=[], excluded_modules=[]):
         candidate_modules = []
 
         for module in self.get_preloading_modules():
-            if module.info['name'] not in excluded_modules:
+            if (
+                (not selected_modules or module.info['name'] in selected_modules)
+                and module.info['name'] not in excluded_modules
+            ):
                 candidate_modules.append(module.info['name'])
 
         if len(candidate_modules) > 0:
             return candidate_modules[0]
         else:
-            return ""
+            raise DispatchingException("No more preloading module available")
 
     # Get all generale purpose modules
     def general_purpose(self):

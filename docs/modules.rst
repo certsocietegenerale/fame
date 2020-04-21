@@ -323,11 +323,9 @@ Preloading modules are used to download a sample file automatically to make it a
 
 To define a new Preloading Module just create a Python class that inherits from :class:`fame.core.module.PreloadingModule` and implements :func:`fame.core.module.PreloadingModule.preload`.
 
-These methods should return a boolean indicating if the sample was downloaded successfully. If the return value is ``True``, one thing will happen:
+If the module was able to successfuly find a sample associated with submitted hash, it should call the `add_preloaded_file` method. If this method is not called, the next preloading module will be scheduled.
 
-* A tag with the module's name will automatically be added to the analysis.
-
-For example, the module `virustotal_download` takes a hash and download the sample from VirusTotal. If it could not download the sample successfully, it should return ``False`` so that the next preloading module can be scheduled.  In that case the module should print a log message showing what went wrong.
+For example, the module `virustotal_download` takes a hash and download the sample from VirusTotal.
 
 Here is the minimal code required for a preloading module::
 
@@ -343,7 +341,7 @@ Here is the minimal code required for a preloading module::
 
         # This method will be called, with the hash of the sample in target
         def preload(self, target):
-            return True
+            return False
 
 Scope
 -----
@@ -355,7 +353,7 @@ Adding the preloading result
 
 Once the module successfully preloaded the sample for FAME, it must add the file to the analysis. Based on what type the file is, FAME then schedules suitable processing modules (if magic mode is enabled).
 
-You can add a preloaded file by calling :func:`fame.core.module.PreloadingModule.add_preloaded_file`. The function expects either a path to a file or a file-like object with the available data (file-like objects have precedence if both are provided).
+You can add a preloaded file by calling :func:`fame.core.module.PreloadingModule.add_preloaded_file`. The function expects either a path to a file or a file-like object with the available data (file path has precedence if both are provided).
 
 Common module features
 ======================
