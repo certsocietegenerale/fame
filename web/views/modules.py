@@ -67,6 +67,29 @@ def update_config(settings, options=False):
     return None
 
 
+def update_queue(module, new_queue):
+    if new_queue == '':
+        flash('queue cannot be empty', 'danger')
+        return validation_error()
+    elif module['queue'] != new_queue:
+        module.update_setting_value('queue', new_queue)
+        updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
+        updates.update_value("last_update", time())
+
+        flash('Workers will reload once they are done with their current tasks', 'success')
+
+
+def update_priority(module, new_priority):
+    if not new_priority:
+        new_priority = '100'
+
+    try:
+        module.update_setting_value('priority', int(new_priority))
+    except ValueError:
+        flash('priority must be an integer', 'danger')
+        return validation_error()
+
+
 class ModulesView(FlaskView, UIView):
 
     @requires_permission('manage_modules')
@@ -299,21 +322,6 @@ class ModulesView(FlaskView, UIView):
         :form queue: name of the queue to use for this module (for Processing and
             Preloading modules).
         """
-
-        def update_queue():
-            new_queue = request.form.get('queue')
-
-            if module['queue'] == '':
-                flash('queue cannot be empty', 'danger')
-                return validation_error()
-            else:
-                if module['queue'] != new_queue:
-                    module.update_setting_value('queue', new_queue)
-                    updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
-                    updates.update_value("last_update", time())
-
-                    flash('Workers will reload once they are done with their current tasks', 'success')
-
         module = ModuleInfo(get_or_404(ModuleInfo.get_collection(), _id=id))
         module['readme'] = module.get_readme()
 
@@ -329,11 +337,14 @@ class ModulesView(FlaskView, UIView):
                     module.update_setting_value('triggered_by', request.form.get('triggered_by', ''))
 
                 if 'queue' in request.form:
-                    update_queue()
+                    update_queue(module, request.form.get('queue', ''))
 
             elif module['type'] == "Preloading":
                 if 'queue' in request.form:
-                    update_queue()
+                    update_queue(module, request.form.get('queue', ''))
+
+                if 'priority' in request.form:
+                    update_priority(module, request.form.get('priority', ''))
 
             errors = update_config(module['config'], options=(module['type'] in ['Preloading', 'Processing']))
             if errors is not None:

@@ -52,22 +52,15 @@ class ModuleInfo(MongoDict):
         return '/'.join(self['path'].split('.')[2:-1]) + '/details.html'
 
     def update_config(self, new_info):
-        def _update_queue():
-            self['queue'] = new_info['queue']
-            if 'queue' in self['diffs']:
-                if self['diffs']['queue'] == new_info['queue']:
-                    del self['diffs']['queue']
-                else:
-                    self['queue'] = self['diffs']['queue']
-
         if self['type'] == 'Processing':
             self['generates'] = new_info['generates']
-            _update_queue()
+            self._update_diffed_value('queue', new_info['queue'])
             self._update_diffed_value('acts_on', new_info['acts_on'])
             self._update_diffed_value('triggered_by', new_info['triggered_by'])
 
         elif self['type'] == 'Preloading':
-            _update_queue()
+            self._update_diffed_value('queue', new_info['queue'])
+            self._update_diffed_value('priority', new_info['priority'])
 
         elif self['type'] == 'Filetype':
             self._update_diffed_value('acts_on', new_info['acts_on'])
@@ -125,25 +118,33 @@ class ModuleInfo(MongoDict):
             self['diffs'][name]['removed'].append(value)
 
     def _update_diffed_value(self, name, value):
-        self._init_list_diff(name)
-        self[name] = value
+        if is_iterable(value):
+            self._init_list_diff(name)
+            self[name] = value
 
-        if name in self['diffs']:
-            new_removed = []
-            for element in self['diffs'][name]['removed']:
-                if element in self[name]:
-                    self[name].remove(element)
-                    new_removed.append(element)
+            if name in self['diffs']:
+                new_removed = []
+                for element in self['diffs'][name]['removed']:
+                    if element in self[name]:
+                        self[name].remove(element)
+                        new_removed.append(element)
 
-            self['diffs'][name]['removed'] = new_removed
+                self['diffs'][name]['removed'] = new_removed
 
-            new_added = []
-            for element in self['diffs'][name]['added']:
-                if element not in self[name]:
-                    self[name].append(element)
-                    new_added.append(element)
+                new_added = []
+                for element in self['diffs'][name]['added']:
+                    if element not in self[name]:
+                        self[name].append(element)
+                        new_added.append(element)
 
-            self['diffs'][name]['added'] = new_added
+                self['diffs'][name]['added'] = new_added
+        else:
+            self[name] = value
+            if name in self['diffs']:
+                if self['diffs'][name] == value:
+                    del self['diffs'][name]
+                else:
+                    self[name] = self['diffs'][name]
 
 
 class Module(object):
@@ -1116,16 +1117,27 @@ class VirtualizationModule(Module):
 
 
 class PreloadingModule(Module):
-    """ PreloadingModules can be used to download the sample
-        binary from e.g. VirusTotal before queueing any
-        processing modules. Hence, PreloadingModules only work
-        on hashes. A successful execution of a PreloadingModule
-        updates the Analysis object with the new data and queues
-        the remaining modules as if the sample itself was uploaded
-        the FAME.
+    """Base class for preloading modules
+
+    PreloadingModules can be used to download the sample
+    binary from e.g. VirusTotal before queueing any
+    processing modules. Hence, PreloadingModules only work
+    on hashes. A successful execution of a PreloadingModule
+    updates the Analysis object with the new data and queues
+    the remaining modules as if the sample itself was uploaded
+    the FAME.
+
+    Attributes:
+        queue: A string defining on which queue the tasks will be added. This
+            defines on which worker this module will execute. The default
+            value is `unix`.
+
+        priority: An integer defining the module's priority when preloading.
+            The smallest values are used first (defaults to 100).
     """
 
     queue = 'unix'
+    priority = 100
 
     def __init__(self, with_config=True):
         Module.__init__(self, with_config)
@@ -1173,7 +1185,8 @@ class PreloadingModule(Module):
             "type": "Preloading",
             "config": cls.config,
             "diffs": {},
-            "queue": cls.queue
+            "queue": cls.queue,
+            "priority": cls.priority
         }
 
         init_config_values(info)
