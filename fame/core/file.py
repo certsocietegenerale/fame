@@ -104,6 +104,9 @@ class File(MongoDict):
 
     def remove_group(self, group):
         # Update file
+        self.remove_from('groups', group)
+
+        # Update previous analysis
         for analysis_id in self['analysis']:
             analysis = Analysis(store.analysis.find_one({'_id': ObjectId(analysis_id)}))
             analysis.remove_from('groups', group)
