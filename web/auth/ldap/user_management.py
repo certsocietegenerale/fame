@@ -114,11 +114,25 @@ def create_user(ldap_user):
     return user
 
 
-def get_or_create_user(ldap_user):
+def update_or_create_user(ldap_user):
     user = User.get(email=ldap_user['mail'])
 
     if user:
+        # update groups
+        groups = get_mapping(ldap_user['groups'], "groups")
+        user.update_value('groups', groups)
+
+        # update default sharings
+        default_sharing = get_mapping(ldap_user['groups'], "default_sharing")
+        user.update_value('default_sharing', default_sharing)
+
+        # update permissions
+        permissions = get_mapping(ldap_user["groups"], "permissions")
+        user.update_value('permissions', permissions)
+
+        # enable/disable user
         user.update_value('enabled', ldap_user['enabled'])
+
         return user_if_enabled(user)
 
     return create_user(ldap_user)
@@ -136,7 +150,7 @@ def authenticate(email, password):
 
         return user
 
-    user = get_or_create_user(ldap_user)
+    user = update_or_create_user(ldap_user)
 
     if user:
         login_user(user)
