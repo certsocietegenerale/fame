@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, flash
 from flask_login import logout_user
 
 from web.views.helpers import prevent_csrf
-from web.auth.ldap.user_management import authenticate
+from web.auth.ldap.user_management import authenticate, LdapSettingsNotPresentException
 
 from ldap import SERVER_DOWN, INVALID_CREDENTIALS
 
@@ -23,6 +23,9 @@ def login():
             return render_template('login.html')
         except INVALID_CREDENTIALS:
             flash("Invalid credentials.", "danger")
+            return render_template('login.html')
+        except LdapSettingsNotPresentException:
+            flash("LDAP Settings not present. Check server logs.", "danger")
             return render_template('login.html')
 
         if not user:

@@ -12,7 +12,28 @@ from web.views.helpers import user_if_enabled
 ldap.set_option(ldap.OPT_X_TLS_NEWCTX, ldap.OPT_X_TLS_DEMAND)
 
 
+class LdapSettingsNotPresentException(Exception):
+    pass
+
+
+def _check_ldap_settings_present():
+    def _check(name):
+        if name not in fame_config:
+            print name + " not present in config"
+            return False
+        return True
+
+    return (
+        _check("ldap_uri") and _check("ldap_user") and
+        _check("ldap_password") and _check("ldap_filter_dn") and
+        _check("ldap_filter_email")
+    )
+
+
 def _ldap_get_con():
+    if not _check_ldap_settings_present():
+        return None
+
     con = ldap.initialize(fame_config.ldap_uri)
     con.protocol_version = ldap.VERSION3
     con.set_option(ldap.OPT_REFERRALS, 0)
@@ -58,6 +79,9 @@ def _find_user_by_email(con, email):
 
 def ldap_authenticate(email, password):
     con = _ldap_get_con()
+    if not con:
+        raise LdapSettingsNotPresentException
+
     ldap_user = _find_user_by_email(con, email)
 
     if ldap_user:
