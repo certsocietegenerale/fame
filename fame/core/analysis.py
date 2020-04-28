@@ -241,7 +241,7 @@ class Analysis(MongoDict):
                 with open(filepath, 'rb') as f:
                     return File(filename=os.path.basename(filepath), stream=f)
             else:
-                return File(filename='file', stream=fd)
+                return File(filename=self._file['names'][0], stream=fd)
 
     def add_preloaded_file(self, filepath, fd):
         f = self._store_preloaded_file(filepath, fd)
