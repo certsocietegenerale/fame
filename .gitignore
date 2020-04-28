@@ -80,3 +80,4 @@ agent/module.py
 
 # Editors
 .vscode
+.mypy_cache
