@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 from fame.core.store import store
 from fame.core.file import File
 from fame.core.module_dispatcher import dispatcher
-from web.views.negotiation import render
+from web.views.negotiation import render, render_json
 from web.views.constants import PER_PAGE
 from web.views.helpers import (
     file_download, get_or_404, requires_permission, clean_files, clean_analyses, clean_users,
@@ -126,7 +126,7 @@ class FilesView(FlaskView, UIView):
         file = request.files['file']
         f = File(filename=secure_filename(file.filename), stream=file.stream)
 
-        return render({'file': f})
+        return render_json({'file': f})
 
     def download(self, id):
         """Download the file with `id`.

@@ -20,14 +20,28 @@ notification_body_tpl = u"""Hi,
 
 Best regards"""
 
+
+def _hash_by_length(hash):
+    _map = {
+        # hashlength: (md5, sha1, sha256)
+        32: (hash.lower(), "", ""),
+        40: ("", hash.lower(), ""),
+        64: ("", "", hash.lower()),
+    }
+
+    return _map.get(len(hash), (None, None, None))
+
+
 class File(MongoDict):
     collection_name = 'files'
 
-    def __init__(self, values=None, filename=None, stream=None, create=True):
+    def __init__(self, values=None, filename=None, stream=None, create=True,
+                 hash=""):
         # When only passing a dict
         if isinstance(values, dict):
             self['comments'] = []
             MongoDict.__init__(self, values)
+
         else:
             MongoDict.__init__(self, {})
             self['probable_names'] = []
@@ -35,22 +49,64 @@ class File(MongoDict):
             self['groups'] = []
             self['owners'] = []
             self['comments'] = []
+            self['analysis'] = []
 
-            # filename should be set
-            if filename is not None and stream is not None:
-                self._compute_hashes(stream)
+            if hash:
+                self._init_with_hash(hash)
+            else:
+                self._init_with_file(filename, stream, create)
 
-            # If the file already exists in the database, update it
-            self.existing = False
-            existing_file = self.collection.find_one({'sha256': self['sha256']})
-            if existing_file:
-                self._add_to_previous(existing_file, filename)
-                self.existing = True
-            # Otherwise, compute default properties and save
-            elif create:
-                self._store_file(filename, stream)
-                self._compute_default_properties()
-                self.save()
+    def _init_with_hash(self, hash):
+        md5, sha1, sha256 = _hash_by_length(hash)
+
+        self.existing = False
+
+        # Set hash and look for existing files
+        existing_file = None
+
+        if sha256:
+            self['sha256'] = sha256
+            existing_file = self.collection.find_one({'sha256': sha256})
+        elif sha1:
+            self['sha1'] = sha1
+            existing_file = self.collection.find_one({'sha1': sha1})
+        elif md5:
+            self['md5'] = md5
+            existing_file = self.collection.find_one({'md5': md5})
+        else:
+            # otherwise, try the hash as filename (aka hash submission)
+            self.collection.find_one({'names': [hash]})
+
+        if existing_file:
+            self.existing = True
+            self.update(existing_file)
+        else:
+            self._compute_default_properties(hash_only=True)
+            self._init_hash(hash)
+            self.save()
+
+    def _init_with_file(self, filename, stream, create):
+        # filename should be set
+        if filename is not None and stream is not None:
+            self._compute_hashes(stream)
+
+        # If the file already exists in the database, update it
+        self.existing = False
+        existing_file = (
+            self.collection.find_one({'sha256': self['sha256']}) or
+            self.collection.find_one({'sha1': self['sha1']}) or
+            self.collection.find_one({'md5': self['md5']})
+        )
+
+        if existing_file:
+            self._add_to_previous(existing_file, filename)
+            self.existing = True
+
+        # If the file doesn't exist, or exists as a hash submission, compute default properties and save
+        if create and ((existing_file is None) or (self['type'] == 'hash')):
+            self._store_file(filename, stream)
+            self._compute_default_properties()
+            self.save()
 
     def add_comment(self, analyst_id, comment, analysis_id=None, probable_name=None, notify=None):
         if probable_name:
@@ -170,12 +226,12 @@ class File(MongoDict):
 
     # Compute default properties
     # For now, just 'name' and 'type'
-    def _compute_default_properties(self):
-        self['names'] = [os.path.basename(self['filepath'])]
-        self['detailed_type'] = magic.from_file(self['filepath'])
-        self['mime'] = magic.from_file(self['filepath'], mime=True)
-        self['size'] = os.path.getsize(self['filepath'])
-        self['analysis'] = []
+    def _compute_default_properties(self, hash_only=False):
+        if not hash_only:
+            self['names'] = [os.path.basename(self['filepath'])]
+            self['detailed_type'] = magic.from_file(self['filepath'])
+            self['mime'] = magic.from_file(self['filepath'], mime=True)
+            self['size'] = os.path.getsize(self['filepath'])
 
         # Init antivirus status
         self['antivirus'] = {}
@@ -183,10 +239,21 @@ class File(MongoDict):
         for module in dispatcher.get_antivirus_modules():
             self['antivirus'][module.name] = False
 
-        self._set_type()
+        self._set_type(hash_only)
+
+    # initialize all necessary values for hash analysis
+    def _init_hash(self, hash):
+        self['type'] = 'hash'
+        self['names'] = [hash]
+        self['filepath'] = hash
 
     # Convert mime/types into clearer type
-    def _set_type(self):
+    def _set_type(self, hash_only=False):
+        if hash_only:
+            # cannot say anything about the file if we only know the hash
+            self['type'] = "hash"
+            return
+
         config = Config.get(name="types").get_values()
         config = ConfigObject(from_string=config.mappings)
         detailed_types = config.get('details')

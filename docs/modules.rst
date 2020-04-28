@@ -6,6 +6,7 @@ FAME relies on modules to add functionality. Modules are actually Python classes
 
 Several kind of modules can be created:
 
+* ``PreloadingModule``: these modules are used to preload the sample file prior to executing any processing module. A ``PreloadingModule`` should take the provided hash from FAME and download the corresponding sample from any source (e.g. VirusTotal).
 * ``ProcessingModule``: this is where FAME's magic is. A ``ProcessingModule`` should define some automated analysis that can be performed on some types of files / analysis information.
 * ``IsolatedProcessingModule``: this is a special ``ProcessingModule`` that will be executed inside a VM, because it contains risks of infection.
 * ``ReportingModule``: this kind of module enables reporting options, such as sending analysis results by email, or post a Slack notification when the analysis is finished.
@@ -17,7 +18,7 @@ Several kind of modules can be created:
 * ``AntivirusModule``: modules that act on files, and send them to antivirus vendors.
 * ``VirtualizationModule``: modules that determine how-to orchestrate Virtual Machines when using ``IsolatedProcessingModule``.
 
-In order to create a module, create a Python file, and place it in the `fame/modules/processing`, `fame/modules/reporting` or `fame/modules/threat_intelligence` directory.
+In order to create a module, create a Python file, and place it in the `fame/modules/preloading`, `fame/modules/processing`, `fame/modules/reporting` or `fame/modules/threat_intelligence` directory.
 
 A valid module is simply a Python class in the `fame/modules` directory that inherits from the :class:`fame.core.module.Module` class.
 
@@ -28,7 +29,7 @@ The best practice is to do the following:
 * Create a directory for your module inside one of the repositories.
 * Make sure your directory is a valid Python package (do not use spaces, make sure every directory in the path as a ``__init__.py`` file).
 * Create a python file inside your directory for your module.
-* Inside your python file, create a class that inherits from :class:`fame.core.module.ProcessingModule`, :class:`fame.core.module.ReportingModule`, :class:`fame.core.module.ThreatIntelligenceModule` or :class:`fame.core.module.AntivirusModule`.
+* Inside your python file, create a class that inherits from :class:`fame.core.module.ProcessingModule`, :class:`fame.core.module.PreloadingModule`, :class:`fame.core.module.ReportingModule`, :class:`fame.core.module.ThreatIntelligenceModule` or :class:`fame.core.module.AntivirusModule`.
 
 Writing a Processing module
 ===========================
@@ -304,6 +305,7 @@ Writing an ``IsolatedProcessingModule`` is similar to writing a ``ProcessingModu
 
 * An ``IsolatedProcessingModule`` cannot have installation scripts (they will not be executed). You should make sure to give specific installation instruction in the module's README and verify requirements in the module's ``initialize`` method.
 
+.. _testing_processing_modules:
 
 Testing Processing Modules
 --------------------------
@@ -313,6 +315,45 @@ When it comes to testing your processing modules during development, you have tw
 * Use a full FAME instance and test your module by launching new analyses using the web interface. You will need a running worker to execute your module. Note that the workers will not automatically reload modified code, so you should make sure to click on the `Reload` button on :ref:`admin-configuration`.
 * The simpler option is to use the :ref:`single_module` utility. This way, you don't need a webserver, a worker or even a MongoDB instance.
 * An ``IsolatedProcessingModule`` can also be tested with the :ref:`single_module` utility. By default, it will execute inside a Virtual Machine (as it should). If you want to test your module without this overhead (if you are already inside the VM for example), you can use the ``-l, --local`` switch.
+
+Writing a Preloading module
+===========================
+
+Preloading modules are used to download a sample file automatically to make it available to FAME.
+
+To define a new Preloading Module just create a Python class that inherits from :class:`fame.core.module.PreloadingModule` and implements :func:`fame.core.module.PreloadingModule.preload`.
+
+If the module was able to successfuly find a sample associated with submitted hash, it should call the `add_preloaded_file` method. If this method is not called, the next preloading module will be scheduled.
+
+For example, the module `virustotal_download` takes a hash and download the sample from VirusTotal.
+
+Here is the minimal code required for a preloading module::
+
+    from fame.core.module import PreloadingModule
+
+
+    class Dummy(PreloadingModule):
+        # You have to give your module a name, and this name should be unique.
+        name = "dummy"
+
+        # (optional) Describe what your module will do. This will be displayed to users.
+        description = "Does nothing."
+
+        # This method will be called, with the hash of the sample in target
+        def preload(self, target):
+            return False
+
+Scope
+-----
+
+It may happen that an analyst only has a hash available for analysis. In this case, FAME can download the sample from configured sample sources and trigger an analysis of the sample by its own.
+
+Adding the preloading result
+----------------------------
+
+Once the module successfully preloaded the sample for FAME, it must add the file to the analysis. Based on what type the file is, FAME then schedules suitable processing modules (if magic mode is enabled).
+
+You can add a preloaded file by calling :func:`fame.core.module.PreloadingModule.add_preloaded_file`. The function expects either a path to a file or a file-like object with the available data (file path has precedence if both are provided).
 
 Common module features
 ======================
@@ -455,6 +496,12 @@ Common module API
 -----------------
 
 .. autoclass:: fame.core.module.Module
+    :members:
+
+Preloading Module
+-----------------
+
+.. autoclass:: fame.core.module.PreloadingModule
     :members:
 
 Processing Module

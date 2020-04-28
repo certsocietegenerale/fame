@@ -19,7 +19,25 @@
                     {% endif %}
 
                     <form class="form-horizontal" method="post" action="{{url_for('ModulesView:configure', id=data.module._id)}}">
-                    {% if data.module.type == "Processing" %}
+                    {% if data.module.type == "Preloading" %}
+                        <hr />
+
+                        <div class="form-group">
+                            <label for="priority" class="col-sm-2 control-label">Priority</label>
+                            <div class="col-sm-8">
+                                <input type="integer" class="form-control" name="priority" value="{{data.module.priority}}">
+                                <p class="help-block">The module's priority when preloading. The smallest values are used first (defaults to 100).</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="queue" class="col-sm-2 control-label">Queue</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="queue" value="{{data.module.queue}}">
+                                <p class="help-block">The queue defines which workers will be executing this module. "unix" is the default queue.</p>
+                            </div>
+                        </div>
+                    {% elif data.module.type == "Processing" %}
                         <hr />
 
                         <div class="form-group">
@@ -56,7 +74,7 @@
                     {% endif %}
 
                     {% if data.module.config %}
-                        {% with settings=data.module.config, option=(data.module.type == 'Processing') %}
+                        {% with settings=data.module.config, option=(data.module.type in ['Preloading', 'Processing']) %}
                             {% include "modules/_configuration.html" %}
                         {% endwith %}
                     {% endif %}

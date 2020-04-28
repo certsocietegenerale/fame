@@ -1,7 +1,6 @@
 import os
 from time import time
 from zipfile import ZipFile
-from tempfile import mkstemp
 from flask import url_for, request, flash
 from flask_classy import FlaskView, route
 
@@ -68,6 +67,29 @@ def update_config(settings, options=False):
     return None
 
 
+def update_queue(module, new_queue):
+    if new_queue == '':
+        flash('queue cannot be empty', 'danger')
+        return validation_error()
+    elif module['queue'] != new_queue:
+        module.update_setting_value('queue', new_queue)
+        updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
+        updates.update_value("last_update", time())
+
+        flash('Workers will reload once they are done with their current tasks', 'success')
+
+
+def update_priority(module, new_priority):
+    if not new_priority:
+        new_priority = '100'
+
+    try:
+        module.update_setting_value('priority', int(new_priority))
+    except ValueError:
+        flash('priority must be an integer', 'danger')
+        return validation_error()
+
+
 class ModulesView(FlaskView, UIView):
 
     @requires_permission('manage_modules')
@@ -84,6 +106,9 @@ class ModulesView(FlaskView, UIView):
 
             "modules": {
                 "Antivirus": [
+                    ...
+                ],
+                "Preloading": [
                     ...
                 ],
                 "Processing": [
@@ -157,6 +182,7 @@ class ModulesView(FlaskView, UIView):
             ]
         """
         types = {
+            'Preloading': [],
             'Processing': [],
             'Reporting': [],
             'Threat Intelligence': [],
@@ -293,8 +319,8 @@ class ModulesView(FlaskView, UIView):
             (only for Processing modules).
         :form triggered_by: comma-delimited list of triggers (only for Processing
             modules).
-        :form queue: name of the queue to use for this module (only for Processing
-            modules).
+        :form queue: name of the queue to use for this module (for Processing and
+            Preloading modules).
         """
         module = ModuleInfo(get_or_404(ModuleInfo.get_collection(), _id=id))
         module['readme'] = module.get_readme()
@@ -311,20 +337,16 @@ class ModulesView(FlaskView, UIView):
                     module.update_setting_value('triggered_by', request.form.get('triggered_by', ''))
 
                 if 'queue' in request.form:
-                    new_queue = request.form.get('queue')
+                    update_queue(module, request.form.get('queue', ''))
 
-                    if module['queue'] == '':
-                        flash('queue cannot be empty', 'danger')
-                        return validation_error()
-                    else:
-                        if module['queue'] != new_queue:
-                            module.update_setting_value('queue', new_queue)
-                            updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
-                            updates.update_value("last_update", time())
+            elif module['type'] == "Preloading":
+                if 'queue' in request.form:
+                    update_queue(module, request.form.get('queue', ''))
 
-                            flash('Workers will reload once they are done with their current tasks', 'success')
+                if 'priority' in request.form:
+                    update_priority(module, request.form.get('priority', ''))
 
-            errors = update_config(module['config'], options=(module['type'] == 'Processing'))
+            errors = update_config(module['config'], options=(module['type'] in ['Preloading', 'Processing']))
             if errors is not None:
                 return errors
 
@@ -335,13 +357,13 @@ class ModulesView(FlaskView, UIView):
             return render({'module': clean_modules(module)}, 'modules/module_configuration.html')
 
     def list(self):
-        """List enabled Processing modules
+        """List enabled Processing and Preloading modules
 
-        .. :quickref: Module; List enabled Processing modules
+        .. :quickref: Module; List enabled Processing and Preloading modules
 
         :>json list modules: list of enabled modules.
         """
-        modules = ModuleInfo.get_collection().find({'enabled': True, 'type': 'Processing'})
+        modules = ModuleInfo.get_collection().find({'enabled': True, 'type': {'$in': ['Processing', 'Preloading']}})
 
         return render(clean_modules(list(modules)))
 
