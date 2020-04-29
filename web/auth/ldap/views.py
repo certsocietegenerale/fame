@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, flash
 from flask_login import logout_user
 
-from web.views.helpers import prevent_csrf
+from web.views.helpers import prevent_csrf, user_has_groups_and_sharing
 from web.auth.ldap.user_management import authenticate, LdapSettingsNotPresentException
 
 from ldap import SERVER_DOWN, INVALID_CREDENTIALS
@@ -28,7 +28,7 @@ def login():
             flash("LDAP Settings not present. Check server logs.", "danger")
             return render_template('login.html')
 
-        if not user:
+        if not user or not user_has_groups_and_sharing(user):
             flash("Access not allowed.", "danger")
             return render_template('login.html')
 
