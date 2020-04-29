@@ -6,7 +6,7 @@ Once installed, please change the authentication type of fame to "ldap" if you w
 
 # Configuration
 
-This authenticator requires several config values to set prior to using the authenticator. The settings are shown in the following table.
+This authenticator requires several config values to set prior to using the authenticator. The settings are shown in the following table.  These settings need to be put into the fame config file.
 
 | Name  | Description|
 |------|------------|
