@@ -6,7 +6,7 @@ from flask_login import login_user, make_secure_token
 
 from fame.core.user import User
 from fame.common.config import fame_config
-from web.auth.ldap.config import ROLE_MAPPING
+from web.auth.ad.config import ROLE_MAPPING
 from web.views.helpers import user_if_enabled
 
 ldap.set_option(ldap.OPT_X_TLS_NEWCTX, ldap.OPT_X_TLS_DEMAND)
