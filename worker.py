@@ -84,7 +84,11 @@ class Worker:
                 should_update = True
 
             if should_update and module['enabled']:
-                self.launch_install_scripts(module)
+                # only in the docker environment the worker has
+                # permissions to perform elevated tasks
+                if os.getenv("FAME_DOCKER", "0") == "1":
+                    self.launch_install_scripts(module)
+
                 self.update_python_requirements(module)
 
     def update_python_requirements(self, module):
