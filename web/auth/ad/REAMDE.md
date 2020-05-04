@@ -1,8 +1,8 @@
 # Installation
 
-The LDAP authentication module requires the python-ldap package to be available to FAME. It can be installed with this command: `utils/run.sh -m pip install python-ldap~=3.2.0`. This installs the required package into the virtualenv that is used by FAME.
+The AD authentication module requires the python-ldap package to be available to FAME. It can be installed with this command: `utils/run.sh -m pip install python-ldap~=3.2.0`. This installs the required package into the virtualenv that is used by FAME.
 
-Once installed, please change the authentication type of fame to "ldap" if you want to use the LDAP authenticator.
+Once installed, please change the authentication type of fame to "ad" if you want to use the AD authenticator.
 
 # Configuration
 
