@@ -57,7 +57,10 @@ def _find_user_by_email(con, email):
     if users:
         user = users[0][1]
 
-        principal = user['userPrincipalName'][0].decode()
+        principal = None
+        if 'userPrincipalName' in user and len(user['userPrincipalName']) != 0:
+            principal = user['userPrincipalName'][0].decode()
+
         full_name = user['cn'][0].decode()
         email = user['mail'][0].decode()
         enabled = (int(user['userAccountControl'][0].decode()) & 0x2) == 0
@@ -67,7 +70,7 @@ def _find_user_by_email(con, email):
         )]
 
         ldap_user = {
-            "principal": principal,
+            "principal": principal or full_name,
             "name": full_name,
             "mail": email,
             "enabled": enabled,
