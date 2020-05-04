@@ -54,12 +54,12 @@ services:
       FAME_ADMIN_PASSWORD: "secret"
       FAME_PUBLIC_KEY: "ssh-rsa ..."
       FAME_SECRET_KEY: "<ssh secret key>"
-      FAME_AUTHENTICATION_TYPE: "ldap"
-      LDAP_URI: "ldap://example.com"
-      LDAP_USER: "ldap-user"
-      LDAP_PASSWORD: "ldap-password"
-      LDAP_FILTER_EMAIL: "(&(objectCategory=Person)(sAMAccountName=*)(mail={})"
-      LDAP_FILTER_DN: "OU=People,DC=example,DC=com"
+      FAME_AUTHENTICATION_TYPE: "user_password"
+      # LDAP_URI: "ldap://example.com"
+      # LDAP_USER: "ldap-user"
+      # LDAP_PASSWORD: "ldap-password"
+      # LDAP_FILTER_EMAIL: "(&(objectCategory=Person)(sAMAccountName=*)(mail={})"
+      # LDAP_FILTER_DN: "OU=People,DC=example,DC=com"
     volumes:
       - /opt/fame-modules:/fame/fame/modules:z
       - /opt/fame-storage:/fame/storage:z
