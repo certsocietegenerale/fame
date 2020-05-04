@@ -3,18 +3,18 @@ version: '3.4'
 networks:
   fame_internal:
     internal: true
-  
+
   gateway:
-  
+
   traefik_default:
-    external: 
+    external:
       name: traefik_default
 
 x-mongo-env: &mongo_env
   MONGO_HOST: "fame-mongo"
   MONGO_PORT: "27017"
   MONGO_DB: "fame"
-  MONGO_USERNAME: "fame" 
+  MONGO_USERNAME: "fame"
   MONGO_PASSWORD: "super-secret-password"
 
 secrets:
@@ -40,7 +40,7 @@ services:
   fame-web:
     image: fame-web
     container_name: fame-web
-    depends_on: 
+    depends_on:
       - fame-mongo
     environment:
       <<: *mongo_env
@@ -78,7 +78,7 @@ services:
   fame-worker:
     image: fame-worker
     container_name: fame-worker
-    depends_on: 
+    depends_on:
       - fame-mongo
       - fame-web
     environment:
