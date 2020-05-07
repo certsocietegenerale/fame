@@ -125,6 +125,7 @@ class Analysis(MongoDict):
                     modules = config["modules"].split()
                 f.analyze(self['groups'], self['analyst'], modules, self['options'])
         fd.close()
+        f.add_groups(self['groups'])
 
         self.append_to('extracted_files', f['_id'])
         f.add_parent_analysis(self)
