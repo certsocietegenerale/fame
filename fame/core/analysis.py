@@ -63,14 +63,13 @@ class Analysis(MongoDict):
             # Sort preloading and processing modules
             if self['modules']:
                 processing = []
-
                 for module_name in self['modules']:
                     module = dispatcher.get_module(module_name)
-
-                    if module.info['type'] == "Preloading":
-                        self['preloading_modules'].append(module_name)
-                    else:
-                        processing.append(module_name)
+                    if module is not None:
+                        if module.info['type'] == "Preloading":
+                            self['preloading_modules'].append(module_name)
+                        else:
+                            processing.append(module_name)
 
                 self['modules'] = processing
 
@@ -120,12 +119,11 @@ class Analysis(MongoDict):
 
             # Automatically analyze extracted file if magic is enabled and module did not disable it
             if self.magic_enabled() and automatic_analysis:
-                modules = None
+                modules = []
                 config = Config.get(name="extracted").get_values()
                 if config is not None and "modules" in config:
                     modules = config["modules"].split()
                 f.analyze(self['groups'], self['analyst'], modules, self['options'])
-
         fd.close()
 
         self.append_to('extracted_files', f['_id'])
