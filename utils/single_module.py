@@ -127,7 +127,7 @@ class TestAnalysis(dict):
     def add_generated_files(self, file_type, location):
         self['generated_files'].append({'type': file_type, 'path': location})
 
-    def add_extracted_file(self, location):
+    def add_extracted_file(self, location, automatic_analysis=True):
         self['extracted_files'].append(location)
 
     def add_support_file(self, module, name, location):
