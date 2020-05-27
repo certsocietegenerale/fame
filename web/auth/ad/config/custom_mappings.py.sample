@@ -1,0 +1,17 @@
+ROLE_MAPPING = {
+    "GROUP_NAME": {
+        "permissions": [
+            "submit_iocs",
+            "configs",
+            "cuckoo_access",
+        ],
+        "default_sharing": [
+            "cert",
+            "users"
+        ],
+        "groups": [
+            "cert",
+            "*",
+        ],
+    }
+}
