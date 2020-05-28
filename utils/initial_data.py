@@ -36,6 +36,9 @@ text/x-mail = eml
 message/rfc822 = eml
 application/CDFV2-unknown = msg
 application/java-archive = jar
+application/x-7z-compressed = 7z
+application/x-rar = rar
+application/x-iso9660-image = iso
 
 [details]
 
@@ -63,7 +66,11 @@ apk = apk
 jar = jar
 zip = zip
 msg = msg
-eml = eml""",
+eml = eml
+iso = iso
+msi = executable
+7z = 7z
+rar = rar""",
                     'description': "In order to determine the file type, FAME will use the `python-magic` library. It will then try to find a match in 'mappings' for either the extension, the detailed type or the mime type (in this order of priority). If no matching type was found, the mime type will be used."
                 }
             ]
