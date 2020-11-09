@@ -85,6 +85,12 @@ def clean_repositories(repositories):
     return repositories
 
 
+def user_has_groups_and_sharing(user):
+    if len(user['groups']) > 0 and len(user['default_sharing']) > 0:
+        return True
+    return False
+
+
 def user_if_enabled(user):
     if user and user['enabled']:
         return user

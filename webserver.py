@@ -7,7 +7,7 @@ from bson import ObjectId
 from datetime import datetime
 from flask import Flask, redirect, request, url_for
 from flask_login import LoginManager
-from werkzeug import url_encode
+from werkzeug.urls import url_encode
 from importlib import import_module
 
 from fame.core import fame_init

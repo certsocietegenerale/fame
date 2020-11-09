@@ -10,13 +10,23 @@ from fame.common.mongo_dict import MongoDict
 from fame.core.module_dispatcher import dispatcher
 from fame.core.config import Config
 
+from fame.common.email_utils import EmailServer
+
+notification_body_tpl = u"""Hi,
+
+{0} has written the following comment on analysis {1}:
+
+\t{2}
+
+Best regards"""
+
 
 def _hash_by_length(hash):
     _map = {
         # hashlength: (md5, sha1, sha256)
-        32: (hash, "", ""),
-        40: ("", hash, ""),
-        64: ("", "", hash),
+        32: (hash.lower(), "", ""),
+        40: ("", hash.lower(), ""),
+        64: ("", "", hash.lower()),
     }
 
     return _map.get(len(hash), (None, None, None))
@@ -32,37 +42,6 @@ class File(MongoDict):
             self['comments'] = []
             MongoDict.__init__(self, values)
 
-        elif hash:
-            MongoDict.__init__(self, {})
-            self['probable_names'] = []
-            self['parent_analyses'] = []
-            self['groups'] = []
-            self['owners'] = []
-            self['comments'] = []
-
-            md5, sha1, sha256 = _hash_by_length(hash)
-
-            self.existing = False
-
-            existing_file = (
-                (
-                    # search for existing samples first
-                    self.collection.find_one({'sha256': sha256}) if sha256 else
-                    self.collection.find_one({'sha1': sha1}) if sha1 else
-                    self.collection.find_one({'md5': md5}) if md5 else None
-                )
-                # otherwise, try the hash as filename (aka hash submission)
-                or self.collection.find_one({'names': [hash]})
-            )
-
-            if existing_file:
-                self.existing = True
-                self.update(existing_file)
-            else:
-                self._compute_default_properties(hash_only=True)
-                self._init_hash(hash)
-                self.save()
-
         else:
             MongoDict.__init__(self, {})
             self['probable_names'] = []
@@ -70,27 +49,66 @@ class File(MongoDict):
             self['groups'] = []
             self['owners'] = []
             self['comments'] = []
+            self['analysis'] = []
 
+            if hash:
+                self._init_with_hash(hash)
+            else:
+                self._init_with_file(filename, stream, create)
 
-            # filename should be set
-            if filename is not None and stream is not None:
-                self._compute_hashes(stream)
+    def _init_with_hash(self, hash):
+        md5, sha1, sha256 = _hash_by_length(hash)
 
-            # If the file already exists in the database, update it
-            self.existing = False
-            existing_file = self.collection.find_one({'sha256': self['sha256']})
+        self.existing = False
 
-            if existing_file:
-                self._add_to_previous(existing_file, filename)
-                self.existing = True
+        # Set hash and look for existing files
+        existing_file = None
 
-            # Otherwise, compute default properties and save
-            elif create:
-                self._store_file(filename, stream)
-                self._compute_default_properties()
-                self.save()
+        if sha256:
+            self['sha256'] = sha256
+            existing_file = self.collection.find_one({'sha256': sha256})
+        elif sha1:
+            self['sha1'] = sha1
+            existing_file = self.collection.find_one({'sha1': sha1})
+        elif md5:
+            self['md5'] = md5
+            existing_file = self.collection.find_one({'md5': md5})
+        else:
+            # otherwise, try the hash as filename (aka hash submission)
+            self.collection.find_one({'names': [hash]})
 
-    def add_comment(self, analyst_id, comment, analysis_id=None, probable_name=None):
+        if existing_file:
+            self.existing = True
+            self.update(existing_file)
+        else:
+            self._compute_default_properties(hash_only=True)
+            self._init_hash(hash)
+            self.save()
+
+    def _init_with_file(self, filename, stream, create):
+        # filename should be set
+        if filename is not None and stream is not None:
+            self._compute_hashes(stream)
+
+        # If the file already exists in the database, update it
+        self.existing = False
+        existing_file = (
+            self.collection.find_one({'sha256': self['sha256']}) or
+            self.collection.find_one({'sha1': self['sha1']}) or
+            self.collection.find_one({'md5': self['md5']})
+        )
+
+        if existing_file:
+            self._add_to_previous(existing_file, filename)
+            self.existing = True
+
+        # If the file doesn't exist, or exists as a hash submission, compute default properties and save
+        if create and ((existing_file is None) or (self['type'] == 'hash')):
+            self._store_file(filename, stream)
+            self._compute_default_properties()
+            self.save()
+
+    def add_comment(self, analyst_id, comment, analysis_id=None, probable_name=None, notify=None):
         if probable_name:
             self.add_probable_name(probable_name)
 
@@ -101,6 +119,33 @@ class File(MongoDict):
             'probable_name': probable_name,
             'date': datetime.datetime.now()
         })
+        if notify is not None and analysis_id is not None:
+            self.notify_new_comment(analysis_id, analyst_id, comment)
+
+    def notify_new_comment(self, analysis_id, commentator_id, comment):
+        commentator = store.users.find_one({'_id': commentator_id})
+        analysis = store.analysis.find_one({'_id': ObjectId(analysis_id)})
+        analyst_id = analysis['analyst']
+        recipients = set()
+        # First let's add submiter analyst and check if he is not commentator
+        if commentator_id != analyst_id:
+            analyst = store.users.find_one({'_id': analysis['analyst']})
+            recipients.add(analyst['email'])
+        # iter on commentators and add them as recipient
+        for comment in self['comments']:
+            if comment['analyst'] not in [analyst_id, commentator_id]:
+                recipient = store.users.find_one({'_id': comment['analyst']})
+                recipients.add(recipient['email'])
+        if len(recipients):
+            config = Config.get(name="email").get_values()
+            analysis_url = "{0}/analyses/{1}".format(fame_config.fame_url, analysis_id)
+            body = notification_body_tpl.format(commentator['name'],
+                                                analysis_url,
+                                                comment['comment'])
+            email_server = EmailServer()
+            if email_server.is_connected:
+                msg = email_server.new_message("[FAME] New comment on analysis", body)
+                msg.send(list(recipients))
 
     def add_probable_name(self, probable_name):
         for name in self['probable_names']:
@@ -115,6 +160,9 @@ class File(MongoDict):
 
     def remove_group(self, group):
         # Update file
+        self.remove_from('groups', group)
+
+        # Update previous analysis
         for analysis_id in self['analysis']:
             analysis = Analysis(store.analysis.find_one({'_id': ObjectId(analysis_id)}))
             analysis.remove_from('groups', group)

@@ -93,13 +93,6 @@ class Analysis(CoreAnalysis):
 
                         self.add_tag(module_name)
 
-                    elif module.info['type'] == "Preloading":
-                        # queue next preloading module
-                        next_module = dispatcher.get_next_preloading_module(
-                            self._tried_modules())
-                        if next_module:
-                            self.queue_modules(next_module)
-
                     self.log('debug', "Done with {0}".format(module_name))
                 except Exception:
                     tb = traceback.format_exc()

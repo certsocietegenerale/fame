@@ -268,6 +268,9 @@ Analysis
                                     {% endfor %}
                                 {% endif %}
                                 <li>
+                                    <a class="ioc-refresh-link" href="{{ url_for('AnalysesView:refresh_iocs', id=analysis._id) }}"><i class="fa fa-recycle"></i>Refresh Observables</a>
+                                </li>
+                                <li>
                                     <div class="legend">
                                         <i class="fa fa-circle text-info"></i> Fame
                                         <i class="fa fa-circle text-danger"></i> Threat Intelligence Data

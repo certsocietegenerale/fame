@@ -1,7 +1,6 @@
 import os
 import datetime
 import traceback
-
 from shutil import copy
 
 from fame.common.config import fame_config
@@ -28,6 +27,7 @@ class Analysis(MongoDict):
         self['pending_modules'] = []
         self['waiting_modules'] = []
         self['canceled_modules'] = []
+        self['preloading_modules'] = []
         self['tags'] = []
         self['iocs'] = []
         self['results'] = {}
@@ -48,12 +48,27 @@ class Analysis(MongoDict):
 
         if '_id' not in self:
             self._init_threat_intelligence()
+
+            # Sort preloading and processing modules
+            if self['modules']:
+                processing = []
+                for module_name in self['modules']:
+                    module = dispatcher.get_module(module_name)
+                    if module is not None:
+                        if module.info['type'] == "Preloading":
+                            self['preloading_modules'].append(module_name)
+                        else:
+                            processing.append(module_name)
+
+                self['modules'] = processing
+
             self.save()
 
             if self['modules']:
                 self.queue_modules(self['modules'])
-            else:
-                self._automatic()
+
+            self._automatic()
+            self.resume()
 
     # can/will be overridden by the worker implementation
     def _get_generated_file_path(self, location):
@@ -92,13 +107,13 @@ class Analysis(MongoDict):
 
             # Automatically analyze extracted file if magic is enabled and module did not disable it
             if self.magic_enabled() and automatic_analysis:
-                modules = None
+                modules = []
                 config = Config.get(name="extracted").get_values()
                 if config is not None and "modules" in config:
                     modules = config["modules"].split()
                 f.analyze(self['groups'], self['analyst'], modules, self['options'])
-
         fd.close()
+        f.add_groups(self['groups'])
 
         self.append_to('extracted_files', f['_id'])
         f.add_parent_analysis(self)
@@ -150,6 +165,21 @@ class Analysis(MongoDict):
             self._file.add_probable_name(probable_name)
             self.append_to('probable_names', probable_name)
 
+    def refresh_iocs(self):
+        for ioc in self["iocs"]:
+            value = ioc["value"]
+            ti_tags, ti_indicators = self._lookup_ioc(value)
+            if ti_tags:
+                self.collection.update_one({'_id': self['_id'], 'iocs.value': value},
+                                           {'$set': {'iocs.$.ti_tags': ti_tags}})
+
+            if ti_indicators:
+                self.collection.update_one({'_id': self['_id'], 'iocs.value': value},
+                                           {'$set': {'iocs.$.ti_indicators': ti_indicators}})
+
+            ioc["ti_tags"] = ti_tags
+            ioc["ti_indicators"] = ti_indicators
+
     def add_ioc(self, value, source, tags=[]):
         # First, we need to make sure there is a record for this IOC
         r = self.collection.update_one({'_id': self['_id'], 'iocs.value': {'$ne': value}},
@@ -175,23 +205,49 @@ class Analysis(MongoDict):
         self.collection.update_one({'_id': self['_id'], 'iocs.value': value},
                                    {'$addToSet': {'iocs.$.sources': source}})
 
-    # can/will be overridden by the worker implementation
-    def _store_preloaded_file(self, filepath, fd):
-        return File(filename=os.path.basename(filepath), stream=fd)
+    def _store_preloaded_file(self, filepath=None, fd=None):
+        if not filepath and not fd:
+            raise ValueError(
+                "Please provide either the path to the file or a file-like "
+                "object containing the data.")
+
+        if filepath and fd:
+            self.log(
+                "debug",
+                "Please provide either the path to the file or a "
+                "file-like object containing the data, not both."
+                "Choosing the filepath for now.")
+
+        if fame_config.remote:
+            if filepath:
+                response = send_file_to_remote(filepath, '/files/')
+            else:
+                response = send_file_to_remote(fd, '/files/')
+
+            return File(response.json()['file'])
+        else:
+            if filepath:
+                with open(filepath, 'rb') as f:
+                    return File(filename=os.path.basename(filepath), stream=f)
+            else:
+                return File(filename=self._file['names'][0], stream=fd)
 
     def add_preloaded_file(self, filepath, fd):
         f = self._store_preloaded_file(filepath, fd)
-        f.append_to('analysis', self['_id'])
-
-        if f['names'] == ['file']:
-            f['names'] = self._file['names']
-            f.save()
-
-        self['file'] = f['_id']
         self._file = f
-        self.save()
 
-        self._automatic(preloading_done=True)
+        if f['_id'] != self['file']:
+            f.append_to('analysis', self['_id'])
+
+            if f['names'] == ['file']:
+                f['names'] = self._file['names']
+                f.save()
+
+            self['file'] = f['_id']
+            self.save()
+
+        # Queue general purpose modules if necessary
+        self._automatic()
 
     # Starts / Resumes an analysis to reach the target module
     def resume(self):
@@ -200,20 +256,34 @@ class Analysis(MongoDict):
         # First, see if there is pending modules remaining
         if self._run_pending_modules():
             was_resumed = True
+        # If not and there is no file, look for a preloading module
+        elif self._needs_preloading():
+            try:
+                next_module = dispatcher.next_preloading_module(self['preloading_modules'], self._tried_modules())
+                self.queue_modules(next_module)
+                was_resumed = True
+            except DispatchingException:
+                self.log('warning', 'no preloading module was able to find a file for submitted hash')
+
+                for module in list(self['waiting_modules']):
+                    self._cancel_module(module)
+        # If not, look for a path to a waiting module
         else:
-            # If not, look for a path to a waiting module
-            for module in self['waiting_modules']:
+            for module in list(self['waiting_modules']):
                 try:
                     next_module = dispatcher.next_module(self._types_available(), module, self._tried_modules())
                     self.queue_modules(next_module)
                     was_resumed = True
                 except DispatchingException:
-                    self.remove_from('waiting_modules', module)
-                    self.append_to('canceled_modules', module)
-                    self.log('warning', 'could not find execution path to "{}" (cancelled)'.format(module))
+                    self._cancel_module(module)
 
         if not was_resumed and self['status'] != self.STATUS_ERROR:
             self._mark_as_finished()
+
+    def _cancel_module(self, module):
+        self.remove_from('waiting_modules', module)
+        self.append_to('canceled_modules', module)
+        self.log('warning', 'could not find execution path to "{}" (cancelled)'.format(module))
 
     # Queue execution of specific module(s)
     def queue_modules(self, modules, fallback_waiting=True):
@@ -224,13 +294,16 @@ class Analysis(MongoDict):
                     module_name not in self['pending_modules']):
                 module = dispatcher.get_module(module_name)
 
-                if self._can_execute_module(module):
-                    if self.append_to('pending_modules', module_name):
-                        celery.send_task('run_module',
-                                         args=(self['_id'], module_name),
-                                         queue=module.info['queue'])
-                elif fallback_waiting:
-                    self.append_to('waiting_modules', module_name)
+                if module is None:
+                    self._error_with_module(module_name, "module has been removed or disabled.")
+                else:
+                    if self._can_execute_module(module):
+                        if self.append_to('pending_modules', module_name):
+                            celery.send_task('run_module',
+                                             args=(self['_id'], module_name),
+                                             queue=module.info['queue'])
+                    elif fallback_waiting:
+                        self.append_to('waiting_modules', module_name)
 
     def add_tag(self, tag):
         self.append_to('tags', tag)
@@ -248,7 +321,10 @@ class Analysis(MongoDict):
         return path
 
     def get_main_file(self):
-        return self.filepath(self._file['filepath'])
+        filepath = self._file['filepath']
+        if self._needs_preloading():
+            return filepath
+        return self.filepath(filepath)
 
     def get_files(self, file_type):
         results = []
@@ -303,9 +379,16 @@ class Analysis(MongoDict):
         else:
             return self['generated_files'].keys() + [self._file['type']]
 
+    def _needs_preloading(self):
+        return self._file['type'] == 'hash'
+
     # Determine if a module could be run on the current status of analysis
     def _can_execute_module(self, module):
-        if 'acts_on' not in module.info or not module.info['acts_on']:
+        # Only Preloading modules can execute on a hash
+        if self._needs_preloading():
+            return module.info['type'] == "Preloading"
+        # When a file is present, look at acts_on property
+        elif 'acts_on' not in module.info or not module.info['acts_on']:
             return True
         else:
             for source_type in iterify(module.info['acts_on']):
@@ -327,24 +410,10 @@ class Analysis(MongoDict):
         return self['executed_modules'] + self['canceled_modules']
 
     # Automatic analysis
-    def _automatic(self, preloading_done=False):
-        if self.magic_enabled():
-            if len(self['pending_modules']) == 0 and self['status'] == self.STATUS_PENDING:
-                if self._file['type'] == "hash":
-                    self['status'] = self.STATUS_PRELOADING
-                    self.save()
-
-                    preloading_module = dispatcher.get_next_preloading_module()
-                    if preloading_module:
-                        self.queue_modules(preloading_module, False)
-                else:
-                    self.queue_modules(dispatcher.general_purpose(), False)
-
-            if preloading_done and self['status'] == self.STATUS_PRELOADING:
-                self.queue_modules(dispatcher.general_purpose(), False)
-
-        if len(self['pending_modules']) == 0:
-            self._mark_as_finished()
+    def _automatic(self):
+        # If magic is enabled, schedule general purpose modules
+        if self.magic_enabled() and not self['modules']:
+            self.queue_modules(dispatcher.general_purpose(), False)
 
     def _error_with_module(self, module, message):
         self.log("error", "{}: {}".format(module, message))

@@ -16,7 +16,6 @@ from web.views.helpers import (
 )
 from web.views.mixins import UIView
 
-
 def return_file(file):
     analyses = list(current_user.analyses.find({'_id': {'$in': file['file']['analysis']}}))
     file['av_modules'] = [m.name for m in dispatcher.get_antivirus_modules()]
@@ -206,13 +205,14 @@ class FilesView(FlaskView, UIView):
 
             comment = request.form.get('comment')
             analysis_id = request.form.get('analysis')
+            notify = request.form.get('notify')
 
             if comment:
                 # If there is an analysis ID, make sure it is accessible
                 if analysis_id:
                     get_or_404(current_user.analyses, _id=analysis_id)
 
-                f.add_comment(current_user['_id'], comment, analysis_id, probable_name)
+                f.add_comment(current_user['_id'], comment, analysis_id, probable_name, notify)
             else:
                 flash('Comment should not be empty', 'danger')
 
