@@ -349,20 +349,6 @@ class ModulesView(FlaskView, UIView):
             Preloading modules).
         """
 
-        def update_queue():
-            new_queue = request.form.get('queue')
-
-            if module['queue'] == '':
-                flash('queue cannot be empty', 'danger')
-                return validation_error()
-            else:
-                if module['queue'] != new_queue:
-                    module.update_setting_value('queue', new_queue)
-                    updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
-                    updates.update_value("last_update", time())
-
-                    flash('Workers will reload once they are done with their current tasks', 'success')
-
         module = ModuleInfo(get_or_404(ModuleInfo.get_collection(), _id=id))
         module['readme'] = get_module_readme(module)
 
