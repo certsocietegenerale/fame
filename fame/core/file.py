@@ -200,10 +200,9 @@ class File(MongoDict):
         self.append_to('parent_analyses', analysis['_id'])
 
     # Update existing record
-    def _add_to_previous(self, existing_record, name=""):
+    def _add_to_previous(self, existing_record, name):
         self.update(existing_record)
-        if name and name not in self['names']:
-            self.append_to('names', name)
+        self.append_to('names', name)
 
     # Compute Hashes for current file
     def _compute_hashes(self, stream):
