@@ -12,6 +12,7 @@ WORKDIR /fame
 RUN utils/run.sh -m pip install --no-cache-dir -r requirements.txt
 
 ENV FAME_DOCKER=1
+ENV PYTHONUNBUFFERED=1
 
 VOLUME [ "/fame/conf" ]
 
