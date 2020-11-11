@@ -1,3 +1,4 @@
+from bson import ObjectId
 from pymongo import DESCENDING
 from flask import make_response, request, flash, redirect
 from flask_classy import FlaskView, route
@@ -5,16 +6,28 @@ from flask_paginate import Pagination
 from flask_login import current_user
 from werkzeug.utils import secure_filename
 
+from fame.common.email_utils import EmailServer
+from fame.common.config import fame_config
 from fame.core.store import store
 from fame.core.file import File
 from fame.core.module_dispatcher import dispatcher
 from web.views.negotiation import render, render_json
 from web.views.constants import PER_PAGE
 from web.views.helpers import (
-    file_download, get_or_404, requires_permission, clean_files, clean_analyses, clean_users,
-    enrich_comments, comments_enabled
+    file_download, get_or_404, requires_permission, clean_files,
+    clean_analyses, clean_users, enrich_comments, comments_enabled
 )
 from web.views.mixins import UIView
+
+
+notification_body_tpl = u"""Hi,
+
+{0} has written the following comment on analysis {1}:
+
+\t{2}
+
+Best regards"""
+
 
 def return_file(file):
     analyses = list(current_user.analyses.find({'_id': {'$in': file['file']['analysis']}}))
@@ -193,6 +206,31 @@ class FilesView(FlaskView, UIView):
 
         return redirect(request.referrer)
 
+    def notify_new_comment(self, file_, analysis_id, commentator_id, comment):
+        commentator = store.users.find_one({'_id': commentator_id})
+        analysis = store.analysis.find_one({'_id': ObjectId(analysis_id)})
+        analyst_id = analysis['analyst']
+        recipients = set()
+        # First let's add submiter analyst and check if he is not commentator
+        if commentator_id != analyst_id:
+            analyst = store.users.find_one({'_id': analysis['analyst']})
+            recipients.add(analyst['email'])
+        # iter on commentators and add them as recipient
+        for comment in file_['comments']:
+            if comment['analyst'] not in [analyst_id, commentator_id]:
+                recipient = store.users.find_one({'_id': comment['analyst']})
+                recipients.add(recipient['email'])
+        if len(recipients):
+            analysis_url = "{0}/analyses/{1}".format(fame_config.fame_url, analysis_id)
+            body = notification_body_tpl.format(commentator['name'],
+                                                analysis_url,
+                                                comment['comment'])
+            email_server = EmailServer()
+            if email_server.is_connected:
+                msg = email_server.new_message("[FAME] New comment on analysis", body)
+                msg.send(list(recipients))
+
+
     @route('/<id>/add_comment/', methods=["POST"])
     def add_comment(self, id):
         if comments_enabled():
@@ -212,7 +250,10 @@ class FilesView(FlaskView, UIView):
                 if analysis_id:
                     get_or_404(current_user.analyses, _id=analysis_id)
 
-                f.add_comment(current_user['_id'], comment, analysis_id, probable_name, notify)
+                f.add_comment(current_user['_id'], comment, analysis_id, probable_name)
+                if notify:
+                    self.notify_new_comment(f, analysis_id, current_user['_id'], comment)
+
             else:
                 flash('Comment should not be empty', 'danger')
 
