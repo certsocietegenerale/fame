@@ -1,26 +1,15 @@
 import os
-import requests
 import datetime
 import traceback
 from shutil import copy
-from hashlib import md5
-from urlparse import urljoin
 
 from fame.common.config import fame_config
-from fame.common.utils import iterify, u, send_file_to_remote
+from fame.common.utils import iterify, u
 from fame.common.mongo_dict import MongoDict
 from fame.core.store import store
 from fame.core.celeryctl import celery
 from fame.core.module_dispatcher import dispatcher, DispatchingException
 from fame.core.config import Config
-
-
-# Celery task to retrieve analysis object and run specific module on it
-@celery.task
-def run_module(analysis_id, module):
-    dispatcher.reload()
-    analysis = Analysis(store.analysis.find_one({'_id': analysis_id}))
-    analysis.run(module)
 
 
 class Analysis(MongoDict):
@@ -81,6 +70,10 @@ class Analysis(MongoDict):
             self._automatic()
             self.resume()
 
+    # can/will be overridden by the worker implementation
+    def _get_generated_file_path(self, location):
+        return location
+
     def magic_enabled(self):
         return ('magic_enabled' not in self['options']) or (self['options']['magic_enabled'])
 
@@ -90,18 +83,17 @@ class Analysis(MongoDict):
             self['generated_files'][file_type] = []
 
         for location in iterify(locations):
-            if fame_config.remote:
-                response = send_file_to_remote(location, '/analyses/{}/generated_file'.format(self['_id']))
-                filepath = response.json()['path']
-            else:
-                filepath = location
-
-            self.log('debug', u"Adding generated file '{0}' of type '{1}'".format(filepath, file_type))
-            self.append_to(['generated_files', file_type], filepath)
+            location = self._get_generated_file_path(location)
+            self.log('debug', u"Adding generated file '{0}' of type '{1}'".format(location, file_type))
+            self.append_to(['generated_files', file_type], location)
 
         # Then, trigger registered modules if magic is enabled
         if self.magic_enabled():
             self.queue_modules(dispatcher.triggered_by("_generated_file(%s)" % file_type))
+
+    # can/will be overridden by the worker implementation
+    def _get_file_from_filepath(self, filepath, fd):
+        return File(filename=os.path.basename(filepath), stream=fd)
 
     def add_extracted_file(self, filepath, automatic_analysis=True):
         self.log('debug', u"Adding extracted file '{}'".format(filepath))
@@ -111,11 +103,7 @@ class Analysis(MongoDict):
         f = File(filename=filename, stream=fd, create=False)
 
         if not f.existing:
-            if fame_config.remote:
-                response = send_file_to_remote(filepath, '/files/')
-                f = File(response.json()['file'])
-            else:
-                f = File(filename=os.path.basename(filepath), stream=fd)
+            f = self._get_file_from_filepath(filepath, fd)
 
             # Automatically analyze extracted file if magic is enabled and module did not disable it
             if self.magic_enabled() and automatic_analysis:
@@ -140,23 +128,25 @@ class Analysis(MongoDict):
         else:
             self.log('warning', u"Tried to change type of generated file '{}'".format(filepath))
 
+    # can/will be overridden by the worker implementation
+    def _store_support_file(self, filepath, module_name):
+        dirpath = os.path.join(fame_config.storage_path, 'support_files', module_name, str(self['_id']))
+        dstfilepath = os.path.join(dirpath, os.path.basename(filepath))
+
+        # Create parent dirs if they don't exist
+        try:
+            os.makedirs(dirpath)
+        except OSError:
+            pass
+
+        copy(filepath, dstfilepath)
+
+        return dstfilepath
+
     def add_support_file(self, module_name, name, filepath):
         self.log('debug', "Adding support file '{}' at '{}'".format(name, filepath))
 
-        if fame_config.remote:
-            response = send_file_to_remote(filepath, '/analyses/{}/support_file/{}'.format(self['_id'], module_name))
-            dstfilepath = response.json()['path']
-        else:
-            dirpath = os.path.join(fame_config.storage_path, 'support_files', module_name, str(self['_id']))
-            dstfilepath = os.path.join(dirpath, os.path.basename(filepath))
-
-            # Create parent dirs if they don't exist
-            try:
-                os.makedirs(dirpath)
-            except:
-                pass
-
-            copy(filepath, dstfilepath)
+        dstfilepath = self._store_support_file(filepath, module_name)
 
         if module_name not in self['support_files']:
             self['support_files'][module_name] = []
@@ -298,8 +288,10 @@ class Analysis(MongoDict):
     # Queue execution of specific module(s)
     def queue_modules(self, modules, fallback_waiting=True):
         for module_name in iterify(modules):
-            self.log("debug", "Trying to queue module '{0}'".format(module_name))
-            if module_name not in self['executed_modules'] and module_name not in self['pending_modules']:
+            self.log(
+                "debug", "Trying to queue module '{0}'".format(module_name))
+            if (module_name not in self['executed_modules'] and
+                    module_name not in self['pending_modules']):
                 module = dispatcher.get_module(module_name)
 
                 if module is None:
@@ -307,51 +299,11 @@ class Analysis(MongoDict):
                 else:
                     if self._can_execute_module(module):
                         if self.append_to('pending_modules', module_name):
-                            run_module.apply_async((self['_id'], module_name), queue=module.info['queue'])
+                            celery.send_task('run_module',
+                                             args=(self['_id'], module_name),
+                                             queue=module.info['queue'])
                     elif fallback_waiting:
                         self.append_to('waiting_modules', module_name)
-
-    # Run specific module, should only be executed on celery worker
-    def run(self, module_name):
-        self.log('debug', "Trying to run {0}".format(module_name))
-        print "Trying to run {0}".format(module_name)
-
-        # This test prevents multiple execution of the same module
-        if self.append_to('executed_modules', module_name):
-            module = dispatcher.get_module(module_name)
-
-            if module is None:
-                self._error_with_module(module_name, "module has been removed or disabled.")
-            else:
-                try:
-                    module.initialize()
-
-                    if module.info['type'] == "Preloading":
-                        self.update_value('status', self.STATUS_PRELOADING)
-                    else:
-                        self.update_value('status', self.STATUS_RUNNING)
-
-                    if module.execute(self):
-                        # Save results, if any
-                        if module.results is not None:
-                            self.update_value(['results', module_name], module.results)
-
-                        # Save tags, and queue triggered modules
-                        for tag in module.tags:
-                            tag_string = "%s(%s)" % (module_name, tag)
-                            self.add_tag(tag_string)
-
-                        self.add_tag(module_name)
-
-                    self.log('debug', "Done with {0}".format(module_name))
-                except Exception:
-                    tb = traceback.format_exc()
-                    self._error_with_module(module_name, tb)
-
-            self.remove_from('pending_modules', module_name)
-            self.remove_from('waiting_modules', module_name)
-
-        self.resume()
 
     def add_tag(self, tag):
         self.append_to('tags', tag)
@@ -361,34 +313,12 @@ class Analysis(MongoDict):
             self.queue_modules(dispatcher.triggered_by(tag))
 
     def log(self, level, message):
-        message = "%s: %s: %s" % (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), level, message)
-        self.append_to('logs', message)
+        message = "%s: %s: %s" % (
+            datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), level, message)
+        self.append_to('logs', message, set_=False)
 
-    # This will give the correct and locally valid filepath of given file
-    # When on a remote worker, the file needs to be retrieved first
     def filepath(self, path):
-        if fame_config.remote:
-            pathhash = md5(path.encode('utf-8')).hexdigest()
-            local_path = os.path.join(fame_config.storage_path, pathhash)
-            if not os.path.isfile(local_path):
-                # Make sure fame_config.storage_path exists
-                try:
-                    os.makedirs(fame_config.storage_path)
-                except Exception:
-                    pass
-
-                url = urljoin(fame_config.remote, '/analyses/{}/get_file/{}'.format(self['_id'], pathhash))
-                response = requests.get(url, stream=True, headers={'X-API-KEY': fame_config.api_key})
-                response.raise_for_status()
-                f = open(local_path, 'ab')
-                for chunk in response.iter_content(1024):
-                    f.write(chunk)
-
-                f.close()
-
-            return local_path
-        else:
-            return path
+        return path
 
     def get_main_file(self):
         filepath = self._file['filepath']
@@ -425,8 +355,7 @@ class Analysis(MongoDict):
                 ti_tags += tags
                 ti_indicators += indicators
             except Exception, e:
-                import traceback
-                traceback.print_exc()
+                self.log('debug', traceback.format_exc())
                 self.log('error', "error in threat intelligence module '{}': {}".format(module.name, e))
 
         return ti_tags, ti_indicators
@@ -492,4 +421,4 @@ class Analysis(MongoDict):
 
 
 # For cyclic imports
-from fame.core.file import File
+from fame.core.file import File  # noqa

@@ -1,0 +1,16 @@
+FROM fame-base
+
+ENV FAME_WORKER=0
+
+COPY docker/fame/run.web.sh /fame/run.sh
+
+RUN apt-get update && apt-get install -y libldap2-dev libsasl2-dev build-essential && \
+    utils/run.sh -m pip install --no-cache-dir -r requirements-web.txt uwsgi && \
+    apt-get purge -y libldap2-dev libsasl2-dev build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+EXPOSE 8080
+
+VOLUME [ "/fame/fame/modules", "/fame/storage", "/fame/web/static/img/avatars" ]
+
+CMD [ "/fame/run.sh" ]

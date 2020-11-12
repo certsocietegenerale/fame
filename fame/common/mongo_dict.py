@@ -58,9 +58,12 @@ class MongoDict(dict):
 
         return self._update({'$set': {mongo_field: value}})
 
-    def append_to(self, names, value):
+    def append_to(self, names, value, set_=True):
         self._local_field(names).append(value)
-        return self._update({'$addToSet': {self._mongo_field(names): value}})
+        if set_:
+            return self._update({'$addToSet': {self._mongo_field(names): value}})
+        else:
+            return self._update({'$push': {self._mongo_field(names): value}})
 
     def remove_from(self, names, value):
         local_array = self._local_field(names)

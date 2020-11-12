@@ -20,6 +20,7 @@ from web.views.modules import ModulesView
 from web.views.search import SearchView
 from web.views.configs import ConfigsView
 from web.views.users import UsersView
+from web.views.system import SystemView
 from web.views.helpers import user_if_enabled
 
 try:
@@ -133,7 +134,7 @@ def avatar(user_id):
     if os.path.exists(os.path.join(AVATARS_ROOT, "{}.png".format(user_id))):
         return url_for('static', filename="img/avatars/{}.png".format(user_id))
     else:
-        return url_for('static', filename="img/avatars/default.png")
+        return url_for('static', filename="img/default_avatar.png")
 
 
 @app.template_global()
@@ -165,6 +166,7 @@ ModulesView.register(app)
 SearchView.register(app)
 ConfigsView.register(app)
 UsersView.register(app)
+SystemView.register(app)
 
 if __name__ == '__main__':
     app.run(debug=True, port=4200, host="0.0.0.0")

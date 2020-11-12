@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/bash
 
 UTILS_ROOT=$(dirname "$0")
 FAME_ROOT=$(dirname "$UTILS_ROOT")

@@ -80,7 +80,7 @@ FAME relies on three components:
 
 .. image:: /images/concept-architecture.png
 
-Components can all be on the same server, or split across multiple servers.
+Components can all be on the same server, or split across multiple servers. A dockerized version of FAME is also available.
 
 The web server is where antivirus modules and threat intelligence modules are executed.
 

@@ -8,12 +8,14 @@ import importlib
 import datetime
 import argparse
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
+fame_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+sys.path.append(fame_dir)
 
 from utils import error, user_input
 from fame.core import fame_init
 from fame.core import module as module_classes
 from fame.common.objects import Dictionary
+from fame.common.config import fame_config
 from fame.common.constants import MODULES_ROOT
 from fame.common.utils import iterify, u
 from fame.core.module import ProcessingModule
@@ -36,7 +38,7 @@ class Dispatcher:
                 except:
                     pass
 
-    def get_processing_module(self, name):
+    def get_module(self, name):
         if name in self.modules:
             module = self.modules[name](with_config=False)
             module.info = module.static_info()
@@ -79,7 +81,7 @@ class Dispatcher:
         if setting['type'] == 'integer':
             value = int(value)
         elif setting['type'] == 'bool':
-            value = bool(value)
+            value = value.lower() in ['true', '1']
 
         return value
 
@@ -177,8 +179,13 @@ class TestAnalysis(dict):
 
 def test_mode_module(name, interactive):
     print "[+] Enabling test mode."
+
+    if 'temp_path' not in fame_config:
+        fame_config.temp_path = os.path.join(fame_dir, "temp")
+        print "[+] Setting temp_path to {}".format(fame_config.temp_path)
+
     dispatcher = Dispatcher(interactive)
-    module = dispatcher.get_processing_module(name)
+    module = dispatcher.get_module(name)
 
     if not module:
         error("Could not find module '{}'".format(name))
@@ -215,7 +222,7 @@ if __name__ == '__main__':
     else:
         try:
             fame_init()
-            module = dispatcher.get_processing_module(args.module)
+            module = dispatcher.get_module(args.module)
             module.initialize()
         except:
             module = test_mode_module(args.module, args.interactive)

@@ -5,6 +5,7 @@ from flask_login import current_user
 from werkzeug.exceptions import Forbidden
 from functools import wraps
 from os.path import basename
+import os
 
 from fame.core.store import store
 from fame.core.config import Config
@@ -102,6 +103,7 @@ def file_download(filepath):
         response = make_response(fd.read())
 
     response.headers["Content-Disposition"] = u"attachment; filename={0}".format(basename(filepath)).encode('latin-1', errors='ignore')
+    response.headers["Content-Type"] = u"application/binary"
 
     return response
 

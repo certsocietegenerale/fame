@@ -104,12 +104,78 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="header">
+                    <h4 class="title">Preloading Modules</h4>
+                    <p class="category"></p>
+                </div>
+                <div class="content module-list">
+                    {% for module in data.modules['Preloading'] %}
+                        <div class="module-info" id="{{module.name}}">
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <h5>{{module.name}}</h5>
+                                </div>
+                                <div class="col-sm-4 text-right module-actions">
+                                    <a class="btn btn-xs btn-fill" href="{{ url_for('ModulesView:configure', id=module._id)}}"><i class="fa fa-sliders"></i> Configure</a>
+                                    {% if module.enabled %}
+                                        <form method="post" action="{{ url_for('ModulesView:disable', id=module._id) }}">
+                                            <button type="submit" class="btn btn-danger btn-xs btn-fill"><i class="fa fa-remove"></i> Disable</button>
+                                        </form>
+                                    {% else %}
+                                        {% if not module.error %}
+                                            <form method="post" action="{{ url_for('ModulesView:enable', id=module._id) }}">
+                                                <button type="submit" class="btn btn-success btn-xs btn-fill"><i class="fa fa-check"></i> Enable</button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if module.description %}
+                                <div>{{module.description}}</div>
+                            {% endif %}
+
+                            {% if module.error %}
+                            <div class="panel panel-danger">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">Error</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <pre>{{module.error}}</pre>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <ul>
+                                {% if module.acts_on %}
+                                    <li><span class="label">Acts On</span> {{module.acts_on|smart_join}}</li>
+                                {% endif %}
+                                <li><span class="label">Queue</span> {{module.queue}}</li>
+                                {% if module.enabled %}
+                                    <li><i class="fa fa-check text-success"></i> enabled</li>
+                                {% else %}
+                                    <li><i class="fa fa-remove text-danger"></i> Disabled</li>
+                                {% endif %}
+                                <li><span class="label">Queue</span> {{module.queue}}</li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div>No module to list. Consider <a href="{{url_for('ModulesView:repository_new')}}">adding a module repository</a>.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
                     <h4 class="title">Processing Modules</h4>
                     <p class="category"></p>
                 </div>
                 <div class="content module-list">
                     {% for module in data.modules['Processing'] %}
-                        <div class="module-info">
+                        <div class="module-info" id="{{module.name}}">
                             <div class="row">
                                 <div class="col-sm-8">
                                     <h5>{{module.name}}</h5>
@@ -242,7 +308,7 @@
                 </div>
                 <div class="content module-list">
                     {% for module in data.modules['Filetype'] %}
-                        <div class="module-info">
+                        <div class="module-info" id="{{module.name}}">
                             <div class="row">
                                 <div class="col-sm-8">
                                     <h5>{{module.name}}</h5>
@@ -306,7 +372,7 @@
                 </div>
                 <div class="content module-list">
                     {% for module in data.modules[type] %}
-                        <div class="module-info">
+                        <div class="module-info" id="{{module.name}}">
                             <div class="row">
                                 <div class="col-sm-8">
                                     <h5>{{module.name}}</h5>

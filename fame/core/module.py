@@ -2,14 +2,21 @@ import os
 import inspect
 import requests
 import traceback
+
+from copy import copy
 from time import sleep
 from urlparse import urljoin
-from markdown2 import markdown
 from datetime import datetime, timedelta
 
 from fame.common.constants import MODULES_ROOT
-from fame.common.exceptions import ModuleInitializationError, ModuleExecutionError, MissingConfiguration
-from fame.common.utils import iterify, is_iterable, list_value, save_response, ordered_list_value
+from fame.common.utils import (
+    iterify, is_iterable, list_value, save_response,
+    ordered_list_value
+)
+from fame.common.exceptions import (
+    ModuleInitializationError, ModuleExecutionError,
+    MissingConfiguration
+)
 from fame.common.mongo_dict import MongoDict
 from fame.core.config import Config, apply_config_update, incomplete_config
 from fame.core.internals import Internals
@@ -39,15 +46,6 @@ class ModuleInfo(MongoDict):
 
         return None
 
-    def get_readme(self):
-        readme = self.get_file('README.md')
-
-        if readme:
-            with open(readme, 'r') as f:
-                readme = markdown(f.read(), extras=["code-friendly"])
-
-        return readme
-
     def details_template(self):
         return '/'.join(self['path'].split('.')[2:-1]) + '/details.html'
 
@@ -66,7 +64,8 @@ class ModuleInfo(MongoDict):
             self._update_diffed_value('acts_on', new_info['acts_on'])
 
         self['description'] = new_info['description']
-        self['config'] = apply_config_update(self['config'], new_info['config'])
+        self['config'] = apply_config_update(
+            self['config'], new_info['config'])
 
         if self['enabled'] and incomplete_config(self['config']):
             self['enabled'] = False
@@ -497,11 +496,12 @@ class ProcessingModule(Module):
 
             return self.each_with_type(target, file_type)
         except ModuleExecutionError, e:
+            self.log("debug", traceback.format_exc())
             self.log("error", "Could not run on %s: %s" % (target, e))
             return False
-        except:
-            tb = traceback.format_exc()
-            self.log("error", "Could not run on %s.\n %s" % (target, tb))
+        except Exception, e:
+            self.log("debug", traceback.format_exc())
+            self.log("error", "Could not run on %s.\n %s" % (target, e))
             return False
 
     @classmethod
@@ -1076,7 +1076,7 @@ class VirtualizationModule(Module):
             r = requests.get(self.agent_url, timeout=1)
 
             return r.status_code == 200
-        except:
+        except Exception:
             return False
 
     def restore(self, should_raise=True):

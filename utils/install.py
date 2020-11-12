@@ -1,6 +1,7 @@
 import os
 import sys
 import errno
+from argparse import ArgumentParser
 from urllib import quote_plus
 from urlparse import urljoin
 from subprocess import call
@@ -64,10 +65,11 @@ def define_mongo_connection(context):
     context['mongo_user'] = ''
     context['mongo_password'] = ''
     if not test_mongodb_connection(db):
-        context['mongo_user'] = user_input("MongoDB username")
+        context['mongo_user'] = user_input("MongoDB user name")
         context['mongo_password'] = user_input("MongoDB password")
+
         try:
-            db.authenticate(context['mongo_user'], quote_plus(context['mongo_password']))
+            db.authenticate(context['mongo_user'], context['mongo_password'])
         except:
             error("Could not connect to MongoDB (invalid credentials).")
 
@@ -81,6 +83,7 @@ def define_installation_type(context):
     print " - 2: Remote worker\n"
 
     itype = user_input("Installation type", "1", ["1", "2"])
+
     if itype == "1":
         context['installation_type'] = 'local'
     else:
@@ -126,16 +129,18 @@ def add_community_repository():
             'status': 'cloning'
         })
         repo.save()
-        repo.do_clone()
+        repo.update_files()
 
 
 def perform_local_installation(context):
     templates = Templates()
 
     context['fame_url'] = user_input("FAME's URL for users (e.g. https://fame.yourdomain/)")
+
     print "[+] Creating configuration file ..."
     context['secret_key'] = os.urandom(64).encode('hex')
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'local_fame.conf', context)
+    templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame-worker.conf'), 'remote_fame.conf', context)
 
     generate_ssh_key()
 
@@ -195,20 +200,20 @@ def perform_remote_installation(context):
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'remote_fame.conf', context)
 
 
-def install_requirements():
-    print "[+] Installing requirements ..."
+def install_requirements(what, req_file):
+    print "[+] Installing {} requirements ...".format(what)
 
-    rcode, output = pip_install('-r', os.path.join(FAME_ROOT, 'requirements.txt'))
+    rcode, output = pip_install('-r', os.path.join(FAME_ROOT, req_file))
 
     if rcode:
         print output
-        error("Could not install requirements.")
+        error("Could not install {} requirements.".format(what))
 
 
 def main():
     context = {}
 
-    install_requirements()
+    install_requirements("base", "requirements.txt")
 
     define_mongo_connection(context)
 
@@ -216,8 +221,11 @@ def main():
     define_installation_type(context)
     if context['installation_type'] == 'local':
         perform_local_installation(context)
+        install_requirements("web", "requirements-web.txt")
+        install_requirements("worker", "requirements-worker.txt")
     else:
         perform_remote_installation(context)
+        install_requirements("worker", "requirements-worker.txt")
 
 
 if __name__ == '__main__':

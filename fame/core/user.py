@@ -61,7 +61,7 @@ class User(MongoDict):
             response.raise_for_status()
             with open(os.path.join(AVATARS_ROOT, "{}.png".format(self['_id'])), 'w') as f:
                 f.write(response.content)
-        except:
+        except Exception:
             print "Could not generate avatar for {}".format(self['email'])
 
     @staticmethod

@@ -1,0 +1,95 @@
+version: '3.4'
+
+networks:
+  fame_internal:
+    internal: true
+
+  gateway:
+
+  traefik_default:
+    external:
+      name: traefik_default
+
+x-mongo-env: &mongo_env
+  MONGO_HOST: "fame-mongo"
+  MONGO_PORT: "27017"
+  MONGO_DB: "fame"
+  MONGO_USERNAME: "fame"
+  MONGO_PASSWORD: "super-secret-password"
+
+secrets:
+  ssh_priv_key:
+    file: ./ssh/id_rsa
+
+volumes:
+  fame-share:
+
+services:
+  fame-mongo:
+    image: fame-mongo
+    environment:
+      MONGO_INITDB_DATABASE: "fame"
+    container_name: fame-mongo
+    restart: unless-stopped
+    volumes:
+      - /opt/fame-mongo:/data/db:z
+    command: --auth
+    networks:
+      - "fame_internal"
+
+  fame-web:
+    image: fame-web
+    container_name: fame-web
+    depends_on:
+      - fame-mongo
+    environment:
+      <<: *mongo_env
+      FAME_INSTALL_COMMUNITY_REPO: "1"
+      FAME_URL: "http://localhost/"
+      FAME_ADMIN_FULLNAME: "The Admin"
+      FAME_ADMIN_EMAIL: "admin@example.com"
+      FAME_ADMIN_GROUPS: "cert"
+      FAME_ADMIN_DEFAULT_SHARING: "cert"
+      FAME_ADMIN_PERMISSIONS: "*"
+      FAME_ADMIN_PASSWORD: "secret"
+      FAME_PUBLIC_KEY: "ssh-rsa ..."
+      FAME_SECRET_KEY: "<ssh secret key>"
+      FAME_AUTHENTICATION_TYPE: "user_password"
+      # LDAP_URI: "ldap://example.com"
+      # LDAP_USER: "ldap-user"
+      # LDAP_PASSWORD: "ldap-password"
+      # LDAP_FILTER_EMAIL: "(&(objectCategory=Person)(sAMAccountName=*)(mail={})"
+      # LDAP_FILTER_DN: "OU=People,DC=example,DC=com"
+    volumes:
+      - /opt/fame-modules:/fame/fame/modules:z
+      - /opt/fame-storage:/fame/storage:z
+      - /opt/fame-avatars:/fame/web/static/img/avatars:z
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_default"
+      - "traefik.port=8080"
+      - "traefik.frontend.rule=Host: fame.example.com"
+    networks:
+      - "fame_internal"
+      - "traefik_default"
+    restart: unless-stopped
+    hostname: fame-web
+
+  fame-worker:
+    image: fame-worker
+    container_name: fame-worker
+    depends_on:
+      - fame-mongo
+      - fame-web
+    environment:
+      <<: *mongo_env
+      FAME_URL: "http://fame-web:8080/"
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:z
+      - fame-share:/fame/docker-storage:z
+    networks:
+      - "fame_internal"
+      - "gateway"
+    secrets:
+      - ssh_priv_key

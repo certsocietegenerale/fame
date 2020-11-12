@@ -1,9 +1,7 @@
 import os
-import requests
 import collections
 from time import sleep
 from uuid import uuid4
-from urlparse import urljoin
 from datetime import datetime
 from shutil import copyfileobj
 from werkzeug.utils import secure_filename
@@ -65,29 +63,19 @@ def ordered_list_value(list_of_values):
     return result
 
 
-def send_file_to_remote(file, url):
-    if isinstance(file, basestring):
-        file = open(file, 'rb')
-
-    url = urljoin(fame_config.remote, url)
-    response = requests.post(url, files={'file': file}, headers={'X-API-KEY': fame_config.api_key})
-    response.raise_for_status()
-
-    file.close()
-
-    return response
-
-
 def unique_for_key(l, key):
     return {d[key]: d for d in l}.values()
 
 
-def tempdir():
-    tempdir = os.path.join(fame_config.temp_path, str(uuid4()).replace('-', ''))
+def tempdir(prefix=None):
+    if not prefix:
+        prefix = fame_config.temp_path
+
+    tempdir = os.path.join(prefix, str(uuid4()).replace('-', ''))
 
     try:
         os.makedirs(tempdir)
-    except:
+    except OSError:
         pass
 
     return tempdir
@@ -95,7 +83,8 @@ def tempdir():
 
 def save_response(response):
     tmp = tempdir()
-    filename = secure_filename(parse_requests_response(response).filename_unsafe)
+    filename = secure_filename(
+        parse_requests_response(response).filename_unsafe)
     filepath = os.path.join(tmp, filename)
 
     with open(filepath, 'wb') as out:

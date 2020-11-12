@@ -1,8 +1,12 @@
 import os
+from io import BytesIO
+from shutil import move, rmtree
 from time import time
 from zipfile import ZipFile
 from flask import url_for, request, flash
 from flask_classy import FlaskView, route
+from uuid import uuid4
+from markdown2 import markdown
 
 from web.views.negotiation import render, redirect, validation_error
 from web.views.mixins import UIView
@@ -23,6 +27,10 @@ def get_name(module):
 
 
 def get_deploy_key():
+    # Public key comes as an env var when running as docker container
+    if os.getenv("FAME_DOCKER", "0") == "1":
+        return os.getenv("FAME_PUBLIC_KEY")
+
     keyfile = os.path.join(FAME_ROOT, "conf", "id_rsa.pub")
 
     key = None
@@ -33,6 +41,16 @@ def get_deploy_key():
         pass
 
     return key
+
+
+def get_module_readme(module):
+    readme = module.get_file('README.md')
+
+    if readme:
+        with open(readme, 'r') as f:
+            readme = markdown(f.read(), extras=["code-friendly"])
+
+    return readme
 
 
 def update_config(settings, options=False):
@@ -217,9 +235,13 @@ class ModulesView(FlaskView, UIView):
         """
         module = ModuleInfo(get_or_404(ModuleInfo.get_collection(), _id=id))
         module.update_value('enabled', False)
+
+        updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
+        updates.update_value("last_update", time())
+
         dispatcher.reload()
 
-        return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
+        return redirect({'module': clean_modules(module)}, url_for('ModulesView:index', _anchor=module['name']))
 
     @requires_permission('manage_modules')
     @route('/<id>/enable', methods=['POST'])
@@ -255,13 +277,17 @@ class ModulesView(FlaskView, UIView):
                 return validation_error(url_for('ModulesView:configure', id=module['_id']))
 
         module.update_value('enabled', True)
+
+        updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
+        updates.update_value("last_update", time())
+
         dispatcher.reload()
 
-        readme = module.get_readme()
+        readme = get_module_readme(module)
         if readme:
             flash(readme, 'persistent')
 
-        return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
+        return redirect({'module': clean_modules(module)}, url_for('ModulesView:index', _anchor=module['name']))
 
     @requires_permission('manage_modules')
     @route('/<id>/configuration', methods=['GET', 'POST'])
@@ -316,14 +342,15 @@ class ModulesView(FlaskView, UIView):
         :param id: id of the named configuration.
 
         :form acts_on: comma-delimited list of FAME types this module can act on
-            (only for Processing modules).
+            (for Processing modules).
         :form triggered_by: comma-delimited list of triggers (only for Processing
             modules).
         :form queue: name of the queue to use for this module (for Processing and
             Preloading modules).
         """
+
         module = ModuleInfo(get_or_404(ModuleInfo.get_collection(), _id=id))
-        module['readme'] = module.get_readme()
+        module['readme'] = get_module_readme(module)
 
         if request.method == "POST":
             if module['type'] == 'Filetype':
@@ -352,7 +379,7 @@ class ModulesView(FlaskView, UIView):
 
             module.save()
             dispatcher.reload()
-            return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
+            return redirect({'module': clean_modules(module)}, url_for('ModulesView:index', _anchor=module['name']))
         else:
             return render({'module': clean_modules(module)}, 'modules/module_configuration.html')
 
@@ -402,9 +429,59 @@ class ModulesView(FlaskView, UIView):
         :>json Repository repository: the repository.
         """
         repository = Repository(get_or_404(Repository.get_collection(), _id=id))
-        repository.pull()
+        repository.update_files()
 
         return redirect({'repository': clean_repositories(repository)}, url_for('ModulesView:index'))
+
+    @requires_permission('worker')
+    @route('/repository/<id>/update', methods=['PUT'])
+    def repository_receive_update(self, id):
+        repository = Repository(
+            get_or_404(Repository.get_collection(), _id=id))
+
+        backup_path = os.path.join(fame_config.temp_path, 'modules_backup_{}'.format(uuid4()))
+
+        # make sure, the path exists before we backup things;
+        # prevents errors if the repository was not installed
+        # prior to this 'update' request
+        try:
+            os.makedirs(repository.path())
+        except OSError:
+            pass
+
+        try:
+            move(repository.path(), backup_path)
+
+            with ZipFile(BytesIO(request.data), 'r') as zipf:
+                zipf.extractall(repository.path())
+
+            repository['status'] = 'active'
+            repository['error_msg'] = ''
+            repository.save()
+
+            dispatcher.update_modules(repository)
+
+            updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
+            updates.update_value("last_update", time())
+
+            rmtree(backup_path)
+
+            return make_response('', 204)  # no response
+        except Exception, e:
+            print "[E] Could not update repository {}: {}".format(
+                repository['name'], e)
+            print "[E] Restoring previous version"
+            rmtree(repository.path())
+            move(backup_path, repository.path())
+
+            repository['status'] = 'error'
+            repository['error_msg'] = \
+                "could not update repository: '{}'".format(e)
+
+            import traceback
+            traceback.print_exc()
+
+            return validation_error()
 
     @requires_permission('manage_modules')
     @route('/repository/<id>/delete', methods=['POST'])
@@ -463,9 +540,9 @@ class ModulesView(FlaskView, UIView):
                 flash("Private repositories are disabled because of a problem with your installation (you do not have a deploy key in 'conf/id_rsa.pub')", 'danger')
                 return validation_error()
 
-            repository['status'] = 'cloning'
             repository.save()
-            repository.clone()
+            repository.update_files()
+
             return redirect({'repository': clean_repositories(repository)}, url_for('ModulesView:index'))
 
         return render({'repository': repository, 'deploy_key': deploy_key}, 'modules/repository_new.html')

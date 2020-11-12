@@ -16,11 +16,16 @@ CELERY_RESULT_BACKEND = MONGO
 CELERY_ACCEPT_CONTENT = ['json_util']
 CELERY_TASK_SERIALIZER = 'json_util'
 
-CELERY_IMPORTS = ('fame.core.analysis', 'fame.core.repository')
+CELERY_IMPORTS = ('fame.worker.analysis', 'fame.worker.repository')
 
 
 def connect_to_db(**kwargs):
     fame_init()
+
+    from fame.core.user import User
+    worker_user = User.get(email="worker@fame")
+    if worker_user:
+        fame_config.api_key = worker_user['api_key']
 
 
 signals.worker_process_init.connect(connect_to_db)

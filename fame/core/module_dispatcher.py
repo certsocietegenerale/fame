@@ -43,7 +43,8 @@ class ModuleDispatcher(object):
             ('configs', 'Grants access to the "Configs" section that tracks malware configurations.'),
             ('submit_iocs', 'Allows user to send observables to Threat Intelligence modules.'),
             ('add_probable_name', "Allows user to set an object's probable name"),
-            ('see_logs', 'Allows user to access the log section of anlyses. This could reveal information on the underlying system.')
+            ('see_logs', 'Allows user to access the log section of anlyses. This could reveal information on the underlying system.'),
+            ('system', 'Allows user to access system view.')
         ])
 
         self.load_all_modules()
@@ -252,7 +253,7 @@ class ModuleDispatcher(object):
 
     def _add_transforms(self, module):
         if not module['acts_on']:
-            for generated_type in iterify(module.generates):
+            for generated_type in iterify(module['generates']):
                 if generated_type not in self._direct_transforms:
                     self._direct_transforms[generated_type] = []
                 self._direct_transforms[generated_type].append(module['name'])
@@ -388,7 +389,7 @@ class ModuleDispatcher(object):
 
         for destination_type in iterify(target_module.info['acts_on']):
             module, length = self._shortest_path_to_type(types_available, destination_type, excluded_modules + [target_module.info['name']])
-            if path_length is None or length < path_length:
+            if path_length is None or (length is not None and length < path_length):
                 path_length = length
                 next_module = module
 

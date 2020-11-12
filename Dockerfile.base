@@ -1,0 +1,20 @@
+FROM python:2-slim-stretch
+
+RUN apt-get update && apt-get install -y git libmagic1 && \
+    useradd -s /bin/false -U fame -m && \
+    pip install --no-cache-dir virtualenv && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY . /fame
+COPY docker/fame/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+WORKDIR /fame
+RUN utils/run.sh -m pip install --no-cache-dir -r requirements.txt
+
+ENV FAME_DOCKER=1
+ENV PYTHONUNBUFFERED=1
+
+VOLUME [ "/fame/conf" ]
+
+ENTRYPOINT [ "docker-entrypoint.sh" ]
+CMD [ "/bin/bash" ]

@@ -29,7 +29,8 @@ The best practice is to do the following:
 * Create a directory for your module inside one of the repositories.
 * Make sure your directory is a valid Python package (do not use spaces, make sure every directory in the path as a ``__init__.py`` file).
 * Create a python file inside your directory for your module.
-* Inside your python file, create a class that inherits from :class:`fame.core.module.ProcessingModule`, :class:`fame.core.module.PreloadingModule`, :class:`fame.core.module.ReportingModule`, :class:`fame.core.module.ThreatIntelligenceModule` or :class:`fame.core.module.AntivirusModule`.
+* Inside your python file, create a class that inherits from :class:`fame.core.module.PreloadingModule`, :class:`fame.core.module.ProcessingModule`, :class:`fame.core.module.ReportingModule`, :class:`fame.core.module.ThreatIntelligenceModule` or :class:`fame.core.module.AntivirusModule`.
+
 
 Writing a Processing module
 ===========================

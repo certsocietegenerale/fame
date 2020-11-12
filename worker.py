@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import signal
@@ -5,7 +6,7 @@ import argparse
 import requests
 from urlparse import urljoin
 from socket import gethostname
-from StringIO import StringIO
+from BytesIO import BytesIO
 from zipfile import ZipFile
 from shutil import move, rmtree
 from uuid import uuid4
@@ -18,10 +19,10 @@ from fame.core.internals import Internals
 from fame.common.config import fame_config
 from fame.common.constants import MODULES_ROOT
 from fame.common.pip import pip_install
-
+from fame.core.user import User
 
 UNIX_INSTALL_SCRIPTS = {
-    "install.sh": ["sh", "{}"],
+    "install.sh": ["bash", "{}"],
     "install.py": ["python", "{}"]
 }
 
@@ -37,28 +38,34 @@ class Worker:
         self.celery_args = [arg for arg in celery_args.split(' ') if arg]
         self.refresh_interval = refresh_interval
 
+        worker_user = User.get(email="worker@fame")
+        if worker_user:
+            fame_config.api_key = worker_user['api_key']
+        else:
+            raise Exception("Worker user (worker@fame) does not exist")
+
     def update_modules(self):
         # Module updates are only needed for remote workers
-        if fame_config.remote:
+        if fame_config.is_worker:
             # First, backup current code
             backup_path = os.path.join(fame_config.temp_path, 'modules_backup_{}'.format(uuid4()))
             move(MODULES_ROOT, backup_path)
 
             # Replace current code with code fetched from web server
-            url = urljoin(fame_config.remote, '/modules/download')
+            url = urljoin(fame_config.fame_url, '/modules/download')
             try:
                 response = requests.get(url, stream=True, headers={'X-API-KEY': fame_config.api_key})
                 response.raise_for_status()
 
                 os.makedirs(MODULES_ROOT)
-                with ZipFile(StringIO(response.content), 'r') as zipf:
+                with ZipFile(BytesIO(response.raw.read()), 'r') as zipf:
                     zipf.extractall(MODULES_ROOT)
 
                 rmtree(backup_path)
-                print "Updated modules."
+                print("Updated modules.")
             except Exception, e:
-                print "Could not update modules: '{}'".format(e)
-                print "Restoring previous version"
+                print("Could not update modules: '{}'".format(e))
+                print("Restoring previous version")
                 move(backup_path, MODULES_ROOT)
 
         self.update_module_requirements()
@@ -69,25 +76,26 @@ class Worker:
 
             if 'error' in module:
                 del(module['error'])
+                module.save()
 
-            if module['type'] == "Processing":
+            if module['type'] in ("Processing", "Preloading", "Virtualization") and 'queue' in module:
                 should_update = (module['queue'] in self.queues)
-            elif module['type'] in ["Threat Intelligence", "Reporting", "Filetype"]:
-                should_update = True
             else:
-                should_update = (not fame_config.remote)
+                should_update = True
 
-            if should_update:
+            if should_update and module['enabled']:
+                # only in the docker environment the worker has
+                # permissions to perform elevated tasks
+                if os.getenv("FAME_DOCKER", "0") == "1":
+                    self.launch_install_scripts(module)
+
                 self.update_python_requirements(module)
-                self.launch_install_scripts(module)
-
-            module.save()
 
     def update_python_requirements(self, module):
         requirements = self._module_requirements(module)
 
         if requirements:
-            print "Installing requirements for '{}' ({})".format(module['name'], requirements)
+            print("Installing requirements for '{}' ({})".format(module['name'], requirements))
 
             rcode, output = pip_install('-r', requirements)
 
@@ -98,10 +106,10 @@ class Worker:
     def launch_install_scripts(self, module):
         scripts = self._module_install_scripts(module)
 
-        for script in scripts:
+        for script, cwd in scripts:
             try:
-                print "Launching installation script '{}'".format(' '.join(script))
-                check_output(script, stderr=STDOUT)
+                print("Launching installation script '{}'".format(' '.join(script)))
+                check_output(script, stderr=STDOUT, cwd=cwd)
             except CalledProcessError, e:
                 self._module_installation_error(' '.join(script), module, e.output)
             except Exception, e:
@@ -112,8 +120,9 @@ class Worker:
 
         module['enabled'] = False
         module['error'] = errors
+        module.save()
 
-        print errors
+        print(errors)
 
     def _module_requirements(self, module):
         return module.get_file('requirements.txt')
@@ -134,7 +143,7 @@ class Worker:
                 for arg in INSTALL_SCRIPTS[filename]:
                     cmdline.append(arg.format(filepath))
 
-                results.append(cmdline)
+                results.append((cmdline, os.path.dirname(filepath)))
 
         return results
 
@@ -194,7 +203,8 @@ class Worker:
                     pass
 
     def _new_celery_worker(self):
-        return Popen(['celery', '-A', 'fame.core.celeryctl', 'worker', '-Q', ','.join(self.queues)] + self.celery_args)
+        return Popen(['celery', '-A', 'fame.core.celeryctl', 'worker', '-Q', ','.join(self.queues)] + self.celery_args,
+                     stdout=sys.stdout, stderr=sys.stderr)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Launches a FAME worker.')
@@ -216,9 +226,9 @@ if __name__ == '__main__':
         else:
             queues = ['unix']
 
-    # A local worker should also take care of updates
-    if not fame_config.remote:
-        queues.append('updates')
+    # ensure workers also listen to update requests if *nix
+    if "unix" in queues:
+        queues.append("updates")
 
     fame_init()
     Worker(queues, args.celery_args, args.refresh_interval).start()
