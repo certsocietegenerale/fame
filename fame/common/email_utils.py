@@ -123,8 +123,8 @@ class EmailServer:
                 else:
                     status = self.smtp.noop()[0]
                     self.is_connected = (status == 250)
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 self.is_connected = False
         except MissingConfiguration:
             self.is_configured = False

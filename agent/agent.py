@@ -1,4 +1,5 @@
 import os
+import imp
 import sys
 import inspect
 import traceback
@@ -21,7 +22,7 @@ sys.path.append(AGENT_ROOT)
 
 
 def is_iterable(element):
-    return isinstance(element, collections.Iterable) and not isinstance(element, basestring)
+    return isinstance(element, collections.Iterable) and not isinstance(element, str)
 
 
 def iterify(element):
@@ -113,7 +114,7 @@ class IsolatedModule:
         def run_each_with_type(self, target, target_type):
             try:
                 return self.each_with_type(target, target_type)
-            except IsolatedExceptions.ModuleExecutionError, e:
+            except IsolatedExceptions.ModuleExecutionError as e:
                 self.log("error", "Could not run on %s: %s" % (target, e))
                 return False
             except:
@@ -156,7 +157,7 @@ class Worker:
         self.queue = None
 
     def new_task(self):
-        self.current_task = str(uuid4()).encode('hex')
+        self.current_task = str(uuid4())
         return self.current_task
 
     def is_valid_task_id(self, task_id):
@@ -164,7 +165,7 @@ class Worker:
 
     def set_module(self, name, config):
         if 'module' in sys.modules:
-            module = reload(sys.modules['module'])
+            module = imp.reload(sys.modules['module'])
         else:
             module = import_module('module')
 
@@ -245,7 +246,7 @@ def module_update_info(task_id):
     try:
         worker.set_module(name, config)
         return jsonify({'status': 'ok'})
-    except Exception, e:
+    except Exception as e:
         return jsonify({'status': 'error', 'error': str(e)})
 
 

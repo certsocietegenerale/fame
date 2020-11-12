@@ -3,7 +3,7 @@ import getpass
 
 
 def error(msg, code=1, exit=True):
-    print "\n/!\\ {}".format(msg)
+    print(("\n/!\\ {}".format(msg)))
 
     if exit:
         sys.exit(code)
@@ -18,11 +18,11 @@ def user_input(prompt, default=None, choices=[]):
         prompt += ": "
 
     while True:
-        value = raw_input(prompt).strip()
+        value = input(prompt).strip()
 
         if value:
             if choices and value not in choices:
-                print "[!] Invalid choice: {}".format(value)
+                print(("[!] Invalid choice: {}".format(value)))
                 continue
 
             return value
@@ -37,7 +37,7 @@ def get_new_password():
         confirmation = getpass.getpass("[?] Confirm: ")
 
         if password != confirmation:
-            print "Passwords do not match ..."
+            print("Passwords do not match ...")
             password = ""
 
     return password

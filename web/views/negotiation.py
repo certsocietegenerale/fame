@@ -1,34 +1,48 @@
 from flask import redirect as flask_redirect
-from flask import request, get_flashed_messages
-from flask_negotiation import Render
-from flask_negotiation.renderers import template_renderer, renderer
-from flask_negotiation.media_type import MediaType, acceptable_media_types, choose_media_type
+from flask import request, get_flashed_messages, render_template
+from flask.wrappers import Response
 from bson.json_util import dumps
 
-html = MediaType('text/html')
+
+def should_render_as_html():
+    best = request.accept_mimetypes.best_match(["text/html", "application/json"])
+
+    return best == "text/html"
 
 
-def redirect(data, path):
-    if choose_media_type(acceptable_media_types(request), [html]):
-        return flask_redirect(path)
+def render_json(data):
+    body = dumps(data)
+
+    return Response(response=body, mimetype='application/json')
+
+
+def render_html(data, template, ctx=None):
+    ctx = ctx or {
+        'data': data
+    }
+
+    return render_template(template, **ctx)
+
+
+def render(data, template, ctx=None):
+    if should_render_as_html():
+        return render_html(data, template, ctx)
     else:
         return render_json(data)
 
 
+def redirect(data, path):
+    if should_render_as_html():
+        return flask_redirect(path)
+
+    return render_json(data)
+
+
 def validation_error(path=None):
-    if choose_media_type(acceptable_media_types(request), [html]):
+    if should_render_as_html():
         if path:
             return flask_redirect(path)
-        else:
-            return flask_redirect(request.referrer)
-    else:
-        return render_json({'errors': get_flashed_messages()})
 
+        return flask_redirect(request.referrer)
 
-@renderer('application/json')
-def bson_renderer(data, template=None, ctx=None):
-    return dumps(data)
-
-
-render = Render(renderers=[template_renderer, bson_renderer])
-render_json = Render(renderers=[bson_renderer])
+    return render_json({'errors': get_flashed_messages()})

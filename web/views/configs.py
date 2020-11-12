@@ -2,7 +2,7 @@ from bson import ObjectId
 from difflib import ndiff
 from flask import request, abort
 from flask_login import current_user
-from flask_classy import FlaskView
+from flask_classful import FlaskView
 
 from fame.core.store import store
 from web.views.negotiation import render

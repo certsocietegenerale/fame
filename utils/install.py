@@ -1,8 +1,8 @@
 import os
 import sys
 import errno
-from urllib import quote_plus
-from urlparse import urljoin
+from urllib.parse import quote_plus
+from urllib.parse import urljoin
 from subprocess import call
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
@@ -30,7 +30,7 @@ class Templates:
 def create_conf_directory():
     try:
         os.makedirs(os.path.join(FAME_ROOT, 'conf'))
-    except OSError, e:
+    except OSError as e:
         if e.errno != errno.EEXIST:
             raise
 
@@ -57,8 +57,8 @@ def define_mongo_connection(context):
         mongo = MongoClient(context['mongo_host'], context['mongo_port'], serverSelectionTimeoutMS=10000)
         mongo.server_info()
         db = mongo[context['mongo_db']]
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
         error("Could not connect to MongoDB.")
 
     context['mongo_user'] = ''
@@ -76,9 +76,9 @@ def define_mongo_connection(context):
 
 
 def define_installation_type(context):
-    print "\nChoose your installation type:\n"
-    print " - 1: Web server + local worker"
-    print " - 2: Remote worker\n"
+    print("\nChoose your installation type:\n")
+    print(" - 1: Web server + local worker")
+    print(" - 2: Remote worker\n")
 
     itype = user_input("Installation type", "1", ["1", "2"])
     if itype == "1":
@@ -90,9 +90,9 @@ def define_installation_type(context):
 def generate_ssh_key():
     key_path = os.path.join(FAME_ROOT, 'conf', 'id_rsa')
     if os.path.exists(key_path):
-        print "[+] SSH key already exists."
+        print("[+] SSH key already exists.")
     else:
-        print "[+] Generating SSH key ..."
+        print("[+] Generating SSH key ...")
         try:
             call(['ssh-keygen', '-q', '-t', 'rsa', '-b', '4096', '-C', 'FAME deploy key', '-f', key_path, '-N', ''])
         except Exception:
@@ -104,9 +104,9 @@ def create_admin_user():
     from utils.create_user import create_user
 
     if store.users.count():
-        print "[+] There are already users in the database."
+        print("[+] There are already users in the database.")
     else:
-        print "[+] Creating first user (as administrator) ..."
+        print("[+] Creating first user (as administrator) ...")
         create_user(admin=True)
 
 
@@ -116,9 +116,9 @@ def add_community_repository():
     repo = Repository.get(name="community")
 
     if repo:
-        print "[+] Community repository already installed."
+        print("[+] Community repository already installed.")
     else:
-        print "[+] Installing community repository ..."
+        print("[+] Installing community repository ...")
         repo = Repository({
             'name': 'community',
             'address': 'https://github.com/certsocietegenerale/fame_modules.git',
@@ -133,15 +133,15 @@ def perform_local_installation(context):
     templates = Templates()
 
     context['fame_url'] = user_input("FAME's URL for users (e.g. https://fame.yourdomain/)")
-    print "[+] Creating configuration file ..."
-    context['secret_key'] = os.urandom(64).encode('hex')
+    print("[+] Creating configuration file ...")
+    context['secret_key'] = os.urandom(64).hex()
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'local_fame.conf', context)
 
     generate_ssh_key()
 
     from fame.core import fame_init
     fame_init()
-    print "[+] Creating initial data ..."
+    print("[+] Creating initial data ...")
     from utils.initial_data import create_initial_data
     create_initial_data()
 
@@ -156,9 +156,9 @@ def create_user_for_worker(context):
     worker_user = User.get(email="worker@fame")
 
     if worker_user:
-        print "[+] User for worker already created."
+        print("[+] User for worker already created.")
     else:
-        print "[+] Creating user for worker ..."
+        print("[+] Creating user for worker ...")
         worker_user = create_user("FAME Worker", "worker@fame", ["*"], ["*"], ["worker"])
 
     context['api_key'] = worker_user['api_key']
@@ -173,8 +173,8 @@ def get_fame_url(context):
     try:
         response = requests.get(url, stream=True, headers={'X-API-KEY': context['api_key']})
         response.raise_for_status()
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
         error("Could not connect to FAME.")
 
 
@@ -196,12 +196,12 @@ def perform_remote_installation(context):
 
 
 def install_requirements():
-    print "[+] Installing requirements ..."
+    print("[+] Installing requirements ...")
 
     rcode, output = pip_install('-r', os.path.join(FAME_ROOT, 'requirements.txt'))
 
     if rcode:
-        print output
+        print(output)
         error("Could not install requirements.")
 
 

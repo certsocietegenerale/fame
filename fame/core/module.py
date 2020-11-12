@@ -3,7 +3,7 @@ import inspect
 import requests
 import traceback
 from time import sleep
-from urlparse import urljoin
+from urllib.parse import urljoin
 from markdown2 import markdown
 from datetime import datetime, timedelta
 
@@ -496,7 +496,7 @@ class ProcessingModule(Module):
                     target = fd.read()
 
             return self.each_with_type(target, file_type)
-        except ModuleExecutionError, e:
+        except ModuleExecutionError as e:
             self.log("error", "Could not run on %s: %s" % (target, e))
             return False
         except:
@@ -616,7 +616,7 @@ class IsolatedProcessingModule(ProcessingModule):
             response.raise_for_status()
 
             return response
-        except Exception, e:
+        except Exception as e:
             raise ModuleExecutionError("Error communicating with agent ({}): {}".format(path, e))
 
     def _get(self, path, **kwargs):
@@ -922,7 +922,7 @@ class ThreatIntelligenceModule(Module):
         """
         methods = [self.iocs_submission, self.ioc_submission]
         for method in methods:
-            for cls in inspect.getmro(method.im_class):
+            for cls in inspect.getmro(method.__self__.__class__):
                 if method.__name__ in cls.__dict__:
                     if cls.__name__ != 'ThreatIntelligenceModule':
                         return True
@@ -1167,7 +1167,7 @@ class PreloadingModule(Module):
             self._analysis = analysis
             self.init_options(analysis['options'])
             return self.preload(self._analysis.get_main_file())
-        except ModuleExecutionError, e:
+        except ModuleExecutionError as e:
             self.log("error", "Could not run on %s: %s" % (
                 self._analysis.get_main_file(), e))
             return False

@@ -1,35 +1,50 @@
 {% if options.text or options.str or options.integer or options.bool %}
 <h4>Options</h4><br />
-{% for option, dict in options.text.iteritems() %}
-    <div class="form-group">
-        <label for="options[{{option}}]">{{dict.display}}</label> <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="{{dict.display}}" data-html="true" data-content="{{dict.description}}<br /><br />Applies on: {{dict.modules|join(', ')}}" data-placement="top" class="help"><i class="glyphicon glyphicon-question-sign"></i></a>
-        <textarea class="form-control" name="options[{{option}}]">{% if dict.default %}{{dict.default}}{% endif %}</textarea>
-    </div>
+{% for option, dict in options.text.items() %}
+<div class="form-group">
+    <label for="options[{{option}}]">{{dict.display}}</label> <a tabindex="0" role="button" data-toggle="popover"
+        data-trigger="focus" title="{{dict.display}}" data-html="true"
+        data-content="{{dict.description}}<br /><br />Applies on: {{dict.modules|join(', ')}}" data-placement="top"
+        class="help"><i class="glyphicon glyphicon-question-sign"></i></a>
+    <textarea class="form-control"
+        name="options[{{option}}]">{% if dict.default %}{{dict.default}}{% endif %}</textarea>
+</div>
 {% endfor %}
-{% for option, dict in options.str.iteritems() %}
-    <div class="form-group">
-        <label for="options[{{option}}]">{{dict.display}}</label> <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="{{dict.display}}" data-html="true" data-content="{{dict.description}}<br /><br />Applies on: {{dict.modules|join(', ')}}" data-placement="top" class="help"><i class="glyphicon glyphicon-question-sign"></i></a>
-        <input type="text" class="form-control" name="options[{{option}}]" {% if dict.default %}value="{{dict.default}}"{% endif %}>
-    </div>
+{% for option, dict in options.str.items() %}
+<div class="form-group">
+    <label for="options[{{option}}]">{{dict.display}}</label> <a tabindex="0" role="button" data-toggle="popover"
+        data-trigger="focus" title="{{dict.display}}" data-html="true"
+        data-content="{{dict.description}}<br /><br />Applies on: {{dict.modules|join(', ')}}" data-placement="top"
+        class="help"><i class="glyphicon glyphicon-question-sign"></i></a>
+    <input type="text" class="form-control" name="options[{{option}}]" {% if dict.default %}value="{{dict.default}}"
+        {% endif %}>
+</div>
 {% endfor %}
-{% for option, dict in options.integer.iteritems() %}
-    <div class="form-group">
-        <label for="options[{{option}}]">{{dict.display}}</label> <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="{{dict.display}}" data-html="true" data-content="{{dict.description}}<br /><br />Applies on: {{dict.modules|join(', ')}}" data-placement="top" class="help"><i class="glyphicon glyphicon-question-sign"></i></a>
-        <input type="text" class="form-control" name="options[{{option}}]" {% if dict.default %}value="{{dict.default}}"{% endif %}>
-    </div>
+{% for option, dict in options.integer.items() %}
+<div class="form-group">
+    <label for="options[{{option}}]">{{dict.display}}</label> <a tabindex="0" role="button" data-toggle="popover"
+        data-trigger="focus" title="{{dict.display}}" data-html="true"
+        data-content="{{dict.description}}<br /><br />Applies on: {{dict.modules|join(', ')}}" data-placement="top"
+        class="help"><i class="glyphicon glyphicon-question-sign"></i></a>
+    <input type="text" class="form-control" name="options[{{option}}]" {% if dict.default %}value="{{dict.default}}"
+        {% endif %}>
+</div>
 {% endfor %}
-{% for option, dict in options.bool.iteritems() %}
-    <div class="form-group">
-        <label class="checkbox checkbox-inline">
-            <input type="checkbox" name="options[{{option}}]" {% if dict.default %}checked{% endif %} data-toggle="checkbox">{{dict.display}}
-        </label>
-        <a class="help" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="{{dict.display}}" data-html="true" data-content="{{dict.description}}<br /><br />Applies on: {{dict.modules|join(', ')}}" data-placement="top"><i class="glyphicon glyphicon-question-sign"></i></a>
-    </div>
+{% for option, dict in options.bool.items() %}
+<div class="form-group">
+    <label class="checkbox checkbox-inline">
+        <input type="checkbox" name="options[{{option}}]" {% if dict.default %}checked{% endif %}
+            data-toggle="checkbox">{{dict.display}}
+    </label>
+    <a class="help" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="{{dict.display}}"
+        data-html="true" data-content="{{dict.description}}<br /><br />Applies on: {{dict.modules|join(', ')}}"
+        data-placement="top"><i class="glyphicon glyphicon-question-sign"></i></a>
+</div>
 {% endfor %}
 
 <script>
-$(function () {
-    $('[data-toggle="popover"]').popover()
-})
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+    })
 </script>
 {% endif %}

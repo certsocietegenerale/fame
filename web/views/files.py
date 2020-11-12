@@ -1,6 +1,6 @@
 from pymongo import DESCENDING
 from flask import make_response, request, flash, redirect
-from flask_classy import FlaskView, route
+from flask_classful import FlaskView, route
 from flask_paginate import Pagination
 from flask_login import current_user
 from werkzeug.utils import secure_filename

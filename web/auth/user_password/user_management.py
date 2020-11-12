@@ -1,6 +1,6 @@
 import os
 from itsdangerous import TimestampSigner
-from flask_login import login_user, make_secure_token
+from flask_login import login_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from fame.core.user import User
@@ -9,7 +9,7 @@ from web.views.helpers import user_if_enabled
 
 
 def auth_token(user):
-    return os.urandom(12).encode('hex') + make_secure_token(user['email'] + user['pwd_hash'])
+    return os.urandom(128).hex()
 
 
 def password_reset_token(user):
@@ -28,7 +28,7 @@ def create_user(name, email, groups, default_sharing, permissions, password=None
     user = User.get(email=email.lower())
 
     if user:
-        print "/!\ User with this email address already exists."
+        print("/!\ User with this email address already exists.")
     else:
         user = User({
             'name': name,
@@ -41,10 +41,10 @@ def create_user(name, email, groups, default_sharing, permissions, password=None
         if password:
             user['pwd_hash'] = generate_password_hash(password)
         user.save()
-        print "[+] User created."
+        print("[+] User created.")
 
         user.generate_avatar()
-        print "[+] Downloaded avatar."
+        print("[+] Downloaded avatar.")
 
     return user
 

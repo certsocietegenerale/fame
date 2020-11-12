@@ -50,7 +50,7 @@ class MongoDict(dict):
     def update_value(self, names, value):
         mongo_field = self._mongo_field(names)
 
-        if isinstance(names, collections.Iterable) and not isinstance(names, basestring):
+        if isinstance(names, collections.Iterable) and not isinstance(names, str):
             last = names.pop()
             self._local_field(names)[last] = value
         else:
@@ -82,7 +82,7 @@ class MongoDict(dict):
         return local_field
 
     def _mongo_field(self, names):
-        if isinstance(names, collections.Iterable) and not isinstance(names, basestring):
+        if isinstance(names, collections.Iterable) and not isinstance(names, str):
             return '.'.join(names)
         else:
             return names

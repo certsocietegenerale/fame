@@ -2,12 +2,11 @@ import os
 from time import time
 from zipfile import ZipFile
 from flask import url_for, request, flash
-from flask_classy import FlaskView, route
+from flask_classful import FlaskView, route
 
-from web.views.negotiation import render, redirect, validation_error
+from web.views.negotiation import render, redirect, validation_error, render_json
 from web.views.mixins import UIView
 from web.views.helpers import get_or_404, requires_permission, file_download, clean_modules, clean_repositories
-from fame.common.config import fame_config
 from fame.common.constants import FAME_ROOT, MODULES_ROOT
 from fame.common.utils import get_class, tempdir
 from fame.common.exceptions import MissingConfiguration
@@ -246,7 +245,7 @@ class ModulesView(FlaskView, UIView):
         module_class.info = module
         try:
             module_class()
-        except MissingConfiguration, e:
+        except MissingConfiguration as e:
             if e.name:
                 flash("You must configure '{}' before trying to enable '{}'".format(e.name, module['name']), 'warning')
                 return validation_error(url_for('ModulesView:configuration', id=e.id))
@@ -365,7 +364,7 @@ class ModulesView(FlaskView, UIView):
         """
         modules = ModuleInfo.get_collection().find({'enabled': True, 'type': {'$in': ['Processing', 'Preloading']}})
 
-        return render(clean_modules(list(modules)))
+        return render_json(clean_modules(list(modules)))
 
     @requires_permission('manage_modules')
     @route('/reload', methods=['POST'])

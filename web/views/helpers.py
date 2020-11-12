@@ -1,4 +1,4 @@
-import urlparse
+import urllib.parse
 from bson import ObjectId
 from flask import make_response, abort, request
 from flask_login import current_user
@@ -101,7 +101,7 @@ def file_download(filepath):
     with open(filepath, 'rb') as fd:
         response = make_response(fd.read())
 
-    response.headers["Content-Disposition"] = u"attachment; filename={0}".format(basename(filepath)).encode('latin-1', errors='ignore')
+    response.headers["Content-Disposition"] = "attachment; filename={0}".format(basename(filepath)).encode('latin-1', errors='ignore')
 
     return response
 
@@ -132,7 +132,7 @@ def requires_permission(permission):
 
 
 def different_origin(referer, target):
-    p1, p2 = urlparse.urlparse(referer), urlparse.urlparse(target)
+    p1, p2 = urllib.parse.urlparse(referer), urllib.parse.urlparse(target)
     origin1 = p1.scheme, p1.hostname, p1.port
     origin2 = p2.scheme, p2.hostname, p2.port
 

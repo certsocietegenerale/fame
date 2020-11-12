@@ -1,7 +1,7 @@
 from importlib import import_module
 from flask import request, flash, url_for, abort
 from flask_login import current_user
-from flask_classy import FlaskView, route
+from flask_classful import FlaskView, route
 
 from fame.common.config import fame_config
 from fame.core.user import User

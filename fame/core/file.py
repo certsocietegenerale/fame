@@ -12,7 +12,7 @@ from fame.core.config import Config
 
 from fame.common.email_utils import EmailServer
 
-notification_body_tpl = u"""Hi,
+notification_body_tpl = """Hi,
 
 {0} has written the following comment on analysis {1}:
 
@@ -292,7 +292,7 @@ class File(MongoDict):
                 pass
 
     def _store_file(self, filename, stream):
-        self['filepath'] = u'{0}/{1}'.format(self['sha256'], filename)
+        self['filepath'] = '{0}/{1}'.format(self['sha256'], filename)
         self['filepath'] = os.path.join(fame_config.storage_path, self['filepath'])
 
         # Create parent dirs if they don't exist

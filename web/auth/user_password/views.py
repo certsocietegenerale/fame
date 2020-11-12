@@ -1,6 +1,6 @@
 import os
-from urlparse import urljoin
-from zxcvbn import password_strength
+from urllib.parse import urljoin
+from zxcvbn import zxcvbn
 from flask import Blueprint, render_template, request, redirect, flash, url_for
 from flask_login import logout_user, current_user, login_required
 from itsdangerous import BadTimeSignature, SignatureExpired
@@ -42,13 +42,13 @@ def create_user(user):
 
 
 def valid_new_password(password, confirmation):
-    strength = password_strength(password)
+    strength = zxcvbn(password)
 
     if password != confirmation:
         flash('Password confirmation differs from new password.', 'danger')
         return False
     elif strength['score'] <= 2:
-        flash('New password is too weak. Estimated cracking time is {}.'.format(strength['crack_time_display']), 'danger')
+        flash('New password is too weak. Estimated cracking time is {}.'.format(strength['crack_times_display']['offline_slow_hashing_1e4_per_second']), 'danger')
         return False
 
     return True

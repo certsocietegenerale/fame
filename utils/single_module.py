@@ -119,7 +119,7 @@ class TestAnalysis(dict):
         return self['filename']
 
     def change_type(self, location, new_type):
-        print "Changing type of '{}' to '{}'".format(location, new_type)
+        print(("Changing type of '{}' to '{}'".format(location, new_type)))
 
     def add_extraction(self, label, extraction):
         self['extractions'].append({'label': label, 'content': u(extraction)})
@@ -148,35 +148,35 @@ class TestAnalysis(dict):
             ioc['tags'].add(tag)
 
     def pprint(self):
-        print "Probable Names: {}\n".format(", ".join(self['probable_names']))
+        print(("Probable Names: {}\n".format(", ".join(self['probable_names']))))
 
-        print "\n## Extracted Files\n"
+        print("\n## Extracted Files\n")
         for f in self['extracted_files']:
-            print "{}".format(f)
+            print(("{}".format(f)))
 
-        print "\n## IOCs\n"
+        print("\n## IOCs\n")
         for ioc in self['iocs']:
-            print "{} ({})".format(ioc['value'], ", ".join(ioc['tags']))
+            print(("{} ({})".format(ioc['value'], ", ".join(ioc['tags']))))
 
-        print "\n## Extractions\n"
+        print("\n## Extractions\n")
         for extraction in self['extractions']:
-            print "-- {} --\n\n{}".format(extraction['label'], extraction['content'])
+            print(("-- {} --\n\n{}".format(extraction['label'], extraction['content'])))
 
-        print "\n## Generated Files\n"
+        print("\n## Generated Files\n")
         for f in self['generated_files']:
-            print "{} ({})".format(f['path'], f['type'])
+            print(("{} ({})".format(f['path'], f['type'])))
 
-        print "\n## Support Files\n"
+        print("\n## Support Files\n")
         for f in self['support_files']:
-            print "{}".format(f)
+            print(("{}".format(f)))
 
-        print "\n## Logs\n"
+        print("\n## Logs\n")
         for f in self['logs']:
-            print "\n".join(self['logs'])
+            print(("\n".join(self['logs'])))
 
 
 def test_mode_module(name, interactive):
-    print "[+] Enabling test mode."
+    print("[+] Enabling test mode.")
     dispatcher = Dispatcher(interactive)
     module = dispatcher.get_processing_module(name)
 
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     analysis = TestAnalysis(args.file, args.type)
 
     if args.local:
-        print "[+] Enabling local mode. /!\ THIS COULD BE DANGEROUS! /!\ "
+        print("[+] Enabling local mode. /!\ THIS COULD BE DANGEROUS! /!\ ")
         module_classes.IsolatedProcessingModule = module_classes.ProcessingModule
 
     if args.test:
@@ -223,10 +223,10 @@ if __name__ == '__main__':
 
     ret = module.execute(analysis)
 
-    print "\nResult: {}\n".format(ret)
+    print(("\nResult: {}\n".format(ret)))
 
     analysis.pprint()
 
     if module.results is not None:
-        print "## Detailed results\n"
-        print module.results
+        print("## Detailed results\n")
+        print((module.results))
