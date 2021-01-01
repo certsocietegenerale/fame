@@ -492,7 +492,7 @@ class ProcessingModule(Module):
     def _try_each(self, target, file_type):
         try:
             if file_type == 'url':
-                with open(target, 'rb') as fd:
+                with open(target, 'r') as fd:
                     target = fd.read()
 
             return self.each_with_type(target, file_type)

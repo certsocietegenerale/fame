@@ -1,5 +1,5 @@
 import os
-from io import StringIO
+from io import BytesIO
 from shutil import copyfileobj
 from hashlib import md5
 from pymongo import DESCENDING
@@ -181,7 +181,7 @@ class AnalysesView(FlaskView, UIView):
         if file:
             f = File(filename=file.filename, stream=file.stream)
         elif url:
-            stream = StringIO(url)
+            stream = BytesIO(url.encode('utf-8'))
             f = File(filename='url', stream=stream)
             if not f.existing:
                 f.update_value('type', 'url')
