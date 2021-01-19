@@ -6,6 +6,7 @@ from time import sleep
 from urllib.parse import urljoin
 from markdown2 import markdown
 from datetime import datetime, timedelta
+from typing import Optional, List, Dict
 
 from fame.common.constants import MODULES_ROOT
 from fame.common.exceptions import ModuleInitializationError, ModuleExecutionError, MissingConfiguration
@@ -200,10 +201,10 @@ class Module(object):
                     }
                 }
     """
-    name = None
-    config = []
-    named_configs = {}
-    description = None
+    name: Optional[str] = None
+    config: List[Dict] = []
+    named_configs: Dict[str, Dict] = {}
+    description: Optional[str] = None
 
     def __init__(self, with_config=True):
         self._analysis = None
@@ -316,10 +317,10 @@ class ProcessingModule(Module):
             The default value is ``{}``, which means the module does not
             use any permission.
     """
-    acts_on = []
-    generates = []
-    triggered_by = []
-    permissions = {}
+    acts_on: List[str] = []
+    generates: List[str] = []
+    triggered_by: List[str] = []
+    permissions: Dict[str, str] = {}
     queue = 'unix'
 
     def __init__(self, with_config=True):
@@ -499,7 +500,7 @@ class ProcessingModule(Module):
         except ModuleExecutionError as e:
             self.log("error", "Could not run on %s: %s" % (target, e))
             return False
-        except:
+        except Exception:
             tb = traceback.format_exc()
             self.log("error", "Could not run on %s.\n %s" % (target, tb))
             return False
@@ -928,7 +929,6 @@ class ThreatIntelligenceModule(Module):
                         return True
         return False
 
-
     @classmethod
     def static_info(cls):
         info = {
@@ -973,7 +973,7 @@ class AntivirusModule(Module):
 class FiletypeModule(Module):
     """Base class for Filetype Modules"""
 
-    acts_on = []
+    acts_on: List[str] = []
 
     def recognize(self, filepath, current_type):
         """To implement. Checks the file in order to determine more accurate
@@ -1076,7 +1076,7 @@ class VirtualizationModule(Module):
             r = requests.get(self.agent_url, timeout=1)
 
             return r.status_code == 200
-        except:
+        except Exception:
             return False
 
     def restore(self, should_raise=True):
@@ -1171,7 +1171,7 @@ class PreloadingModule(Module):
             self.log("error", "Could not run on %s: %s" % (
                 self._analysis.get_main_file(), e))
             return False
-        except:
+        except Exception:
             tb = traceback.format_exc()
             self.log("error", "Exception occurred while execting module on %s.\n %s" % (
                 self._analysis.get_main_file(), tb))

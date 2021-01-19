@@ -1,13 +1,13 @@
 import os
-import imp
 import sys
 import inspect
+import importlib
 import traceback
 import collections
 from uuid import uuid4
 from tempfile import mkstemp
 from shutil import copyfileobj
-from importlib import import_module
+from typing import Optional, List, Dict
 from multiprocessing import Queue, Process
 from flask import Flask, jsonify, request, abort, make_response
 
@@ -55,8 +55,8 @@ class IsolatedExceptions:
 
 class IsolatedModule:
     class IsolatedProcessingModule:
-        name = None
-        config = []
+        name: Optional[str] = None
+        config: List[Dict] = []
 
         def __init__(self):
             self._results = {
@@ -117,14 +117,14 @@ class IsolatedModule:
             except IsolatedExceptions.ModuleExecutionError as e:
                 self.log("error", "Could not run on %s: %s" % (target, e))
                 return False
-            except:
+            except Exception:
                 tb = traceback.format_exc()
                 self.log("error", "Could not run on %s.\n %s" % (target, tb))
                 return False
 
 
 class FakePackage:
-    __path__ = []
+    __path__: List[str] = []
 
 
 def fake_module(path, klass):
@@ -134,6 +134,7 @@ def fake_module(path, klass):
         sys.modules['.'.join(path_parts[0:i])] = FakePackage
 
     sys.modules[path] = klass
+
 
 fake_module('fame.core.module', IsolatedModule)
 fake_module('fame.common.exceptions', IsolatedExceptions)
@@ -165,9 +166,9 @@ class Worker:
 
     def set_module(self, name, config):
         if 'module' in sys.modules:
-            module = imp.reload(sys.modules['module'])
+            module = importlib.reload(sys.modules['module'])
         else:
-            module = import_module('module')
+            module = importlib.import_module('module')
 
         for _, obj in inspect.getmembers(module, inspect.isclass):
             if obj.name and obj.name == name:
@@ -194,7 +195,11 @@ class Worker:
             return True
 
     def get_results(self):
-        return self.module.__dict__
+        return {
+            "results": self.module.results,
+            "_results": self.module._results,
+            "should_restore": self.module.should_restore
+        }
 
 
 worker = Worker()
