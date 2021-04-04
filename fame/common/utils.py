@@ -7,7 +7,6 @@ from urllib.parse import urljoin
 from datetime import datetime
 from shutil import copyfileobj
 from werkzeug.utils import secure_filename
-from rfc6266 import parse_requests_response
 
 from fame.common.config import fame_config
 
@@ -93,9 +92,9 @@ def tempdir():
     return tempdir
 
 
-def save_response(response):
+def save_response(response, filepath):
     tmp = tempdir()
-    filename = secure_filename(parse_requests_response(response).filename_unsafe)
+    filename = secure_filename(os.path.basename(filepath))
     filepath = os.path.join(tmp, filename)
 
     with open(filepath, 'wb') as out:

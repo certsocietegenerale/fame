@@ -654,7 +654,7 @@ class IsolatedProcessingModule(ProcessingModule):
     def _get_file(self, filepath):
         response = self._make_request('POST', '/get_file', data={'filepath': filepath}, stream=True)
 
-        return save_response(response)
+        return save_response(response, filepath)
 
     def _get_results(self):
         results = self._get('/results')
