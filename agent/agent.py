@@ -76,8 +76,8 @@ class IsolatedModule:
         def initialize(self):
             pass
 
-        def __getattr(self, name):
-            self.log('error', "'{}' is not available in IsolatedProcessingModule")
+        def __getattr__(self, name):
+            self.log('error', "'{}' is not available in IsolatedProcessingModule".format(name))
 
         def log(self, level, message):
             self._results['logs'].append((level, message))
@@ -122,6 +122,13 @@ class IsolatedModule:
                 self.log("error", "Could not run on %s.\n %s" % (target, tb))
                 return False
 
+        def to_dict(self):
+            return {
+                "results": self.results,
+                "_results": self._results,
+                "should_restore": self.should_restore
+            }
+
 
 class FakePackage:
     __path__: List[str] = []
@@ -148,7 +155,7 @@ def run_module(queue, module, target, file_type):
     if module.run_each_with_type(target, file_type):
         module._results['result'] = True
 
-    queue.put(module)
+    queue.put(module.to_dict())
 
 
 class Worker:
@@ -156,6 +163,7 @@ class Worker:
         self.current_task = None
         self.module = None
         self.queue = None
+        self._module_results = None
 
     def new_task(self):
         self.current_task = str(uuid4())
@@ -174,6 +182,7 @@ class Worker:
             if obj.name and obj.name == name:
                 self.queue = Queue()
                 self.module = obj()
+                self._module_results = None
 
                 for key in config:
                     setattr(self.module, key, config[key])
@@ -191,15 +200,11 @@ class Worker:
         if self.process.is_alive():
             return False
         else:
-            self.module = self.queue.get(block=False)
+            self._module_results = self.queue.get(block=False)
             return True
 
     def get_results(self):
-        return {
-            "results": self.module.results,
-            "_results": self.module._results,
-            "should_restore": self.module.should_restore
-        }
+        return self._module_results
 
 
 worker = Worker()
