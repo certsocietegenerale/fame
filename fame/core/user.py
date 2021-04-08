@@ -40,9 +40,6 @@ class User(MongoDict):
         self.analyses = FilteredCollection(store.analysis, self.filters())
 
     def get_id(self):
-        return str(self['_id'])
-
-    def get_auth_token(self):
         return self['auth_token']
 
     def filters(self):
@@ -59,11 +56,11 @@ class User(MongoDict):
         try:
             response = requests.get("https://robohash.org/{}.png".format(s))
             response.raise_for_status()
-            with open(os.path.join(AVATARS_ROOT, "{}.png".format(self['_id'])), 'w') as f:
+            with open(os.path.join(AVATARS_ROOT, "{}.png".format(self['_id'])), 'wb') as f:
                 f.write(response.content)
         except:
-            print "Could not generate avatar for {}".format(self['email'])
+            print(("Could not generate avatar for {}".format(self['email'])))
 
     @staticmethod
     def generate_api_key():
-        return os.urandom(40).encode('hex')
+        return os.urandom(40).hex()

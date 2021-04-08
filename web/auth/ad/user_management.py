@@ -19,7 +19,7 @@ class LdapSettingsNotPresentException(Exception):
 def _check_ldap_settings_present():
     def _check(name):
         if name not in fame_config:
-            print name + " not present in config"
+            print((name + " not present in config"))
             return False
         return True
 
@@ -44,7 +44,7 @@ def _find_user_by_email(con, email):
     try:
         con.simple_bind_s(fame_config.ldap_user, fame_config.ldap_password)
     except ldap.INVALID_CREDENTIALS:
-        print "Cannot connect to LDAP: invalid credentials"
+        print("Cannot connect to LDAP: invalid credentials")
         return None
 
     users = con.search_s(
@@ -64,10 +64,7 @@ def _find_user_by_email(con, email):
         full_name = user['cn'][0].decode()
         email = user['mail'][0].decode()
         enabled = (int(user['userAccountControl'][0].decode()) & 0x2) == 0
-        groups = [group for group in map(
-            lambda x: x.decode().lower().split(",")[0].lstrip("cn="),
-            user['memberOf']
-        )]
+        groups = [group for group in [x.decode().lower().split(",")[0].lstrip("cn=") for x in user['memberOf']]]
 
         ldap_user = {
             "principal": principal or full_name,
@@ -172,7 +169,7 @@ def authenticate(email, password):
         # user not found in LDAP, update local user object accordingly (if existent)
         user = User.get(email=email)
         if user:
-            print "Disabling user {}: not available in LDAP".format(email)
+            print(("Disabling user {}: not available in LDAP".format(email)))
             user.update_value('enabled', False)
 
         return user

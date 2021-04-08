@@ -3,7 +3,7 @@ var old_should_refresh = true;
 
 function enable_checkboxes() {
   $('[data-toggle="checkbox"]').each(function () {
-    if($(this).data('toggle') == 'switch') return;
+    if ($(this).data('toggle') == 'switch') return;
 
     var $checkbox = $(this);
     $checkbox.checkbox();
@@ -31,7 +31,7 @@ function auto_update(url, time, selector) {
 }
 
 function add_options_to_select(select) {
-  return function(data) {
+  return function (data) {
     for (var i = 0; i < data.modules.length; i++) {
       var module = data.modules[i];
       select.append('<option value="' + module + '">' + module + '</option>');
@@ -119,7 +119,7 @@ function enable_ioc_submission() {
     e.preventDefault();
   });
 
-  $('#main-content').on('submit', '#ioc-submission', function(e) {
+  $('#main-content').on('submit', '#ioc-submission', function (e) {
     // Display spinner
     $('#ioc-submission .feedback').toggleClass('hidden');
 
@@ -127,7 +127,7 @@ function enable_ioc_submission() {
     var url = $('#ioc-submission input[type=hidden]').val();
     var tags = $('#ioc-submission-tags').val();
     var module = url.split('/');
-    module = module[module.length -1 ];
+    module = module[module.length - 1];
 
     $('.submission-single-ioc').each(function (index) {
       var line = $(this);
@@ -157,14 +157,14 @@ function enable_ioc_submission() {
       enable_autorefresh();
 
       $.notify({
-            message: "Could not send to " + module
-         }, {
-             type: "danger",
-             offset: {
-                 y: 50,
-                 x: 30
-             }
-         });
+        message: "Could not send to " + module
+      }, {
+        type: "danger",
+        offset: {
+          y: 50,
+          x: 30
+        }
+      });
     }
 
     $.ajax({
@@ -198,20 +198,19 @@ function enable_av_submission() {
       if (data == 'ok') {
         $('#av-sendto-' + module).addClass('hidden');
         $('#av-sent-' + module).removeClass('hidden');
-      }
-      else {
+      } else {
         $('#av-sendto-' + module + ' i').removeClass('fa-spinner spinner');
         $('#av-sendto-' + module + ' i').addClass('fa-send');
 
         $.notify({
-              message: data
-           }, {
-               type: "danger",
-               offset: {
-                   y: 50,
-                   x: 30
-               }
-           });
+          message: data
+        }, {
+          type: "danger",
+          offset: {
+            y: 50,
+            x: 30
+          }
+        });
       }
     }
 
@@ -220,14 +219,14 @@ function enable_av_submission() {
       $('#av-sendto-' + module + ' i').addClass('text-danger fa-exclamation-triangle');
 
       $.notify({
-            message: "Could not send to " + module
-         }, {
-             type: "danger",
-             offset: {
-                 y: 50,
-                 x: 30
-             }
-         });
+        message: "Could not send to " + module
+      }, {
+        type: "danger",
+        offset: {
+          y: 50,
+          x: 30
+        }
+      });
     }
 
     $.ajax({

@@ -1,6 +1,6 @@
 import os
-import ConfigParser
-from StringIO import StringIO
+import configparser
+from io import StringIO
 
 from fame.common.constants import FAME_ROOT
 from fame.common.objects import Dictionary
@@ -9,7 +9,7 @@ from fame.common.objects import Dictionary
 class ConfigObject:
 
     def __init__(self, filename=None, from_string=''):
-        config = ConfigParser.SafeConfigParser({'root': FAME_ROOT}, allow_no_value=True)
+        config = configparser.SafeConfigParser({'root': FAME_ROOT}, allow_no_value=True)
 
         if filename:
             config.read(os.path.join(FAME_ROOT, "conf", "%s.conf" % filename))

@@ -61,6 +61,7 @@ Several kind of modules can be created:
 
 * ``PreloadingModule``: these modules can be used to preload a given hash provided to FAME for analysis so that the sample file is available to FAME without the need of manually downloading it.
 * ``ProcessingModule``: this is where FAME's magic is. A ``ProcessingModule`` should define some automated analysis that can be performed on some types of files / analysis information.
+* ``IsolatedProcessingModule``: similar to a ``ProcessingModule`` except it will be executed in an isolated virtual machine environment.
 * ``ReportingModule``: this kind of module enables reporting options, such as send analysis results by email, or post a Slack notification when the analysis is finished.
 * ``ThreatIntelligenceModule``: this kind of modules acts on IOCs. a ``ThreatIntelligenceModule`` has two roles:
 
@@ -68,6 +69,7 @@ Several kind of modules can be created:
   * Enrich the Threat Intelligence Platform with IOCs extracted by FAME.
 
 * ``AntivirusModule``: modules that act on files, and send them to antivirus vendors.
+* ``VirtualizationModule``: modules needed to support different virtualization backends for ``IsolatedProcessingModule``.
 
 Architecture
 ============

@@ -1,4 +1,5 @@
 import collections
+from typing import Optional
 
 from fame.common.utils import iterify
 from fame.core.store import store
@@ -7,7 +8,7 @@ from fame.core.store import store
 class MongoDict(dict):
     # Should be defined for children classes
     # ex: collection_name = 'files'
-    collection_name = None
+    collection_name: Optional[str] = None
 
     def __init__(self, values={}):
         dict.__init__(self, values)
@@ -50,7 +51,7 @@ class MongoDict(dict):
     def update_value(self, names, value):
         mongo_field = self._mongo_field(names)
 
-        if isinstance(names, collections.Iterable) and not isinstance(names, basestring):
+        if isinstance(names, collections.Iterable) and not isinstance(names, str):
             last = names.pop()
             self._local_field(names)[last] = value
         else:
@@ -82,7 +83,7 @@ class MongoDict(dict):
         return local_field
 
     def _mongo_field(self, names):
-        if isinstance(names, collections.Iterable) and not isinstance(names, basestring):
+        if isinstance(names, collections.Iterable) and not isinstance(names, str):
             return '.'.join(names)
         else:
             return names

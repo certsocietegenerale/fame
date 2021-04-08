@@ -1,7 +1,7 @@
 import os
 import sys
 import platform
-from urllib import quote_plus
+from urllib.parse import quote_plus
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
@@ -18,16 +18,16 @@ from fame.core.module import ModuleInfo
 
 
 def version_info():
-    print "########## VERSION ##########\n"
-    print "OS: {}".format(platform.platform())
-    print "Python: {}".format(platform.python_version())
-    print "\n"
+    print("########## VERSION ##########\n")
+    print(("OS: {}".format(platform.platform())))
+    print(("Python: {}".format(platform.python_version())))
+    print("\n")
 
 
 def dependencies():
-    print "########## DEPENDENCIES ###########\n"
+    print("########## DEPENDENCIES ###########\n")
     pipmain(['freeze'])
-    print "\n"
+    print("\n")
 
 
 def test_mongodb_connection(db):
@@ -40,7 +40,7 @@ def test_mongodb_connection(db):
 
 
 def mongodb():
-    print "########## MongoDB ##########\n"
+    print("########## MongoDB ##########\n")
 
     try:
         connection = MongoClient(fame_config.mongo_host, int(fame_config.mongo_port), serverSelectionTimeoutMS=10000)
@@ -49,20 +49,20 @@ def mongodb():
         if fame_config.mongo_user and fame_config.mongo_password:
             db.authenticate(fame_config.mongo_user, quote_plus(fame_config.mongo_password), mechanism='SCRAM-SHA-1')
 
-        print "Version: {}".format(connection.server_info()['version'])
-        print "Authorization check: {}\n".format(test_mongodb_connection(db))
+        print(("Version: {}".format(connection.server_info()['version'])))
+        print(("Authorization check: {}\n".format(test_mongodb_connection(db))))
         return True
-    except Exception, e:
-        print "Could not connect to MongoDB: {}\n".format(e)
+    except Exception as e:
+        print(("Could not connect to MongoDB: {}\n".format(e)))
         return False
 
 
 def configuration():
-    print "########## Configuration ##########\n"
+    print("########## Configuration ##########\n")
     for config in Config.find():
-        print "{}: {}".format(config['name'], not incomplete_config(config['config']))
+        print(("{}: {}".format(config['name'], not incomplete_config(config['config']))))
 
-    print "\nModules:\n"
+    print("\nModules:\n")
 
     for module in ModuleInfo.find():
         state = "Disabled"
@@ -74,7 +74,7 @@ def configuration():
         if incomplete_config(module['config']):
             configured = "Not Configured"
 
-        print "{: <25} {: <20} {: <10} {: <15}".format(module['name'], module['type'], state, configured)
+        print(("{: <25} {: <20} {: <10} {: <15}".format(module['name'], module['type'], state, configured)))
 
 
 def main():

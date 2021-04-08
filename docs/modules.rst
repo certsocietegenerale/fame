@@ -202,8 +202,8 @@ Links to the new analyses will be displayed like this:
 
 .. image:: /images/modules-extracted-files.png
 
-Making results look great again
--------------------------------
+Making results look great
+-------------------------
 
 By default, FAME will try to render the detailed results of every processing module in a readable way.
 

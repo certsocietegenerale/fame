@@ -149,4 +149,4 @@ def create_initial_data():
 if __name__ == '__main__':
     fame_init()
     create_initial_data()
-    print "[+] Created initial data."
+    print("[+] Created initial data.")

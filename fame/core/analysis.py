@@ -4,7 +4,7 @@ import datetime
 import traceback
 from shutil import copy
 from hashlib import md5
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 from fame.common.config import fame_config
 from fame.common.utils import iterify, u, send_file_to_remote
@@ -96,7 +96,7 @@ class Analysis(MongoDict):
             else:
                 filepath = location
 
-            self.log('debug', u"Adding generated file '{0}' of type '{1}'".format(filepath, file_type))
+            self.log('debug', "Adding generated file '{0}' of type '{1}'".format(filepath, file_type))
             self.append_to(['generated_files', file_type], filepath)
 
         # Then, trigger registered modules if magic is enabled
@@ -104,7 +104,7 @@ class Analysis(MongoDict):
             self.queue_modules(dispatcher.triggered_by("_generated_file(%s)" % file_type))
 
     def add_extracted_file(self, filepath, automatic_analysis=True):
-        self.log('debug', u"Adding extracted file '{}'".format(filepath))
+        self.log('debug', "Adding extracted file '{}'".format(filepath))
 
         fd = open(filepath, 'rb')
         filename = os.path.basename(filepath)
@@ -138,7 +138,7 @@ class Analysis(MongoDict):
             if self.magic_enabled():
                 self._file.analyze(self['groups'], self['analyst'], None, self['options'])
         else:
-            self.log('warning', u"Tried to change type of generated file '{}'".format(filepath))
+            self.log('warning', "Tried to change type of generated file '{}'".format(filepath))
 
     def add_support_file(self, module_name, name, filepath):
         self.log('debug', "Adding support file '{}' at '{}'".format(name, filepath))
@@ -314,7 +314,7 @@ class Analysis(MongoDict):
     # Run specific module, should only be executed on celery worker
     def run(self, module_name):
         self.log('debug', "Trying to run {0}".format(module_name))
-        print "Trying to run {0}".format(module_name)
+        print(("Trying to run {0}".format(module_name)))
 
         # This test prevents multiple execution of the same module
         if self.append_to('executed_modules', module_name):
@@ -412,7 +412,7 @@ class Analysis(MongoDict):
         for module in dispatcher.get_reporting_modules():
             try:
                 getattr(module, hook_name)(self)
-            except Exception, e:
+            except Exception as e:
                 self.log('error', "error in reporting module '{0}': {1}".format(module.name, e))
 
     def _lookup_ioc(self, ioc):
@@ -424,7 +424,7 @@ class Analysis(MongoDict):
                 tags, indicators = module.ioc_lookup(ioc)
                 ti_tags += tags
                 ti_indicators += indicators
-            except Exception, e:
+            except Exception as e:
                 import traceback
                 traceback.print_exc()
                 self.log('error', "error in threat intelligence module '{}': {}".format(module.name, e))
@@ -446,9 +446,9 @@ class Analysis(MongoDict):
 
     def _types_available(self):
         if self._file['type'] in self['generated_files']:
-            return self['generated_files'].keys()
+            return list(self['generated_files'].keys())
         else:
-            return self['generated_files'].keys() + [self._file['type']]
+            return list(self['generated_files'].keys()) + [self._file['type']]
 
     def _needs_preloading(self):
         return self._file['type'] == 'hash'

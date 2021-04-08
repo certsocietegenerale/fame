@@ -3,9 +3,10 @@ import inspect
 import requests
 import traceback
 from time import sleep
-from urlparse import urljoin
+from urllib.parse import urljoin
 from markdown2 import markdown
 from datetime import datetime, timedelta
+from typing import Optional, List, Dict
 
 from fame.common.constants import MODULES_ROOT
 from fame.common.exceptions import ModuleInitializationError, ModuleExecutionError, MissingConfiguration
@@ -200,10 +201,10 @@ class Module(object):
                     }
                 }
     """
-    name = None
-    config = []
-    named_configs = {}
-    description = None
+    name: Optional[str] = None
+    config: List[Dict] = []
+    named_configs: Dict[str, Dict] = {}
+    description: Optional[str] = None
 
     def __init__(self, with_config=True):
         self._analysis = None
@@ -316,10 +317,10 @@ class ProcessingModule(Module):
             The default value is ``{}``, which means the module does not
             use any permission.
     """
-    acts_on = []
-    generates = []
-    triggered_by = []
-    permissions = {}
+    acts_on: List[str] = []
+    generates: List[str] = []
+    triggered_by: List[str] = []
+    permissions: Dict[str, str] = {}
     queue = 'unix'
 
     def __init__(self, with_config=True):
@@ -492,14 +493,14 @@ class ProcessingModule(Module):
     def _try_each(self, target, file_type):
         try:
             if file_type == 'url':
-                with open(target, 'rb') as fd:
+                with open(target, 'r') as fd:
                     target = fd.read()
 
             return self.each_with_type(target, file_type)
-        except ModuleExecutionError, e:
+        except ModuleExecutionError as e:
             self.log("error", "Could not run on %s: %s" % (target, e))
             return False
-        except:
+        except Exception:
             tb = traceback.format_exc()
             self.log("error", "Could not run on %s.\n %s" % (target, tb))
             return False
@@ -616,7 +617,7 @@ class IsolatedProcessingModule(ProcessingModule):
             response.raise_for_status()
 
             return response
-        except Exception, e:
+        except Exception as e:
             raise ModuleExecutionError("Error communicating with agent ({}): {}".format(path, e))
 
     def _get(self, path, **kwargs):
@@ -653,7 +654,7 @@ class IsolatedProcessingModule(ProcessingModule):
     def _get_file(self, filepath):
         response = self._make_request('POST', '/get_file', data={'filepath': filepath}, stream=True)
 
-        return save_response(response)
+        return save_response(response, filepath)
 
     def _get_results(self):
         results = self._get('/results')
@@ -922,12 +923,11 @@ class ThreatIntelligenceModule(Module):
         """
         methods = [self.iocs_submission, self.ioc_submission]
         for method in methods:
-            for cls in inspect.getmro(method.im_class):
+            for cls in inspect.getmro(method.__self__.__class__):
                 if method.__name__ in cls.__dict__:
                     if cls.__name__ != 'ThreatIntelligenceModule':
                         return True
         return False
-
 
     @classmethod
     def static_info(cls):
@@ -973,7 +973,7 @@ class AntivirusModule(Module):
 class FiletypeModule(Module):
     """Base class for Filetype Modules"""
 
-    acts_on = []
+    acts_on: List[str] = []
 
     def recognize(self, filepath, current_type):
         """To implement. Checks the file in order to determine more accurate
@@ -1076,7 +1076,7 @@ class VirtualizationModule(Module):
             r = requests.get(self.agent_url, timeout=1)
 
             return r.status_code == 200
-        except:
+        except Exception:
             return False
 
     def restore(self, should_raise=True):
@@ -1167,11 +1167,11 @@ class PreloadingModule(Module):
             self._analysis = analysis
             self.init_options(analysis['options'])
             return self.preload(self._analysis.get_main_file())
-        except ModuleExecutionError, e:
+        except ModuleExecutionError as e:
             self.log("error", "Could not run on %s: %s" % (
                 self._analysis.get_main_file(), e))
             return False
-        except:
+        except Exception:
             tb = traceback.format_exc()
             self.log("error", "Exception occurred while execting module on %s.\n %s" % (
                 self._analysis.get_main_file(), tb))

@@ -1,12 +1,13 @@
 import os
 import sys
 import inspect
+import importlib
 import traceback
 import collections
 from uuid import uuid4
 from tempfile import mkstemp
 from shutil import copyfileobj
-from importlib import import_module
+from typing import Optional, List, Dict
 from multiprocessing import Queue, Process
 from flask import Flask, jsonify, request, abort, make_response
 
@@ -21,7 +22,7 @@ sys.path.append(AGENT_ROOT)
 
 
 def is_iterable(element):
-    return isinstance(element, collections.Iterable) and not isinstance(element, basestring)
+    return isinstance(element, collections.Iterable) and not isinstance(element, str)
 
 
 def iterify(element):
@@ -54,8 +55,8 @@ class IsolatedExceptions:
 
 class IsolatedModule:
     class IsolatedProcessingModule:
-        name = None
-        config = []
+        name: Optional[str] = None
+        config: List[Dict] = []
 
         def __init__(self):
             self._results = {
@@ -75,8 +76,8 @@ class IsolatedModule:
         def initialize(self):
             pass
 
-        def __getattr(self, name):
-            self.log('error', "'{}' is not available in IsolatedProcessingModule")
+        def __getattr__(self, name):
+            self.log('error', "'{}' is not available in IsolatedProcessingModule".format(name))
 
         def log(self, level, message):
             self._results['logs'].append((level, message))
@@ -113,17 +114,24 @@ class IsolatedModule:
         def run_each_with_type(self, target, target_type):
             try:
                 return self.each_with_type(target, target_type)
-            except IsolatedExceptions.ModuleExecutionError, e:
+            except IsolatedExceptions.ModuleExecutionError as e:
                 self.log("error", "Could not run on %s: %s" % (target, e))
                 return False
-            except:
+            except Exception:
                 tb = traceback.format_exc()
                 self.log("error", "Could not run on %s.\n %s" % (target, tb))
                 return False
 
+        def to_dict(self):
+            return {
+                "results": self.results,
+                "_results": self._results,
+                "should_restore": self.should_restore
+            }
+
 
 class FakePackage:
-    __path__ = []
+    __path__: List[str] = []
 
 
 def fake_module(path, klass):
@@ -133,6 +141,7 @@ def fake_module(path, klass):
         sys.modules['.'.join(path_parts[0:i])] = FakePackage
 
     sys.modules[path] = klass
+
 
 fake_module('fame.core.module', IsolatedModule)
 fake_module('fame.common.exceptions', IsolatedExceptions)
@@ -146,7 +155,7 @@ def run_module(queue, module, target, file_type):
     if module.run_each_with_type(target, file_type):
         module._results['result'] = True
 
-    queue.put(module)
+    queue.put(module.to_dict())
 
 
 class Worker:
@@ -154,9 +163,10 @@ class Worker:
         self.current_task = None
         self.module = None
         self.queue = None
+        self._module_results = None
 
     def new_task(self):
-        self.current_task = str(uuid4()).encode('hex')
+        self.current_task = str(uuid4())
         return self.current_task
 
     def is_valid_task_id(self, task_id):
@@ -164,14 +174,15 @@ class Worker:
 
     def set_module(self, name, config):
         if 'module' in sys.modules:
-            module = reload(sys.modules['module'])
+            module = importlib.reload(sys.modules['module'])
         else:
-            module = import_module('module')
+            module = importlib.import_module('module')
 
         for _, obj in inspect.getmembers(module, inspect.isclass):
             if obj.name and obj.name == name:
                 self.queue = Queue()
                 self.module = obj()
+                self._module_results = None
 
                 for key in config:
                     setattr(self.module, key, config[key])
@@ -189,11 +200,11 @@ class Worker:
         if self.process.is_alive():
             return False
         else:
-            self.module = self.queue.get(block=False)
+            self._module_results = self.queue.get(block=False)
             return True
 
     def get_results(self):
-        return self.module.__dict__
+        return self._module_results
 
 
 worker = Worker()
@@ -245,7 +256,7 @@ def module_update_info(task_id):
     try:
         worker.set_module(name, config)
         return jsonify({'status': 'ok'})
-    except Exception, e:
+    except Exception as e:
         return jsonify({'status': 'error', 'error': str(e)})
 
 

@@ -3,54 +3,62 @@
         <div class="card">
             <div class="header">
                 {% if user %}
-                    <h4 class="title">Edit User</h4>
+                <h4 class="title">Edit User</h4>
                 {% else %}
-                    <h4 class="title">Create User</h4>
+                <h4 class="title">Create User</h4>
                 {% endif %}
                 <p class="category"></p>
             </div>
             <div class="content admin-form">
-                <form class="form-horizontal" method="post" action="{% if user %}{{url_for('UsersView:update', id=user._id)}}{% else %}{{url_for('UsersView:create')}}{% endif %}">
+                <form class="form-horizontal" method="post"
+                    action="{% if user %}{{url_for('UsersView:update', id=user._id)}}{% else %}{{url_for('UsersView:create')}}{% endif %}">
 
-                <div class="form-group">
-                    <label for="name" class="col-sm-2 control-label">Name *</label>
-                    <div class="col-sm-8">
-                        <input type="text" class="form-control" name="name" value="{% if user %}{{user.name}}{% endif %}" placeholder="Full Name">
-                        <p class="help-block">User's full name. Will be displayed when hovering on avatar.</p>
+                    <div class="form-group">
+                        <label for="name" class="col-sm-2 control-label">Name *</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" name="name"
+                                value="{% if user %}{{user.name}}{% endif %}" placeholder="Full Name">
+                            <p class="help-block">User's full name. Will be displayed when hovering on avatar.</p>
+                        </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label for="email" class="col-sm-2 control-label">Email *</label>
-                    <div class="col-sm-8">
-                        <input type="text" class="form-control" name="email" value="{% if user %}{{user.email}}{% endif %}" placeholder="Email address">
-                        <p class="help-block">User's email address. Used as a login.</p>
+                    <div class="form-group">
+                        <label for="email" class="col-sm-2 control-label">Email *</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" name="email"
+                                value="{% if user %}{{user.email}}{% endif %}" placeholder="Email address">
+                            <p class="help-block">User's email address. Used as a login.</p>
+                        </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label for="groups" class="col-sm-2 control-label">Groups *</label>
-                    <div class="col-sm-8">
-                        <input type="text" class="tags-input tag-azure" name="groups" value="{% if user %}{{ user.groups|join(',') }}{% endif %}" placeholder="Groups">
-                        <p class="help-block">User's groups. Defines which analyses the user will have access to. Special group '*' will give access to all analyses.</p>
+                    <div class="form-group">
+                        <label for="groups" class="col-sm-2 control-label">Groups *</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="tags-input tag-azure" name="groups"
+                                value="{% if user %}{{ user.groups|join(',') }}{% endif %}" placeholder="Groups">
+                            <p class="help-block">User's groups. Defines which analyses the user will have access to.
+                                Special group '*' will give access to all analyses.</p>
+                        </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label class="col-sm-2 control-label">Permissions</label>
-                    <div class="col-sm-8">
-                        {% for permission, description in data.permissions.iteritems() %}
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Permissions</label>
+                        <div class="col-sm-8">
+                            {% for permission, description in data.permissions.items() %}
                             <label class="checkbox checkbox-inline">
-                                <input type="checkbox" name="permission_{{permission}}" {% if user and permission in user.permissions %}checked{% endif %} data-toggle="checkbox">{{permission}}
+                                <input type="checkbox" name="permission_{{permission}}"
+                                    {% if user and permission in user.permissions %}checked{% endif %}
+                                    data-toggle="checkbox">{{permission}}
                             </label>
                             <p class="help-block">{{description}}</p>
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
                     </div>
-                </div>
 
-                <div class="text-center">
-                    <button type="submit" class="btn btn-info btn-fill"><i class="fa fa-save"></i> {% if user %}Save Changes{% else %}Create{% endif %}</button>
-                </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-info btn-fill"><i class="fa fa-save"></i> {% if user %}Save
+                            Changes{% else %}Create{% endif %}</button>
+                    </div>
 
                 </form>
             </div>

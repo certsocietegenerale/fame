@@ -1,6 +1,5 @@
 import os
-import requests
-from StringIO import StringIO
+from io import BytesIO
 from shutil import copyfileobj
 from hashlib import md5
 from pymongo import DESCENDING
@@ -9,11 +8,10 @@ from flask import (
     make_response, abort, jsonify
 )
 from flask_login import current_user
-from flask_classy import FlaskView, route
+from flask_classful import FlaskView, route
 from flask_paginate import Pagination
 from werkzeug.utils import secure_filename
 
-from fame.common.exceptions import MissingConfiguration
 from fame.common.config import fame_config
 from fame.core.module_dispatcher import dispatcher
 from fame.core.store import store
@@ -50,7 +48,7 @@ def get_options():
             else:
                 options[option] = value
 
-    for option in dispatcher.options['bool'].keys() + ['magic_enabled']:
+    for option in list(dispatcher.options['bool'].keys()) + ['magic_enabled']:
         value = request.form.get("options[{}]".format(option))
         options[option] = (value is not None) and (value not in ['0', 'False'])
 
@@ -183,7 +181,7 @@ class AnalysesView(FlaskView, UIView):
         if file:
             f = File(filename=file.filename, stream=file.stream)
         elif url:
-            stream = StringIO(url)
+            stream = BytesIO(url.encode('utf-8'))
             f = File(filename='url', stream=stream)
             if not f.existing:
                 f.update_value('type', 'url')
@@ -249,7 +247,7 @@ class AnalysesView(FlaskView, UIView):
         :form string option[*]: value of each enabled option.
         """
         file_id = request.form.get('file_id')
-        modules = filter(None, request.form.get('modules', '').split(','))
+        modules = [_f for _f in request.form.get('modules', '').split(',') if _f]
         groups = request.form.get('groups', '').split(',')
         comment = request.form.get('comment', '')
 

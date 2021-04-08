@@ -3,15 +3,15 @@ Installation
 ************
 
 .. note::
-    This page documents how to install FAME on Ubuntu 16.04. FAME being written in Python, you can install it on the system of your choice.
+    This page documents how to install FAME on Ubuntu 20.04. FAME being written in Python, you can install it on the system of your choice.
 
 Dependencies
 ============
 
 Install dependencies::
 
-    $ sudo apt-get install git python-pip python-dev
-    $ sudo pip install virtualenv
+    $ sudo apt install git python3-pip python3-dev
+    $ sudo pip3 install virtualenv
 
 MongoDB
 -------
@@ -72,6 +72,24 @@ All these modifications will only be effective once `mongod` is restarted::
 
     $ sudo systemctl restart mongod
 
+Docker
+------
+
+Some modules rely on docker to properly execute. If you want to use these modules, follow these additional instructions.
+
+Install docker::
+
+    $ sudo apt install docker.io
+
+Add the user to the docker group::
+
+    $ sudo groupadd docker
+    $ sudo usermod -aG docker $USER
+
+Restart the system for changes to be effective::
+
+    $ sudo reboot
+
 Install FAME
 ============
 
@@ -106,14 +124,14 @@ Installation on a production environment
 The commands shown above are good for development environments. In production, you will want to run the web server and the worker as daemons.
 
 .. note::
-    In this paragraph, we will describe how to set up FAME in production environments on Ubuntu 16.04, using nginx, uwsgi and systemd. If you setup differs, you will have to adapt these instructions.
+    In this paragraph, we will describe how to set up FAME in production environments on Ubuntu 20.04, using nginx, uwsgi and systemd. If your setup differs, you will have to adapt these instructions.
 
 Register the web server and the worker as services
 --------------------------------------------------
 
 Install uwsgi::
 
-    $ sudo pip install uwsgi
+    $ sudo pip3 install uwsgi
 
 Create a systemd configuration file for the web server, at `/etc/systemd/system/fame_web.service`::
 
@@ -155,7 +173,7 @@ Serve the application with nginx
 
 Install nginx::
 
-    $ sudo apt-get install nginx
+    $ sudo apt install nginx
 
 Remove the default configuration file::
 
@@ -189,6 +207,9 @@ Enable your configuration file, and restart nginx::
 
     $ sudo ln -s /etc/nginx/sites-available/fame /etc/nginx/sites-enabled/fame
     $ sudo systemctl restart nginx
+
+.. note::
+    In most settings, we recommend updating this configuration to use HTTPS instead of HTTP, but this is not described here as each organization handles certificates differently.
 
 Accessing FAME
 ==============
@@ -233,7 +254,7 @@ Installing on Windows
 
 When installing on Windows, install the following dependencies:
 
-* Python 2.7 (https://www.python.org/)
+* Python 3 (https://www.python.org/)
 * Git (https://git-scm.com/download/win)
 
 You can then follow the same installation instructions::
@@ -254,7 +275,7 @@ Here is how you can create a Virtual Machine that will work with these modules:
 
 * Use virtualization software that has a ``VirtualizationModule`` (FAME currently has support for Virtualbox and KVM).
 * Install the operating system of your choice (verify the module's requirements in the module's README).
-* Install Python 2.7.
+* Install Python 3.
 * Install flask (``pip install flask``).
 * Configure networking. You have two options:
     * Use NAT. If you do, you have to make sure to enable port forwarding so that port 4242 inside the guest is mapped to a port of your choice on the host. This port should then be specified in the module's configuration.

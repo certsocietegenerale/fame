@@ -1,4 +1,4 @@
-from urlparse import urlparse
+from urllib.parse import urlparse
 import os
 
 from flask import Blueprint, request, redirect, session

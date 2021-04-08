@@ -1,6 +1,6 @@
 from flask import request
 from flask_login import current_user
-from flask_classy import FlaskView
+from flask_classful import FlaskView
 
 from web.views.mixins import UIView
 from web.views.helpers import clean_files, clean_analyses

@@ -10,16 +10,16 @@ from fame.common.pip import pip_install
 
 
 def update_repository():
-    print "[+] Updating repository ..."
+    print("[+] Updating repository ...")
     try:
         repo = Repo(FAME_ROOT)
         repo.remotes.origin.pull()
-    except Exception, e:
+    except Exception as e:
         error("Could not update repository: {}".format(e))
 
 
 def update_requirements():
-    print "[+] Updating requirements ..."
+    print("[+] Updating requirements ...")
 
     rcode, output = pip_install('-r', os.path.join(FAME_ROOT, 'requirements.txt'))
 
@@ -29,7 +29,7 @@ def update_requirements():
 
 
 def end_message():
-    print "\n[+] Successfully updated FAME. Restart webserver and workers for changes to be effective."
+    print("\n[+] Successfully updated FAME. Restart webserver and workers for changes to be effective.")
 
 
 def main():
