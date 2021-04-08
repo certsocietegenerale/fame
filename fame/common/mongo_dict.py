@@ -1,5 +1,4 @@
 import collections
-from typing import Optional
 
 from fame.common.utils import iterify
 from fame.core.store import store
@@ -8,7 +7,7 @@ from fame.core.store import store
 class MongoDict(dict):
     # Should be defined for children classes
     # ex: collection_name = 'files'
-    collection_name: Optional[str] = None
+    collection_name = None
 
     def __init__(self, values={}):
         dict.__init__(self, values)

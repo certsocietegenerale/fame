@@ -7,7 +7,6 @@ import collections
 from uuid import uuid4
 from tempfile import mkstemp
 from shutil import copyfileobj
-from typing import Optional, List, Dict
 from multiprocessing import Queue, Process
 from flask import Flask, jsonify, request, abort, make_response
 
@@ -55,8 +54,8 @@ class IsolatedExceptions:
 
 class IsolatedModule:
     class IsolatedProcessingModule:
-        name: Optional[str] = None
-        config: List[Dict] = []
+        name = None
+        config = []
 
         def __init__(self):
             self._results = {
@@ -131,7 +130,7 @@ class IsolatedModule:
 
 
 class FakePackage:
-    __path__: List[str] = []
+    __path__ = []
 
 
 def fake_module(path, klass):

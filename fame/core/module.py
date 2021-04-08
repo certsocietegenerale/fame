@@ -6,7 +6,6 @@ from time import sleep
 from urllib.parse import urljoin
 from markdown2 import markdown
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict
 
 from fame.common.constants import MODULES_ROOT
 from fame.common.exceptions import ModuleInitializationError, ModuleExecutionError, MissingConfiguration
@@ -201,10 +200,10 @@ class Module(object):
                     }
                 }
     """
-    name: Optional[str] = None
-    config: List[Dict] = []
-    named_configs: Dict[str, Dict] = {}
-    description: Optional[str] = None
+    name = None
+    config = []
+    named_configs = {}
+    description = None
 
     def __init__(self, with_config=True):
         self._analysis = None
@@ -317,10 +316,10 @@ class ProcessingModule(Module):
             The default value is ``{}``, which means the module does not
             use any permission.
     """
-    acts_on: List[str] = []
-    generates: List[str] = []
-    triggered_by: List[str] = []
-    permissions: Dict[str, str] = {}
+    acts_on = []
+    generates = []
+    triggered_by = []
+    permissions = {}
     queue = 'unix'
 
     def __init__(self, with_config=True):
@@ -973,7 +972,7 @@ class AntivirusModule(Module):
 class FiletypeModule(Module):
     """Base class for Filetype Modules"""
 
-    acts_on: List[str] = []
+    acts_on = []
 
     def recognize(self, filepath, current_type):
         """To implement. Checks the file in order to determine more accurate
