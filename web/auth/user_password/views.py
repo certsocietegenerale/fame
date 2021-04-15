@@ -101,7 +101,7 @@ def password_reset(token):
         confirm = request.form.get('password_confirmation', '')
 
         if valid_new_password(password, confirm):
-            user = User(get_or_404(User.get_collection(), _id=user_id))
+            user = User(get_or_404(User.get_collection(), _id=user_id.decode('ascii')))
             change_password(user, password)
             flash('Password was successfully changed.', 'success')
             return redirect('/login')

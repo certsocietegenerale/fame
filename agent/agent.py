@@ -75,9 +75,6 @@ class IsolatedModule:
         def initialize(self):
             pass
 
-        def __getattr__(self, name):
-            self.log('error', "'{}' is not available in IsolatedProcessingModule".format(name))
-
         def log(self, level, message):
             self._results['logs'].append((level, message))
 

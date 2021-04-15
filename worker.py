@@ -103,7 +103,7 @@ class Worker:
                 print(("Launching installation script '{}'".format(' '.join(script))))
                 check_output(script, stderr=STDOUT)
             except CalledProcessError as e:
-                self._module_installation_error(' '.join(script), module, e.output)
+                self._module_installation_error(' '.join(script), module, e.output.decode('utf-8', errors='replace'))
             except Exception as e:
                 self._module_installation_error(' '.join(script), module, e)
 
