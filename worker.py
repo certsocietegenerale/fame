@@ -5,7 +5,7 @@ import argparse
 import requests
 from urllib.parse import urljoin
 from socket import gethostname
-from io import StringIO
+from io import BytesIO
 from zipfile import ZipFile
 from shutil import move, rmtree
 from uuid import uuid4
@@ -51,7 +51,7 @@ class Worker:
                 response.raise_for_status()
 
                 os.makedirs(MODULES_ROOT)
-                with ZipFile(StringIO(response.content), 'r') as zipf:
+                with ZipFile(BytesIO(response.content), 'r') as zipf:
                     zipf.extractall(MODULES_ROOT)
 
                 rmtree(backup_path)
