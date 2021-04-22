@@ -60,7 +60,7 @@ $ git clone https://github.com/certsocietegenerale/fame
 - Copy old files to the new directory
 
 ```
-$ cp -r fame.py2_backup/conf fame.py2_backup/storage
+$ cp -r fame.py2_backup/conf fame.py2_backup/storage fame
 ```
 
 - Run the installation script, and make sure you use the same MongoDB information (you can look at _fame/conf/fame.conf_ if needed)
