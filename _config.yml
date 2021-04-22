@@ -19,6 +19,11 @@ authors:
         url: https://cert.societegenerale.com
         image: assets/images/avatar_cert.jpg
         twitter: CertSG
+    gael:
+        name: Gael Muller
+        bio: Blue Team Leader at CERT SEKOIA
+        image: assets/images/avatar_gael.jpg
+        twitter: GaelMuller
 
 google_analytics: UA-94099950-1
 
