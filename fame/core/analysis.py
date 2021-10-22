@@ -53,6 +53,7 @@ class Analysis(MongoDict):
         self['end_date'] = None
         self['groups'] = []
         self['analyst'] = []
+        self['reviewed'] = None
         MongoDict.__init__(self, values)
 
         self._file = File(store.files.find_one({'_id': self['file']}))
@@ -407,6 +408,13 @@ class Analysis(MongoDict):
             results.append(self.get_main_file())
 
         return results
+
+    def set_reviewed(self, analyst=None):
+        if analyst is not None :
+            self['reviewed'] = analyst
+        else:
+            self['reviewed'] = None
+        self.save()
 
     def _reporting_hook(self, hook_name):
         for module in dispatcher.get_reporting_modules():

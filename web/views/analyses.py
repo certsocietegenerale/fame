@@ -95,6 +95,7 @@ class AnalysesView(FlaskView, UIView):
 
         :>json dict _id: ObjectId dict.
         :>json dict analyst: analyst's ObjectId.
+        :>json dict reviewed: analyst's ObjectId if review has been performed
         :>json dict date: date dict.
         :>json list executed_modules: list of executed modules.
         :>json list pending_modules: list of pending modules.
@@ -287,6 +288,75 @@ class AnalysesView(FlaskView, UIView):
                     return redirect(analysis, url_for('AnalysesView:get', id=analysis['analysis']['_id']))
             else:
                 return render_template('analyses/new.html', options=dispatcher.options)
+
+    @requires_permission("reviewed")
+    @route('/review/', methods=["GET"])
+    def reviewed(self):
+        """Get the list of analyses that has not been reviewed.
+
+        Same as index, but add the reviewed feature
+
+        .. :quickref: Reviewed nalysis; Get the list of analyses with the possibility to filter if reviewed or not
+
+        Response is paginated and will only contain 25 results. The most recent
+        analyses appear first. By default, it filter by not reviewed items.
+
+        :query page: page number.
+        :type page: int
+
+        :query filter: (optional) set filter. can be "all" or "reviewed"
+
+        :>json list analyses: list of analyses (see :http:get:`/analyses/(id)` for details on the format of an analysis).
+        """
+
+        page = int(request.args.get('page', 1))
+        filter = request.args.get('filter')
+        filter_query = {"reviewed": { "$exists": True, "$eq": None } }
+        if filter:
+            if filter == 'reviewed':
+                filter_query = { "reviewed": { "$exists": True, "$ne": None } }
+            elif filter == 'all':
+                filter_query = {}
+
+        analyses = current_user.analyses.find(filter_query).sort('_id', DESCENDING).limit(PER_PAGE).skip((page - 1) * PER_PAGE)
+        pagination = Pagination(page=page, per_page=PER_PAGE, total=analyses.count(), css_framework='bootstrap3')
+        analyses = {'analyses': clean_analyses(list(analyses))}
+        for analysis in analyses['analyses']:
+            file = current_user.files.find_one({'_id': analysis['file']})
+            analysis['file'] = clean_files(file)
+
+            if 'analyst' in analysis:
+                analyst = store.users.find_one({'_id': analysis['analyst']})
+                analysis['analyst'] = clean_users(analyst)
+
+            if 'reviewed' in analysis:
+                analyst = store.users.find_one({'_id': analysis['reviewed']})
+                analysis['reviewed'] = clean_users(analyst)
+
+        return render(analyses, 'analyses/reviewed.html', ctx={'data': analyses, 'pagination': pagination})
+
+    @requires_permission("reviewed")
+    @route('/<id>/reviewed', methods=["POST"])
+    def set_reviewed(self, id):
+        """Set reviewed value by an analyst.
+
+        .. :quickref: Analysis; set review state
+
+        Set the review state of an analysis.
+
+
+        :form bool reviewed: if the file has been reviewed or not
+        """
+        analysis = Analysis(get_or_404(current_user.analyses, _id=id))
+        reviewed = request.form.get('reviewed')
+        if reviewed:
+            analysis.set_reviewed(current_user['_id'])
+        else:
+            analysis.set_reviewed(None)
+
+        return redirect(analysis, url_for('AnalysesView:get', id=analysis["_id"]))
+
+
 
     @requires_permission("submit_iocs")
     @route('/<id>/submit_iocs/<module>', methods=["POST"])

@@ -477,3 +477,17 @@ td.user-actions .btn {
 #change-file-type {
     font-size: 12px;
 }
+
+.reviewed {
+    opacity: 0.3;
+}
+
+.filter-btn {
+    position:relative;
+    top: 1em;
+}
+
+.filter-btn form input{
+    position:absolute;
+    z-index: 99;
+}
