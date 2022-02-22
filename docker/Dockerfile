@@ -1,27 +1,29 @@
-
-FROM debian:stretch
+FROM debian:latest
 
 WORKDIR /opt
 
-RUN apt-get update && \
-  apt-get upgrade -y && \
-  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+ENV PYTHONUNBUFFERED=1
+
+RUN apt update && \
+  apt upgrade -y && \
+  DEBIAN_FRONTEND=noninteractive apt install -y \
   git \
-  python-dev \
-  python-pip \
+  python3-dev \
+  python3-pip \
   screen \
   p7zip-full \
   libjpeg-dev \
   zlib1g-dev \
+  libmagic-dev \
   apt-transport-https \
+  netcat \
   ca-certificates \
   curl \
   gnupg2 \
+  pkg-config \
+  libvirt-dev \
+  sudo \
   software-properties-common
-
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
-   --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
-RUN echo "deb http://repo.mongodb.org/apt/debian stretch/mongodb-org/4.0 main" | tee /etc/apt/sources.list.d/mongodb-org-4.0.list
 
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
     add-apt-repository \
@@ -29,17 +31,27 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
     $(lsb_release -cs) \
     stable"
 
+RUN curl -o /bin/wait-for https://raw.githubusercontent.com/eficode/wait-for/master/wait-for && \
+    chmod +x /bin/wait-for
+
 RUN apt-get update && apt-get install -y \
     docker-ce \
     docker-ce-cli \
     containerd.io
 
-RUN apt-get update && apt-get install -y \
-    mongodb-org
+RUN groupadd -r fame && \
+    useradd -M -r -d /opt/fame -g fame -G docker fame && \
+    install -d -m 0755 -o fame -g fame /opt/fame
 
+USER fame
 
-RUN pip install virtualenv && \
-    git clone https://github.com/certsocietegenerale/fame
+RUN git clone https://github.com/certsocietegenerale/fame && \
+    pip3 install virtualenv && \
+    /opt/fame/utils/run.sh
 
-ENTRYPOINT ["/opt/fame/docker/launch.sh"]
+USER root
+
+RUN chown -R fame:fame /opt/fame
+
+CMD ["/opt/fame/docker/docker-entrypoint.sh", "web"]
 EXPOSE 4200

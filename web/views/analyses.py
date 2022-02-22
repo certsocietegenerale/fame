@@ -72,7 +72,7 @@ class AnalysesView(FlaskView, UIView):
         page = int(request.args.get('page', 1))
 
         analyses = current_user.analyses.find().sort('_id', DESCENDING).limit(PER_PAGE).skip((page - 1) * PER_PAGE)
-        pagination = Pagination(page=page, per_page=PER_PAGE, total=analyses.count(), css_framework='bootstrap3')
+        pagination = Pagination(page=page, per_page=PER_PAGE, total=current_user.analyses.count_documents(), css_framework='bootstrap3')
         analyses = {'analyses': clean_analyses(list(analyses))}
         for analysis in analyses['analyses']:
             file = current_user.files.find_one({'_id': analysis['file']})

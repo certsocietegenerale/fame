@@ -63,6 +63,7 @@ temp/
 # Config files
 conf/*
 !conf/types.conf
+docker/fame.env
 
 # Modules
 fame/modules/*

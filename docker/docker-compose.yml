@@ -1,0 +1,85 @@
+version: '3.4'
+
+networks:
+  backend.fame:
+
+volumes:
+  mongodb:
+  modules:
+  storage:
+  avatars:
+
+services:
+  fame_web:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    image: fame:latest
+    hostname: fame_web
+    container_name: fame_web
+    networks:
+      - backend.fame
+    ports:
+      - "127.0.0.1:4200:4200"
+    env_file:
+      - fame.env
+    depends_on:
+      - fame_db
+    volumes:
+      - modules:/opt/fame/fame/modules/
+      - storage:/opt/fame/fame/storage/
+      - avatars:/opt/fame/web/static/img/avatars/
+
+  fame_worker:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    image: fame:latest
+    hostname: fame_worker
+    container_name: fame_worker
+    entrypoint: /bin/sh
+    command: -c "wait-for -t 15 fame_web:4200 && /opt/fame/docker/docker-entrypoint.sh worker"
+    networks:
+      - backend.fame
+    env_file:
+      - fame.env
+    privileged: true # this is required to use docker-in-docker functionnalities. Without privilegied mode, FAME modules which are using docker will not work
+    depends_on:
+      - fame_db
+      - fame_web
+
+  fame_updater:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    image: fame:latest
+    hostname: fame_updater
+    container_name: fame_updater
+    entrypoint: /bin/sh
+    command: -c "wait-for -t 15 fame_web:4200 && /opt/fame/docker/docker-entrypoint.sh updater"
+    networks:
+      - backend.fame
+    env_file:
+      - fame.env
+    depends_on:
+      - fame_db
+      - fame_web
+    volumes:
+      - modules:/opt/fame/fame/modules/
+      - storage:/opt/fame/fame/storage/
+
+  fame_db:
+    image: mongo:latest
+    container_name: fame_db
+    hostname: fame_db
+    command: mongod --auth --quiet --logpath /dev/null
+    env_file:
+      - fame.env
+    networks:
+      - backend.fame
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: NeedToBeChanged
+    volumes:
+      - mongodb:/data/db
+      - ./mongo-init-root-user.js:/docker-entrypoint-initdb.d/mongo-init-root-user.js:ro

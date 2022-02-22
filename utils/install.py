@@ -7,9 +7,8 @@ from subprocess import call
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
-from utils import user_input, error
+from utils import error
 from fame.common.constants import FAME_ROOT
-from fame.common.pip import pip_install
 
 
 class Templates:
@@ -49,9 +48,11 @@ def test_mongodb_connection(db):
 def define_mongo_connection(context):
     from pymongo import MongoClient
 
-    context['mongo_host'] = user_input("MongoDB host", "localhost")
-    context['mongo_port'] = int(user_input("MongoDB port", "27017"))
-    context['mongo_db'] = user_input("MongoDB database", "fame")
+    context['mongo_host'] = os.environ.get('MONGODB_HOST', "localhost")
+    context['mongo_port'] = int(os.environ.get("MONGODB_PORT", 27017))
+    context['mongo_db'] = os.environ.get("MONGO_INITDB_DATABASE", "fame")
+    context['mongo_user'] = os.environ.get("MONGODB_USERNAME", '')
+    context['mongo_password'] = os.environ.get("MONGODB_PASSWORD", '')
 
     try:
         mongo = MongoClient(context['mongo_host'], context['mongo_port'], serverSelectionTimeoutMS=10000)
@@ -61,11 +62,7 @@ def define_mongo_connection(context):
         print(e)
         error("Could not connect to MongoDB.")
 
-    context['mongo_user'] = ''
-    context['mongo_password'] = ''
     if not test_mongodb_connection(db):
-        context['mongo_user'] = user_input("MongoDB username")
-        context['mongo_password'] = user_input("MongoDB password")
         try:
             db.authenticate(context['mongo_user'], quote_plus(context['mongo_password']))
         except:
@@ -73,18 +70,6 @@ def define_mongo_connection(context):
 
         if not test_mongodb_connection(db):
             error("MongDB user has insufficient privileges.")
-
-
-def define_installation_type(context):
-    print("\nChoose your installation type:\n")
-    print(" - 1: Web server + local worker")
-    print(" - 2: Remote worker\n")
-
-    itype = user_input("Installation type", "1", ["1", "2"])
-    if itype == "1":
-        context['installation_type'] = 'local'
-    else:
-        context['installation_type'] = 'remote'
 
 
 def generate_ssh_key():
@@ -101,13 +86,15 @@ def generate_ssh_key():
 
 def create_admin_user():
     from fame.core.store import store
-    from utils.create_user import create_user
+    from web.auth.user_password.user_management import create_user
 
-    if store.users.count():
+    if store.users.count_documents({}):
         print("[+] There are already users in the database.")
     else:
         print("[+] Creating first user (as administrator) ...")
-        create_user(admin=True)
+        default_user_email = os.environ.get("DEFAULT_EMAIL", "admin@changeme.fame")
+        default_user_password = os.environ.get("DEFAULT_PASSWORD", 'ChangeMe')
+        create_user("Admin", default_user_email, ['*', 'cert'], ["cert"], ['*'], default_user_password)
 
 
 def add_community_repository():
@@ -132,7 +119,7 @@ def add_community_repository():
 def perform_local_installation(context):
     templates = Templates()
 
-    context['fame_url'] = user_input("FAME's URL for users (e.g. https://fame.yourdomain/)")
+    context['fame_url'] = os.environ.get("FAME_URL", "http://localhost")
     print("[+] Creating configuration file ...")
     context['secret_key'] = os.urandom(64).hex()
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'local_fame.conf', context)
@@ -140,6 +127,7 @@ def perform_local_installation(context):
     generate_ssh_key()
 
     from fame.core import fame_init
+    from web.auth.user_password.user_management import create_user
     fame_init()
     print("[+] Creating initial data ...")
     from utils.initial_data import create_initial_data
@@ -167,7 +155,7 @@ def create_user_for_worker(context):
 def get_fame_url(context):
     import requests
 
-    context['fame_url'] = user_input("FAME's URL for worker")
+    context['fame_url'] = os.environ.get("FAME_URL", 'http://localhost')
 
     url = urljoin(context['fame_url'], '/modules/download')
     try:
@@ -195,29 +183,19 @@ def perform_remote_installation(context):
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'remote_fame.conf', context)
 
 
-def install_requirements():
-    print("[+] Installing requirements ...")
-
-    rcode, output = pip_install('-r', os.path.join(FAME_ROOT, 'requirements.txt'))
-
-    if rcode:
-        print(output)
-        error("Could not install requirements.")
-
 
 def main():
     context = {}
 
-    install_requirements()
-
     define_mongo_connection(context)
 
     create_conf_directory()
-    define_installation_type(context)
-    if context['installation_type'] == 'local':
-        perform_local_installation(context)
-    else:
+    if sys.argv and len(sys.argv) > 1 and sys.argv[1] == 'worker':
         perform_remote_installation(context)
+        print('[+] performing remote install')
+    else:
+        perform_local_installation(context)
+        print('[+] performing local install')
 
 
 if __name__ == '__main__':
