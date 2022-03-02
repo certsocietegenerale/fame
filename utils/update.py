@@ -1,12 +1,14 @@
 import os
 import sys
+
 from git import Repo
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
-from utils import error
 from fame.common.constants import FAME_ROOT
 from fame.common.pip import pip_install
+
+from utils import error
 
 
 def update_repository():
@@ -21,7 +23,7 @@ def update_repository():
 def update_requirements():
     print("[+] Updating requirements ...")
 
-    rcode, output = pip_install('-r', os.path.join(FAME_ROOT, 'requirements.txt'))
+    rcode, output = pip_install("-r", os.path.join(FAME_ROOT, "requirements.txt"))
 
     # In case pip failed
     if rcode:
@@ -37,11 +39,15 @@ def main():
     update_requirements()
 
     # Make sure basic configuration values are present
+    from fame.core import fame_init
+
     from utils.initial_data import create_initial_data
+
+    fame_init()
     create_initial_data()
 
     end_message()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
