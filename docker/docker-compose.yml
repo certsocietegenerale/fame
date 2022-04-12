@@ -82,4 +82,4 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: NeedToBeChanged
     volumes:
       - mongodb:/data/db
-      - ./mongo-init-root-user.js:/docker-entrypoint-initdb.d/mongo-init-root-user.js:ro
+      - ./mongo-init-user.sh:/docker-entrypoint-initdb.d/mongo-init-user.sh:ro

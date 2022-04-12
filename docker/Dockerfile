@@ -39,19 +39,20 @@ RUN apt-get update && apt-get install -y \
     docker-ce-cli \
     containerd.io
 
+
 RUN groupadd -r fame && \
     useradd -M -r -d /opt/fame -g fame -G docker fame && \
-    install -d -m 0755 -o fame -g fame /opt/fame
+    install -d -m 0755 -o fame -g fame /opt/fame && \
+    echo 'fame ALL=(root) NOPASSWD: /usr/bin/dockerd ""' > /etc/sudoers.d/fame
+
+COPY . /opt/fame
+
+RUN chown -R fame:fame /opt/fame
 
 USER fame
 
-RUN git clone https://github.com/certsocietegenerale/fame && \
-    pip3 install virtualenv && \
+RUN  pip3 install virtualenv && \
     /opt/fame/utils/run.sh
-
-USER root
-
-RUN chown -R fame:fame /opt/fame
 
 CMD ["/opt/fame/docker/docker-entrypoint.sh", "web"]
 EXPOSE 4200
