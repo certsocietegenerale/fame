@@ -9,6 +9,7 @@ from flask_login import LoginManager
 from werkzeug.urls import url_encode
 from importlib import import_module
 
+from urllib.parse import urljoin
 from fame.core import fame_init
 from fame.core.user import User
 from fame.common.config import fame_config
@@ -150,7 +151,7 @@ def modify_query(key, value):
 
 @app.route('/')
 def root():
-    return redirect('/analyses')
+    return redirect(urljoin(fame_config.fame_url, '/analyses/'))
 
 
 FilesView.register(app)
