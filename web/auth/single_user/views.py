@@ -1,5 +1,7 @@
 from flask_login import login_user
 from flask import Blueprint, request, redirect
+from fame.common.config import fame_config
+from urllib.parse import urljoin
 
 from fame.core.user import User
 from web.views.helpers import prevent_csrf
@@ -38,10 +40,10 @@ def login():
     user.update_value('last_activity', datetime.now().timestamp())
     login_user(user)
 
-    return redirect(redir)
+    return redirect(urljoin(fame_config.fame_url, redir))
 
 
 @auth.route('/logout')
 def logout():
     redir = '/'
-    return redirect(redir)
+    return redirect(urljoin(fame_config.fame_url, redir))

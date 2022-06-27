@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, flash
 from flask_login import logout_user
+from fame.common.config import fame_config
+from urllib.parse import urljoin
 
 from web.views.helpers import prevent_csrf, user_has_groups_and_sharing
 from web.auth.ad.user_management import authenticate, LdapSettingsNotPresentException
@@ -33,10 +35,10 @@ def login():
             return render_template('login.html')
 
         redir = request.args.get('next', '/')
-        return redirect(redir)
+        return redirect(urljoin(fame_config.fame_url, redir))
 
 
 @auth.route('/logout')
 def logout():
     logout_user()
-    return redirect('/login')
+    return redirect(urljoin(fame_config.fame_url, '/login'))
