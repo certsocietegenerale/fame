@@ -19,7 +19,7 @@ from web.views.modules import ModulesView
 from web.views.search import SearchView
 from web.views.configs import ConfigsView
 from web.views.users import UsersView
-from web.views.helpers import user_if_enabled
+from web.views.helpers import user_if_enabled, disconnect_if_inactive
 
 try:
     fame_init()
@@ -50,7 +50,7 @@ app.register_blueprint(auth_module.auth)
 
 @login_manager.user_loader
 def load_user(token):
-    return user_if_enabled(User.get(auth_token=token))
+    return disconnect_if_inactive(user_if_enabled(User.get(auth_token=token)))
 
 
 @login_manager.request_loader

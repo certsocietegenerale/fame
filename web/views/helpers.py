@@ -5,10 +5,12 @@ from flask_login import current_user
 from werkzeug.exceptions import Forbidden
 from functools import wraps
 from os.path import basename
+from datetime import timedelta, datetime
 
 from fame.core.store import store
 from fame.core.config import Config
 from fame.common.utils import is_iterable
+from fame.common.config import fame_config
 
 
 def remove_field(instance, field):
@@ -94,6 +96,26 @@ def user_if_enabled(user):
     if user and user['enabled']:
         return user
 
+    return None
+
+
+def convert_to_seconds(s):
+    units = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days", "w": "weeks"}
+    count = int(s[:-1])
+    unit = units[s[-1]]
+    td = timedelta(**{unit: count})
+    return td.seconds + 60 * 60 * 24 * td.days
+
+
+def disconnect_if_inactive(user):
+    if 'last_activity' not in user or fame_config.max_inactivity_time is None:
+        return user
+
+    if user:
+        ts = datetime.now().timestamp()
+        if user['last_activity'] + convert_to_seconds(fame_config.max_inactivity_time) > ts:
+            user.update_value('last_activity', ts)
+            return user
     return None
 
 

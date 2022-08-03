@@ -3,6 +3,7 @@ import os
 import ldap
 from itsdangerous import TimestampSigner
 from flask_login import login_user, make_secure_token
+from datetime import datetime
 
 from fame.core.user import User
 from fame.common.config import fame_config
@@ -131,6 +132,7 @@ def create_user(ldap_user):
         'groups': groups,
         'default_sharing': default_sharing,
         'permissions': permissions,
+        'last_activity', datetime.now().timestamp(),
     })
     user.save()
     user.generate_avatar()
@@ -156,6 +158,8 @@ def update_or_create_user(ldap_user):
 
         # enable/disable user
         user.update_value('enabled', ldap_user['enabled'])
+
+        user.update_value('last_activity', datetime.now().timestamp())
 
         return user_if_enabled(user)
 

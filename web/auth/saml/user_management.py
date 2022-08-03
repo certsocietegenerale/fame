@@ -1,4 +1,5 @@
 from flask_login import login_user
+from datetime import datetime
 
 from fame.core.user import User
 from web.views.helpers import user_if_enabled
@@ -11,6 +12,7 @@ def authenticate(session):
     user = get_or_create_user(saml_name_id, saml_user_data)
 
     if user:
+        user.update_value('last_activity', datetime.now().timestamp())
         login_user(user)
 
     return user
