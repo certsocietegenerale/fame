@@ -2,6 +2,7 @@ import os
 from itsdangerous import TimestampSigner
 from flask_login import login_user
 from werkzeug.security import check_password_hash, generate_password_hash
+from datetime import datetime
 
 from fame.core.user import User
 from fame.common.config import fame_config
@@ -57,6 +58,7 @@ def authenticate(email, password):
             if check_password_hash(user['pwd_hash'], password):
                 if 'auth_token' not in user:
                     user.update_value('auth_token', auth_token(user))
+                user.update_value('last_activity', datetime.now().timestamp())
 
                 login_user(user)
                 return user

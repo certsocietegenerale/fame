@@ -34,7 +34,9 @@ def login():
     if "/login" in redir:
         redir = '/'
 
-    login_user(get_or_create_user())
+    user = get_or_create_user()
+    user.update_value('last_activity', datetime.now().timestamp())
+    login_user(user)
 
     return redirect(redir)
 
