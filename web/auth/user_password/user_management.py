@@ -56,10 +56,8 @@ def authenticate(email, password):
     if user_if_enabled(user):
         if 'pwd_hash' in user:
             if check_password_hash(user['pwd_hash'], password):
-                if 'auth_token' not in user:
-                    user.update_value('auth_token', auth_token(user))
+                user.update_value('auth_token', auth_token(user))
                 user.update_value('last_activity', datetime.now().timestamp())
-
                 login_user(user)
                 return user
 
