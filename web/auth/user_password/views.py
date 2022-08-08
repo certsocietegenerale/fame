@@ -10,7 +10,7 @@ from fame.common.config import fame_config
 from fame.common.email_utils import EmailServer
 from fame.core.user import User
 from web.views.helpers import prevent_csrf, get_or_404
-from web.auth.user_password.user_management import authenticate, change_password, password_reset_token, validate_password_reset_token
+from web.auth.user_password.user_management import authenticate, change_password, password_reset_token, validate_password_reset_token, auth_token
 
 auth = Blueprint('auth', __name__, template_folder='templates')
 
@@ -125,6 +125,8 @@ def login():
 
 @auth.route('/logout')
 def logout():
+    if current_user.is_authenticated:
+        current_user.update_value('auth_token', auth_token(current_user))
     logout_user()
     return redirect(urljoin(fame_config.fame_url, '/login'))
 
