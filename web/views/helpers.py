@@ -108,14 +108,13 @@ def convert_to_seconds(s):
 
 
 def disconnect_if_inactive(user):
-    if 'last_activity' not in user or fame_config.max_inactivity_time is None:
+    if not user or 'last_activity' not in user or fame_config.max_inactivity_time is None:
         return user
 
-    if user:
-        ts = datetime.now().timestamp()
-        if user['last_activity'] + convert_to_seconds(fame_config.max_inactivity_time) > ts:
-            user.update_value('last_activity', ts)
-            return user
+    ts = datetime.now().timestamp()
+    if user['last_activity'] + convert_to_seconds(fame_config.max_inactivity_time) > ts:
+        user.update_value('last_activity', ts)
+        return user
     return None
 
 
