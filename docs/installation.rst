@@ -5,6 +5,25 @@ Installation
 .. note::
     This page documents how to install FAME on Ubuntu 20.04. FAME being written in Python, you can install it on the system of your choice.
 
+The easy way
+============
+
+Probably the most easy way to run fame is::
+
+    $ git clone https://github.com/certsocietegenerale/fame.git
+    $ cd fame/docker
+    $ cp fame.env.template fame.env
+    $ echo "DEFAULT_EMAIL=admin@changeme.fame" >> fame.env
+    $ echo "DEFAULT_PASSWORD=changeme" >> fame.env
+    $ docker-compose up --build
+
+
+Then browse http://localhost:4200/ using your web browser, and login using the `docker first run default credentials <https://github.com/certsocietegenerale/fame/blob/master/docker/fame.env.template>`_  (admin@changeme.fame / changeme)
+
+These commands are very nice for having a first look to what fame is, but you may also want to install fame without docker. This is especially true given that FAME use docker internally for its activities, which leads to Docker-in-Docker situation.
+
+Here is how to install fame without docker :
+
 Dependencies
 ============
 
@@ -239,7 +258,7 @@ Clone the repository::
 
 Run the install script, and answer the questions (choose '2' for installation type)::
 
-    $ utils/run.sh utils/install.py
+    $ utils/run.sh utils/install.py worker
 
 You can now start your worker::
 

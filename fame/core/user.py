@@ -22,6 +22,10 @@ class FilteredCollection():
         combined_filters.update(self.filters)
         return self.collection.find_one(combined_filters)
 
+    def count_documents(self, filters={}):
+        combined_filters = filters.copy()
+        combined_filters.update(self.filters)
+        return self.collection.count_documents(combined_filters)
 
 class User(MongoDict):
     collection_name = 'users'

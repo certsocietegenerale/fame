@@ -57,7 +57,7 @@ class FilesView(FlaskView, UIView):
         page = int(request.args.get("page", 1))
 
         files = current_user.files.find().sort("_id", DESCENDING).limit(PER_PAGE).skip((page - 1) * PER_PAGE)
-        pagination = Pagination(page=page, per_page=PER_PAGE, total=files.count(), css_framework="bootstrap3")
+        pagination = Pagination(page=page, per_page=PER_PAGE, total=current_user.files.count_documents(), css_framework="bootstrap3")
         files = {"files": clean_files(list(files))}
 
         return render(files, "files/index.html", ctx={"data": files, "pagination": pagination})

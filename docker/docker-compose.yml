@@ -1,0 +1,97 @@
+version: '3.4'
+
+networks:
+  backend.fame:
+
+volumes:
+  mongodb:
+  modules:
+  modules_worker:
+  storage:
+  avatars:
+  temp:
+  env_web:
+  env_worker:
+  env_updater:
+
+services:
+  fame_web:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    image: fame:latest
+    hostname: fame_web
+    container_name: fame_web
+    networks:
+      - backend.fame
+    ports:
+      - "127.0.0.1:4200:4200"
+    env_file:
+      - fame.env
+    depends_on:
+      - fame_db
+    volumes:
+      - modules:/opt/fame/fame/modules/
+      - env_web:/opt/fame/env/
+      - storage:/opt/fame/fame/storage/
+      - temp:/opt/fame/fame/temp/
+      - avatars:/opt/fame/web/static/img/avatars/
+    entrypoint: /bin/sh
+    command: -c "wait-for -t 0 fame_db:27017 && /opt/fame/docker/docker-entrypoint.sh web"
+
+  fame_worker:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    image: fame:latest
+    hostname: fame_worker
+    container_name: fame_worker
+    volumes:
+      - modules_worker:/opt/fame/fame/modules/
+      - env_worker:/opt/fame/env/
+    entrypoint: /bin/sh
+    command: -c "wait-for -t 0 fame_web:4200 && /opt/fame/docker/docker-entrypoint.sh worker"
+    networks:
+      - backend.fame
+    env_file:
+      - fame.env
+    privileged: true # this is required to use docker-in-docker functionnalities. Without privilegied mode, FAME modules which are using docker will not work
+    depends_on:
+      - fame_db
+      - fame_web
+
+  fame_updater:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    image: fame:latest
+    hostname: fame_updater
+    container_name: fame_updater
+    entrypoint: /bin/sh
+    command: -c "wait-for -t 0 fame_web:4200 && /opt/fame/docker/docker-entrypoint.sh updater"
+    networks:
+      - backend.fame
+    env_file:
+      - fame.env
+    depends_on:
+      - fame_db
+      - fame_web
+    volumes:
+      - modules:/opt/fame/fame/modules/
+      - env_updater:/opt/fame/env/
+
+  fame_db:
+    image: mongo:latest
+    container_name: fame_db
+    hostname: fame_db
+    command: mongod --auth --quiet --logpath /dev/null
+    env_file:
+      - fame.env
+    networks:
+      - backend.fame
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: NeedToBeChanged
+    volumes:
+      - mongodb:/data/db
+      - ./mongo-init-user.sh:/docker-entrypoint-initdb.d/mongo-init-user.sh:ro
