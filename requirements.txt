@@ -12,6 +12,6 @@ requests~=2.25.1
 Flask-Login~=0.5.0
 zxcvbn==4.4.28
 GitPython~=3.1.7
-markdown2~=2.3.9
+markdown2~=2.4.3
 jinja2~=3.0.3
 virtualenv~=20.13.2
