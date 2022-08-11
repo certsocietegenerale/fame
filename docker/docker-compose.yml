@@ -28,6 +28,8 @@ services:
       - "127.0.0.1:4200:4200"
     env_file:
       - fame.env
+    environment:
+      FAME_URL: http://localhost:4200
     depends_on:
       - fame_db
     volumes:
