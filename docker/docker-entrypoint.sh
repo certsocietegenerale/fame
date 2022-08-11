@@ -1,6 +1,7 @@
 #!/bin/bash
 cd /opt/fame
-utils/run.sh "utils/install.py" "$1"
+utils/run.sh "utils/install.py" "$1" "--not-interactive"
+
 if [ "$1" == "web" ]; then
   utils/run.sh webserver.py
 elif [ "$1" == "worker" ]; then

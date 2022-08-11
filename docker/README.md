@@ -14,4 +14,6 @@ Follow the [official instructions](https://www.docker.com/community-edition).
 
     $ cd fame/docker
     $ cp fame.env.template fame.env
+    $ echo "DEFAULT_EMAIL=admin@changeme.fame" >> fame.env
+    $ echo "DEFAULT_PASSWORD=changeme" >> fame.env
     $ docker-compose up --build

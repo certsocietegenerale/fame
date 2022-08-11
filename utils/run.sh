@@ -4,7 +4,7 @@ UTILS_ROOT=$(dirname "$0")
 FAME_ROOT=$(dirname "$UTILS_ROOT")
 VIRTUALENV="$FAME_ROOT/env"
 
-if [ -d "$VIRTUALENV" ]; then
+if [ -d "$VIRTUALENV/bin" ]; then
     echo "[+] Using existing virtualenv."
     . "$VIRTUALENV/bin/activate"
 else

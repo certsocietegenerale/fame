@@ -6,8 +6,13 @@ networks:
 volumes:
   mongodb:
   modules:
+  modules_worker:
   storage:
   avatars:
+  temp:
+  env_web:
+  env_worker:
+  env_updater:
 
 services:
   fame_web:
@@ -27,8 +32,12 @@ services:
       - fame_db
     volumes:
       - modules:/opt/fame/fame/modules/
+      - env_web:/opt/fame/env/
       - storage:/opt/fame/fame/storage/
+      - temp:/opt/fame/fame/temp/
       - avatars:/opt/fame/web/static/img/avatars/
+    entrypoint: /bin/sh
+    command: -c "wait-for -t 0 fame_db:27017 && /opt/fame/docker/docker-entrypoint.sh web"
 
   fame_worker:
     build:
@@ -37,8 +46,11 @@ services:
     image: fame:latest
     hostname: fame_worker
     container_name: fame_worker
+    volumes:
+      - modules_worker:/opt/fame/fame/modules/
+      - env_worker:/opt/fame/env/
     entrypoint: /bin/sh
-    command: -c "wait-for -t 15 fame_web:4200 && /opt/fame/docker/docker-entrypoint.sh worker"
+    command: -c "wait-for -t 0 fame_web:4200 && /opt/fame/docker/docker-entrypoint.sh worker"
     networks:
       - backend.fame
     env_file:
@@ -56,7 +68,7 @@ services:
     hostname: fame_updater
     container_name: fame_updater
     entrypoint: /bin/sh
-    command: -c "wait-for -t 15 fame_web:4200 && /opt/fame/docker/docker-entrypoint.sh updater"
+    command: -c "wait-for -t 0 fame_web:4200 && /opt/fame/docker/docker-entrypoint.sh updater"
     networks:
       - backend.fame
     env_file:
@@ -66,7 +78,7 @@ services:
       - fame_web
     volumes:
       - modules:/opt/fame/fame/modules/
-      - storage:/opt/fame/fame/storage/
+      - env_updater:/opt/fame/env/
 
   fame_db:
     image: mongo:latest

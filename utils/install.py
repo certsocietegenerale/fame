@@ -7,7 +7,7 @@ from subprocess import call
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
-from utils import error
+from utils import user_input, error, get_new_password
 from fame.common.constants import FAME_ROOT
 
 
@@ -54,6 +54,13 @@ def define_mongo_connection(context):
     context['mongo_user'] = os.environ.get("MONGODB_USERNAME", '')
     context['mongo_password'] = os.environ.get("MONGODB_PASSWORD", '')
 
+    if context['interactive']:
+        context['mongo_host'] = user_input("MongoDB host", context['mongo_host'])
+        context['mongo_port'] = int(user_input("MongoDB port", context['mongo_port']))
+        context['mongo_db'] = user_input("MongoDB database", context['mongo_db'])
+        context['mongo_user'] = user_input("MongoDB username", context['mongo_user'])
+        context['mongo_password'] = user_input("MongoDB password", context['mongo_password'])
+
     try:
         mongo = MongoClient(context['mongo_host'], context['mongo_port'], serverSelectionTimeoutMS=10000)
         mongo.server_info()
@@ -84,7 +91,7 @@ def generate_ssh_key():
             error("Could not generate SSH key (missing 'ssh-keygen' ?)", exit=False)
 
 
-def create_admin_user():
+def create_admin_user(context):
     from fame.core.store import store
     from web.auth.user_password.user_management import create_user
 
@@ -93,7 +100,15 @@ def create_admin_user():
     else:
         print("[+] Creating first user (as administrator) ...")
         default_user_email = os.environ.get("DEFAULT_EMAIL", "admin@changeme.fame")
-        default_user_password = os.environ.get("DEFAULT_PASSWORD", 'ChangeMe')
+        default_user_password = os.environ.get("DEFAULT_PASSWORD", '')
+        if context['interactive']:
+            default_user_email = user_input("User email address:", default_user_email)
+            if not default_user_password:
+                default_user_password = get_new_password()
+
+        if not default_user_password:
+            error("Error: No password given for the default account. Did you set DEFAULT_EMAIL / DEFAULT_PASSWORD ?")
+
         create_user("Admin", default_user_email, ['*', 'cert'], ["cert"], ['*'], default_user_password)
 
 
@@ -120,6 +135,8 @@ def perform_local_installation(context):
     templates = Templates()
 
     context['fame_url'] = os.environ.get("FAME_URL", "http://localhost")
+    if context['interactive']:
+        context['fame_url'] = user_input("FAME's URL for worker", context['fame_url'])
     print("[+] Creating configuration file ...")
     context['secret_key'] = os.urandom(64).hex()
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'local_fame.conf', context)
@@ -133,7 +150,7 @@ def perform_local_installation(context):
     from utils.initial_data import create_initial_data
     create_initial_data()
 
-    create_admin_user()
+    create_admin_user(context)
     add_community_repository()
 
 
@@ -187,15 +204,31 @@ def perform_remote_installation(context):
 def main():
     context = {}
 
+    context['interactive'] = True
+    if sys.argv and any([arg == "--not-interactive" for arg in sys.argv]):
+        print("[+] Performing a non-interactive installation")
+        context['interactive'] = False
+
     define_mongo_connection(context)
 
     create_conf_directory()
-    if sys.argv and len(sys.argv) > 1 and sys.argv[1] == 'worker':
-        perform_remote_installation(context)
-        print('[+] performing remote install')
-    else:
-        perform_local_installation(context)
+
+    itype = "1"
+    if sys.argv and any([arg == 'worker' for arg in sys.argv]):
+        itype = "2"
+
+    if context["interactive"]:
+        print("\nChoose your installation type:\n")
+        print(" - 1: Web server + local worker")
+        print(" - 2: Remote worker\n")
+        itype = user_input("Installation type", itype, ["1", "2"])
+
+    if itype == "1":
         print('[+] performing local install')
+        perform_local_installation(context)
+    else:
+        print('[+] performing remote install')
+        perform_remote_installation(context)
 
 
 if __name__ == '__main__':

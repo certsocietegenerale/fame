@@ -51,8 +51,7 @@ RUN chown -R fame:fame /opt/fame
 
 USER fame
 
-RUN  pip3 install virtualenv && \
-    /opt/fame/utils/run.sh
+RUN cd /opt/fame && mkdir -p env storage temp && pip3 install virtualenv
 
 CMD ["/opt/fame/docker/docker-entrypoint.sh", "web"]
 EXPOSE 4200

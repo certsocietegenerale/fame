@@ -42,7 +42,9 @@ class Worker:
         if fame_config.remote:
             # First, backup current code
             backup_path = os.path.join(fame_config.temp_path, 'modules_backup_{}'.format(uuid4()))
-            move(MODULES_ROOT, backup_path)
+            os.makedirs(backup_path, exist_ok=True)
+            for module in os.listdir(MODULES_ROOT):
+                move(os.path.join(MODULES_ROOT, module), backup_path)
 
             # Replace current code with code fetched from web server
             url = urljoin(fame_config.remote, '/modules/download')
@@ -50,7 +52,6 @@ class Worker:
                 response = requests.get(url, stream=True, headers={'X-API-KEY': fame_config.api_key})
                 response.raise_for_status()
 
-                os.makedirs(MODULES_ROOT)
                 with ZipFile(BytesIO(response.content), 'r') as zipf:
                     zipf.extractall(MODULES_ROOT)
 

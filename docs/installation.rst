@@ -13,6 +13,8 @@ Probably the most easy way to run fame is::
     $ git clone https://github.com/certsocietegenerale/fame.git
     $ cd fame/docker
     $ cp fame.env.template fame.env
+    $ echo "DEFAULT_EMAIL=admin@changeme.fame" >> fame.env
+    $ echo "DEFAULT_PASSWORD=changeme" >> fame.env
     $ docker-compose up --build
 
 
@@ -115,15 +117,7 @@ Start by cloning the repository::
     $ git clone https://github.com/certsocietegenerale/fame
     $ cd fame
 
-Then, you need to set some environment variables::
-
-    $ export MONGODB_USERNAME=fame
-    $ export MONGODB_PASSWORD=SOME_OTHER_STRONG_PASSWORD
-
-    $ export DEFAULT_EMAIL=myWonderfulEmail@changeme.fame
-    $ export DEFAULT_PASSWORD=YET_ANOTHER_STRONG_PASSWORD
-
-Finally, run the install script::
+Run the install script, and answer the questions (choose '1' for installation type)::
 
     $ utils/run.sh utils/install.py
 
@@ -262,14 +256,7 @@ Clone the repository::
     $ git clone https://github.com/certsocietegenerale/fame
     $ cd fame
 
-define some variables::
-
-    $ export MONGODB_USERNAME=fame
-    $ export MONGODB_PASSWORD=SOME_OTHER_STRONG_PASSWORD
-
-    $ export FAME_URL=http://locationOfaFameMasterInstance.com
-
-Then the install script::
+Run the install script, and answer the questions (choose '2' for installation type)::
 
     $ utils/run.sh utils/install.py worker
 
