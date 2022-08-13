@@ -6,26 +6,29 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 
 try:
-    from pip._internal import main as pipmain
+    from importlib.metadata import distribution
 except ImportError:
-    from pip import main as pipmain
+    from importlib_metadata import distribution
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
 from fame.common.config import fame_config
 from fame.core.config import Config, incomplete_config
 from fame.core.module import ModuleInfo
+from fame.core import fame_init
 
 
 def version_info():
     print("########## VERSION ##########\n")
-    print(("OS: {}".format(platform.platform())))
+    print(("OS: {}".format(platform.version())))
     print(("Python: {}".format(platform.python_version())))
     print("\n")
 
 
 def dependencies():
     print("########## DEPENDENCIES ###########\n")
+    pipmain = distribution("pip").entry_points[0].load()
+
     pipmain(['freeze'])
     print("\n")
 
@@ -59,6 +62,7 @@ def mongodb():
 
 def configuration():
     print("########## Configuration ##########\n")
+    fame_init()
     for config in Config.find():
         print(("{}: {}".format(config['name'], not incomplete_config(config['config']))))
 
