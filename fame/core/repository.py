@@ -56,16 +56,13 @@ class Repository(MongoDict):
     def do_clone(self):
         print(("[+] Cloning '{}'".format(self['name'])))
         try:
-            if self['private']:
-                Repo.clone_from(self['address'], self.path(), env=dict(GIT_SSH_COMMAND=self['ssh_cmd']))
-            else:
-                Repo.clone_from(self['address'], self.path())
+            Repo.clone_from(self['address'], self.path(), env=dict(GIT_SSH_COMMAND=self['ssh_cmd']))
 
             dispatcher.update_modules(self)
             self.update_value('status', 'active')
         except Exception as e:
             self['status'] = 'error'
-            self['error_msg'] = 'Could not clone repository, probably due to authentication issues.\n{}'.format(e)
+            self['error_msg'] = 'Could not clone repository, probably due to authentication issues.\n{}: {}'.format(type(e).__name__, e)
             self.save()
 
         internals = Internals.get(name="updates")
@@ -80,10 +77,7 @@ class Repository(MongoDict):
         try:
             repo = Repo(self.path())
 
-            if self['private']:
-                with repo.git.custom_environment(GIT_SSH_COMMAND=self['ssh_cmd']):
-                    repo.remotes.origin.pull()
-            else:
+            with repo.git.custom_environment(GIT_SSH_COMMAND=self['ssh_cmd']):
                 repo.remotes.origin.pull()
 
             # Make sure we delete orphan .pyc files
@@ -98,7 +92,7 @@ class Repository(MongoDict):
             self.update_value('status', 'active')
         except Exception as e:
             self['status'] = 'error'
-            self['error_msg'] = 'Could not update repository.\n{}'.format(e)
+            self['error_msg'] = 'Could not update repository.\n{}: {}'.format(type(e).__name__, e)
             self.save()
 
         updates = Internals.get(name="updates")
