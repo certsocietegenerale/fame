@@ -62,7 +62,8 @@ class Repository(MongoDict):
                 Repo.clone_from(self['address'], self.path())
 
             dispatcher.update_modules(self)
-            self.update_value('status', 'active')
+            if self['status'] == 'cloning':
+                self.update_value('status', 'active')
         except Exception as e:
             self['status'] = 'error'
             self['error_msg'] = 'Could not clone repository, probably due to authentication issues.\n{}'.format(e)
@@ -95,7 +96,8 @@ class Repository(MongoDict):
                         os.remove(f)
 
             dispatcher.update_modules(self)
-            self.update_value('status', 'active')
+            if self['status'] == 'updating':
+                self.update_value('status', 'active')
         except Exception as e:
             self['status'] = 'error'
             self['error_msg'] = 'Could not update repository.\n{}'.format(e)
