@@ -51,7 +51,8 @@ RUN chown -R fame:fame /opt/fame
 
 USER fame
 
-RUN cd /opt/fame && mkdir -p env storage temp && pip3 install virtualenv
+RUN cd /opt/fame && mkdir -p env storage temp && pip3 install virtualenv \
+    && git config --global user.name fame && git config --global user.email git@fame
 
 CMD ["/opt/fame/docker/docker-entrypoint.sh", "web"]
 EXPOSE 4200
