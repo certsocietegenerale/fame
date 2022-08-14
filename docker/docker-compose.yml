@@ -10,9 +10,8 @@ volumes:
   storage:
   avatars:
   temp:
-  env_web:
-  env_worker:
-  env_updater:
+  env:
+  docker:
 
 services:
   fame_web:
@@ -34,7 +33,7 @@ services:
       - fame_db
     volumes:
       - modules:/opt/fame/fame/modules/
-      - env_web:/opt/fame/env/
+      - env:/opt/fame/env/
       - storage:/opt/fame/fame/storage/
       - temp:/opt/fame/fame/temp/
       - avatars:/opt/fame/web/static/img/avatars/
@@ -50,7 +49,8 @@ services:
     container_name: fame_worker
     volumes:
       - modules_worker:/opt/fame/fame/modules/
-      - env_worker:/opt/fame/env/
+      - env:/opt/fame/env/
+      - docker:/var/lib/docker
     entrypoint: /bin/sh
     command: -c "wait-for -t 0 fame_web:4200 && /opt/fame/docker/docker-entrypoint.sh worker"
     networks:
@@ -80,7 +80,7 @@ services:
       - fame_web
     volumes:
       - modules:/opt/fame/fame/modules/
-      - env_updater:/opt/fame/env/
+      - env:/opt/fame/env/
 
   fame_db:
     image: mongo:latest
