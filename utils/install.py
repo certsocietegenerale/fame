@@ -3,7 +3,7 @@ import sys
 import errno
 from urllib.parse import quote_plus
 from urllib.parse import urljoin
-from subprocess import call
+from subprocess import run, PIPE
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
@@ -84,11 +84,28 @@ def generate_ssh_key():
     if os.path.exists(key_path):
         print("[+] SSH key already exists.")
     else:
-        print("[+] Generating SSH key ...")
-        try:
-            call(['ssh-keygen', '-q', '-t', 'rsa', '-b', '4096', '-C', 'FAME deploy key', '-f', key_path, '-N', ''])
-        except Exception:
-            error("Could not generate SSH key (missing 'ssh-keygen' ?)", exit=False)
+        if os.environ.get("FAME_GIT_SSH_KEY", ''):
+            print("[+] installing provided SSH key ...")
+            key_file = open(key_path, "w+")
+            key_file.write(os.environ.get("FAME_GIT_SSH_KEY", '').replace("\\n", "\n"))
+            key_file.close()
+            os.chmod(key_path, 0o600)
+
+            try:
+                pubkey = run(['ssh-keygen','-y', '-C', 'FAME deploy key', '-f', key_path], stdout=PIPE)
+            except Exception:
+                error("Could not generate SSH key (missing 'ssh-keygen' ? Invalid key?)", exit=False)
+
+            if pubkey:
+                pubkey_file = open(key_path + '.pub', 'w+')
+                pubkey_file.write(pubkey.stdout.decode())
+                pubkey_file.close()
+        else:
+            print("[+] Generating SSH key ...")
+            try:
+                run(['ssh-keygen', '-q', '-t', 'rsa', '-b', '4096', '-C', 'FAME deploy key', '-f', key_path, '-N', ''])
+            except Exception:
+                error("Could not generate SSH key (missing 'ssh-keygen' ?)", exit=False)
 
 
 def create_admin_user(context):
