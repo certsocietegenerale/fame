@@ -2,6 +2,7 @@ import fnmatch
 import inspect
 import pkgutil
 import importlib
+import traceback
 from os import path, walk, remove
 from collections import OrderedDict
 
@@ -331,6 +332,9 @@ class ModuleDispatcher(object):
                     remove(path.join(root, f))
 
     def walk_modules(self, modules_dir, repository=None):
+        if repository:
+            repository['error_msg'] = ''
+
         for loader, name, ispkg in pkgutil.walk_packages([modules_dir], prefix='fame.modules.'):
             if not ispkg:
                 if repository is None or name.startswith('fame.modules.{}.'.format(repository['name'])):
@@ -339,7 +343,14 @@ class ModuleDispatcher(object):
                         for _, obj in inspect.getmembers(module, inspect.isclass):
                             if issubclass(obj, Module):
                                 yield name, obj
-                    except Exception:
+                    except Exception as e:
+                        tb = traceback.format_exc()
+                        error = "Could not import {}. The module was ignored.\n{}\n".format(name, tb)
+                        if repository:
+                            repository['status'] = 'error'
+                            repository['error_msg'] += error
+                            repository.save()
+                            print(error)
                         pass
 
     def update_modules(self, repository):
