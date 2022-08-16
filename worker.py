@@ -94,7 +94,7 @@ class Worker:
 
             # In case pip failed
             if rcode:
-                self._module_installation_error(requirements, module, output)
+                self._module_installation_error(requirements, module, output.decode('utf-8', errors='replace'))
 
     def launch_install_scripts(self, module):
         scripts = self._module_install_scripts(module)
