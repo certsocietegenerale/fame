@@ -23,6 +23,8 @@ RUN apt update && \
   pkg-config \
   libvirt-dev \
   sudo \
+  default-jdk \
+  unzip \
   software-properties-common
 
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
@@ -33,6 +35,12 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
 
 RUN curl -o /bin/wait-for https://raw.githubusercontent.com/eficode/wait-for/master/wait-for && \
     chmod +x /bin/wait-for
+
+# some FAME module require protobuf-compiler >= 3.19.0
+RUN curl -fsSL -o /tmp/protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v21.6/protoc-21.6-linux-x86_64.zip && \
+    unzip /tmp/protoc.zip -d /tmp/protoc && \
+    mv /tmp/protoc/bin/* /usr/local/bin && mv /tmp/protoc/include/* /usr/local/include && \
+    rm -rf /tmp/protoc /tmp/protoc.zip
 
 RUN apt-get update && apt-get install -y \
     docker-ce \
