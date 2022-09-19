@@ -1,5 +1,3 @@
-from urllib.parse import quote_plus
-
 from pymongo import TEXT, MongoClient
 
 from fame.common.config import fame_config
@@ -11,7 +9,17 @@ class Store:
 
     def init(self):
         # Connection
-        self._con = MongoClient(fame_config.mongo_host, int(fame_config.mongo_port), serverSelectionTimeoutMS=10000)
+        if fame_config.mongo_user and fame_config.mongo_password:
+            self._con = MongoClient(host=fame_config.mongo_host,
+                port=int(fame_config.mongo_port),
+                serverSelectionTimeoutMS=10000,
+                username=fame_config.mongo_user,
+                password=fame_config.mongo_password,
+                authSource=fame_config.mongo_db)
+        else:
+            self._con = MongoClient(host=fame_config.mongo_host,
+                port=int(fame_config.mongo_port),
+                serverSelectionTimeoutMS=10000)
         self.db = self._con[fame_config.mongo_db]
 
         # Collections
@@ -31,12 +39,6 @@ class Store:
 
     def connect(self):
         self.init()
-
-        # Authenticate
-        if fame_config.mongo_user and fame_config.mongo_password:
-            self.db.authenticate(
-                fame_config.mongo_user, quote_plus(fame_config.mongo_password), mechanism="SCRAM-SHA-1"
-            )
 
         # Create indexes
         self.files.create_index("md5")

@@ -50,7 +50,13 @@ def mongodb():
         db = connection[fame_config.mongo_db]
 
         if fame_config.mongo_user and fame_config.mongo_password:
-            db.authenticate(fame_config.mongo_user, quote_plus(fame_config.mongo_password), mechanism='SCRAM-SHA-1')
+            mongo = MongoClient(host=fame_config.mongo_host,
+                port=int(fame_config.mongo_port),
+                serverSelectionTimeoutMS=10000,
+                username=fame_config.mongo_user,
+                password=fame_config.mongo_password,
+                authSource="fame")
+            db = mongo[fame_config.mongo_db]
 
         print(("Version: {}".format(connection.server_info()['version'])))
         print(("Authorization check: {}\n".format(test_mongodb_connection(db))))

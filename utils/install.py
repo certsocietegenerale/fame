@@ -1,7 +1,6 @@
 import os
 import sys
 import errno
-from urllib.parse import quote_plus
 from urllib.parse import urljoin
 from subprocess import run, PIPE
 
@@ -71,7 +70,13 @@ def define_mongo_connection(context):
 
     if not test_mongodb_connection(db):
         try:
-            db.authenticate(context['mongo_user'], quote_plus(context['mongo_password']))
+            mongo = MongoClient(host=context['mongo_host'],
+                port=context['mongo_port'],
+                serverSelectionTimeoutMS=10000,
+                username=context['mongo_user'],
+                password=context['mongo_password'],
+                authSource="fame")
+            db = mongo[context['mongo_db']]
         except:
             error("Could not connect to MongoDB (invalid credentials).")
 

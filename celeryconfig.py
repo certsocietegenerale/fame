@@ -1,3 +1,4 @@
+from urllib.parse import quote_plus
 from kombu.serialization import register
 from bson.json_util import dumps, loads
 from celery import signals
@@ -9,7 +10,7 @@ register('json_util', dumps, loads, content_type='application/json', content_enc
 
 MONGO = 'mongodb://{}:{}/{}'.format(fame_config.mongo_host, fame_config.mongo_port, fame_config.mongo_db)
 if fame_config.mongo_user and fame_config.mongo_password:
-    MONGO = 'mongodb://{}:{}@{}:{}/{}'.format(fame_config.mongo_user, fame_config.mongo_password, fame_config.mongo_host, fame_config.mongo_port, fame_config.mongo_db)
+    MONGO = 'mongodb://{}:{}@{}:{}/{}'.format(fame_config.mongo_user, quote_plus(fame_config.mongo_password), fame_config.mongo_host, fame_config.mongo_port, fame_config.mongo_db)
 
 broker_url = MONGO
 accept_content = ['json_util']
