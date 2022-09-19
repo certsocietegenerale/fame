@@ -29,7 +29,7 @@ def create_user(name, email, groups, default_sharing, permissions, password=None
     user = User.get(email=email.lower())
 
     if user:
-        print("/!\ User with this email address already exists.")
+        print("/!\\ User with this email address already exists.")
     else:
         user = User({
             'name': name,

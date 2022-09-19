@@ -27,6 +27,7 @@ class FilteredCollection():
         combined_filters.update(self.filters)
         return self.collection.count_documents(combined_filters)
 
+
 class User(MongoDict):
     collection_name = 'users'
 
@@ -62,7 +63,7 @@ class User(MongoDict):
             response.raise_for_status()
             with open(os.path.join(AVATARS_ROOT, "{}.png".format(self['_id'])), 'wb') as f:
                 f.write(response.content)
-        except:
+        except Exception:
             print(("Could not generate avatar for {}".format(self['email'])))
 
     @staticmethod

@@ -7,7 +7,7 @@ from fame.common.mongo_dict import MongoDict
 
 def config_to_dict(config):
     result = {setting['name']: setting for setting in config}
-    
+
     return result
 
 

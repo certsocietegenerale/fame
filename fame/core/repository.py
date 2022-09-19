@@ -41,7 +41,7 @@ class Repository(MongoDict):
         # Then, delete the files
         try:
             rmtree(self.path())
-        except:
+        except Exception:
             pass
 
         # Finally, delete record of repository

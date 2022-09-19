@@ -4,9 +4,9 @@ from time import time
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
-from fame.core import fame_init
-from fame.core.config import Config
-from fame.core.internals import Internals
+from fame.core import fame_init  # noqa: E402
+from fame.core.config import Config  # noqa: E402
+from fame.core.internals import Internals  # noqa: E402
 
 
 def create_types():

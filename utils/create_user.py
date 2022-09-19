@@ -5,9 +5,9 @@ import sys
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
-from fame.core import fame_init
-from web.auth.user_password.user_management import create_user as do_create_user
-from utils import user_input, get_new_password
+from fame.core import fame_init  # noqa: E402
+from web.auth.user_password.user_management import create_user as do_create_user  # noqa: E402
+from utils import user_input, get_new_password  # noqa: E402
 
 
 def create_user(admin=False, password=True):

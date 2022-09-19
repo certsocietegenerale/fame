@@ -103,10 +103,8 @@ class ModuleDispatcher(object):
         smallest_priority = None
 
         for module in self.get_preloading_modules():
-            if (
-                (not selected_modules or module.info['name'] in selected_modules)
-                and module.info['name'] not in excluded_modules
-            ):
+            if ((not selected_modules or module.info['name'] in selected_modules)
+                    and module.info['name'] not in excluded_modules):
                 module_info = ModuleInfo.get(name=module.info['name'])
 
                 if smallest_priority is None or module_info['priority'] < smallest_priority:

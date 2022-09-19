@@ -8,8 +8,9 @@ from flask import Flask, redirect, request, url_for
 from flask_login import LoginManager
 from werkzeug.urls import url_encode
 from importlib import import_module
-
+from pymongo.errors import OperationFailure
 from urllib.parse import urljoin
+
 from fame.core import fame_init
 from fame.core.user import User
 from fame.common.config import fame_config
@@ -24,7 +25,7 @@ from web.views.helpers import user_if_enabled, disconnect_if_inactive
 
 try:
     fame_init()
-except:
+except OperationFailure:
     print("/!\\ Could not connect to MongoDB database.")
 
 app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
@@ -121,8 +122,8 @@ def timesince(dt, default="just now"):
 
 
 @app.template_filter()
-def unique(l):
-    return list(set(l))
+def unique(li):
+    return list(set(li))
 
 
 @app.template_filter()

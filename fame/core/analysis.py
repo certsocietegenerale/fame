@@ -153,7 +153,7 @@ class Analysis(MongoDict):
             # Create parent dirs if they don't exist
             try:
                 os.makedirs(dirpath)
-            except:
+            except Exception:
                 pass
 
             copy(filepath, dstfilepath)
@@ -492,4 +492,4 @@ class Analysis(MongoDict):
 
 
 # For cyclic imports
-from fame.core.file import File
+from fame.core.file import File  # noqa: E402

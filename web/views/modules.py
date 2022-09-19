@@ -28,7 +28,7 @@ def get_deploy_key():
     try:
         with open(keyfile, 'r') as fd:
             key = fd.read()
-    except:
+    except Exception:
         pass
 
     return key
@@ -53,7 +53,7 @@ def update_config(settings, options=False):
                 if config['type'] == "integer":
                     try:
                         config['value'] = int(value, 0)
-                    except:
+                    except ValueError:
                         flash('{} must be an integer'.format(config['name']), 'danger')
                         return validation_error()
                 else:

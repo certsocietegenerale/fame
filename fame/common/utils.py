@@ -77,8 +77,8 @@ def send_file_to_remote(file, url):
     return response
 
 
-def unique_for_key(l, key):
-    return list({d[key]: d for d in l}.values())
+def unique_for_key(li, key):
+    return list({d[key]: d for d in li}.values())
 
 
 def tempdir():
@@ -86,7 +86,7 @@ def tempdir():
 
     try:
         os.makedirs(tempdir)
-    except:
+    except Exception:
         pass
 
     return tempdir

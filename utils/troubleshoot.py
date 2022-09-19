@@ -4,6 +4,7 @@ import platform
 from urllib.parse import quote_plus
 from pymongo import MongoClient
 from pymongo.collection import Collection
+from pymongo.errors import OperationFailure
 
 try:
     from importlib.metadata import distribution
@@ -12,10 +13,10 @@ except ImportError:
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
-from fame.common.config import fame_config
-from fame.core.config import Config, incomplete_config
-from fame.core.module import ModuleInfo
-from fame.core import fame_init
+from fame.common.config import fame_config  # noqa: E402
+from fame.core.config import Config, incomplete_config  # noqa: E402
+from fame.core.module import ModuleInfo  # noqa: E402
+from fame.core import fame_init  # noqa: E402
 
 
 def version_info():
@@ -38,7 +39,7 @@ def test_mongodb_connection(db):
         test_collection = Collection(db, "auth_check", create=True)
         test_collection.drop()
         return True
-    except:
+    except OperationFailure:
         return False
 
 
@@ -86,6 +87,7 @@ def main():
     dependencies()
     if mongodb():
         configuration()
+
 
 if __name__ == '__main__':
     main()

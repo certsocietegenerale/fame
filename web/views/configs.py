@@ -24,13 +24,13 @@ def clean_record(record):
 
 def targets_aggregation():
     return store.config_blocks.aggregate([
-            { '$sort': { 'updated': 1 }},
-            { '$group': {
-                '_id': { 'target': '$target', 'monitor': '$monitor', 'botnet': '$botnet', 'type': '$type' },
-                'count': { '$sum': 1 },
-                'last_action': { '$last': '$action' }
-            }}
-        ])
+        {'$sort': {'updated': 1}},
+        {'$group': {
+            '_id': {'target': '$target', 'monitor': '$monitor', 'botnet': '$botnet', 'type': '$type'},
+            'count': {'$sum': 1},
+            'last_action': {'$last': '$action'}
+        }}
+    ])
 
 
 def get_monitor(monitors, record):

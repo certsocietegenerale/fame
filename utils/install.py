@@ -7,8 +7,8 @@ from subprocess import run, PIPE
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
-from utils import user_input, error, get_new_password
-from fame.common.constants import FAME_ROOT
+from utils import user_input, error, get_new_password  # noqa: E402
+from fame.common.constants import FAME_ROOT  # noqa: E402
 
 
 class Templates:
@@ -41,7 +41,7 @@ def test_mongodb_connection(db):
         test_collection = Collection(db, "auth_check", create=True)
         test_collection.drop()
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -72,7 +72,7 @@ def define_mongo_connection(context):
     if not test_mongodb_connection(db):
         try:
             db.authenticate(context['mongo_user'], quote_plus(context['mongo_password']))
-        except:
+        except Exception:
             error("Could not connect to MongoDB (invalid credentials).")
 
         if not test_mongodb_connection(db):
@@ -92,7 +92,7 @@ def generate_ssh_key():
             os.chmod(key_path, 0o600)
 
             try:
-                pubkey = run(['ssh-keygen','-y', '-C', 'FAME deploy key', '-f', key_path], stdout=PIPE)
+                pubkey = run(['ssh-keygen', '-y', '-C', 'FAME deploy key', '-f', key_path], stdout=PIPE)
             except Exception:
                 error("Could not generate SSH key (missing 'ssh-keygen' ? Invalid key?)", exit=False)
 
@@ -215,7 +215,6 @@ def perform_remote_installation(context):
 
     # Create definitive configuration file (with api key and URL)
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'remote_fame.conf', context)
-
 
 
 def main():

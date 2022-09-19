@@ -69,7 +69,7 @@ class Worker:
             module = ModuleInfo(module)
 
             if 'error' in module:
-                del(module['error'])
+                del module['error']
 
             if module['type'] == "Processing":
                 should_update = (module['queue'] in self.queues)
@@ -151,7 +151,7 @@ class Worker:
                 if (current_time - file_mtime) > (7 * 24 * 3600):
                     try:
                         os.remove(filepath)
-                    except:
+                    except Exception:
                         pass
 
             for d in dirs:
@@ -159,7 +159,7 @@ class Worker:
 
                 try:
                     os.rmdir(dirpath)
-                except:
+                except Exception:
                     pass
 
     def start(self):
@@ -196,6 +196,7 @@ class Worker:
 
     def _new_celery_worker(self):
         return Popen(['celery', '-A', 'fame.core.celeryctl', 'worker', '-Q', ','.join(self.queues)] + self.celery_args)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Launches a FAME worker.')

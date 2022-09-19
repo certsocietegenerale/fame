@@ -49,4 +49,5 @@ def get_fame_config():
 
     return fame_config
 
+
 fame_config = get_fame_config()

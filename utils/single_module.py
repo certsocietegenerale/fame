@@ -10,14 +10,14 @@ import argparse
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
-from utils import error, user_input
-from fame.core import fame_init
-from fame.core import module as module_classes
-from fame.common.objects import Dictionary
-from fame.common.constants import MODULES_ROOT
-from fame.common.utils import iterify, u
-from fame.core.module import ProcessingModule
-from fame.core.module_dispatcher import dispatcher
+from utils import error, user_input  # noqa: E402
+from fame.core import fame_init  # noqa: E402
+from fame.core import module as module_classes  # noqa: E402
+from fame.common.objects import Dictionary  # noqa: E402
+from fame.common.constants import MODULES_ROOT  # noqa: E402
+from fame.common.utils import iterify, u  # noqa: E402
+from fame.core.module import ProcessingModule  # noqa: E402
+from fame.core.module_dispatcher import dispatcher  # noqa: E402
 
 
 class Dispatcher:
@@ -33,7 +33,7 @@ class Dispatcher:
                         if issubclass(obj, module_classes.ProcessingModule):
                             if obj.name:
                                 self.modules[obj.name] = obj
-                except:
+                except ModuleNotFoundError:
                     pass
 
     def get_processing_module(self, name):
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     analysis = TestAnalysis(args.file, args.type)
 
     if args.local:
-        print("[+] Enabling local mode. /!\ THIS COULD BE DANGEROUS! /!\ ")
+        print("[+] Enabling local mode. /!\\ THIS COULD BE DANGEROUS! /!\\ ")
         module_classes.IsolatedProcessingModule = module_classes.ProcessingModule
 
     if args.test:
@@ -217,7 +217,7 @@ if __name__ == '__main__':
             fame_init()
             module = dispatcher.get_processing_module(args.module)
             module.initialize()
-        except:
+        except Exception:
             module = test_mode_module(args.module, args.interactive)
             module.initialize()
 
