@@ -123,6 +123,7 @@ def file_download(filepath):
         response = make_response(fd.read())
 
     response.headers["Content-Disposition"] = "attachment; filename={0}".format(basename(filepath)).encode('latin-1', errors='ignore')
+    response.headers["Content-Type"] = "application/binary"
 
     return response
 
