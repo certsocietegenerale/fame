@@ -7,12 +7,12 @@ from .config import ROLE_MAPPING, ROLE_KEY
 
 
 def authenticate(session):
-    saml_user_data = session['samlUserdata']
-    saml_name_id = session['samlNameId']
+    saml_user_data = session["samlUserdata"]
+    saml_name_id = session["samlNameId"]
     user = get_or_create_user(saml_name_id, saml_user_data)
 
     if user:
-        user.update_value('last_activity', datetime.now().timestamp())
+        user.update_value("last_activity", datetime.now().timestamp())
         login_user(user)
 
     return user
@@ -31,14 +31,16 @@ def create_user(saml_name_id, saml_user_data):
 
     role = saml_user_data[ROLE_KEY][0]
 
-    user = User({
-        'saml_name_id': saml_name_id,
-        'name': saml_name_id,
-        'groups': ROLE_MAPPING[role]['groups'],
-        'default_sharing': ROLE_MAPPING[role]['default_sharing'],
-        'permissions': ROLE_MAPPING[role]['permissions'],
-        'enabled': True
-    })
+    user = User(
+        {
+            "saml_name_id": saml_name_id,
+            "name": saml_name_id,
+            "groups": ROLE_MAPPING[role]["groups"],
+            "default_sharing": ROLE_MAPPING[role]["default_sharing"],
+            "permissions": ROLE_MAPPING[role]["permissions"],
+            "enabled": True,
+        }
+    )
     user.save()
     user.generate_avatar()
 

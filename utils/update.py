@@ -3,7 +3,9 @@ import sys
 
 from git import Repo
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
+sys.path.append(
+    os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+)
 
 from fame.common.constants import FAME_ROOT  # noqa: E402
 from fame.common.pip import pip_install  # noqa: E402
@@ -31,7 +33,9 @@ def update_requirements():
 
 
 def end_message():
-    print("\n[+] Successfully updated FAME. Restart webserver and workers for changes to be effective.")
+    print(
+        "\n[+] Successfully updated FAME. Restart webserver and workers for changes to be effective."
+    )
 
 
 def main():

@@ -35,16 +35,16 @@ class MongoDict(dict):
 
     def delete(self):
         self.collection.remove(self["_id"])
-        del self['_id']
+        del self["_id"]
 
     def save(self):
         if "_id" in self:
-            self.collection.replace_one({"_id": self['_id']}, dict(self))
+            self.collection.replace_one({"_id": self["_id"]}, dict(self))
         else:
-            self['_id'] = self.collection.insert_one(dict(self)).inserted_id
+            self["_id"] = self.collection.insert_one(dict(self)).inserted_id
 
     def refresh(self):
-        new = self.collection.find_one({'_id': self['_id']})
+        new = self.collection.find_one({"_id": self["_id"]})
         self.update(new)
 
     def update_value(self, names, value):
@@ -56,11 +56,11 @@ class MongoDict(dict):
         else:
             self[names] = value
 
-        return self._update({'$set': {mongo_field: value}})
+        return self._update({"$set": {mongo_field: value}})
 
     def append_to(self, names, value):
         self._local_field(names).append(value)
-        return self._update({'$addToSet': {self._mongo_field(names): value}})
+        return self._update({"$addToSet": {self._mongo_field(names): value}})
 
     def remove_from(self, names, value):
         local_array = self._local_field(names)
@@ -68,7 +68,7 @@ class MongoDict(dict):
         if value in local_array:
             local_array.remove(value)
 
-        return self._update({'$pull': {self._mongo_field(names): value}})
+        return self._update({"$pull": {self._mongo_field(names): value}})
 
     def _local_field(self, names):
         local_field = self
@@ -83,12 +83,12 @@ class MongoDict(dict):
 
     def _mongo_field(self, names):
         if isinstance(names, collections.Iterable) and not isinstance(names, str):
-            return '.'.join(names)
+            return ".".join(names)
         else:
             return names
 
     def _update(self, operation, conditions={}):
-        query = {'_id': self['_id']}
+        query = {"_id": self["_id"]}
         query.update(conditions)
         result = self.collection.update_one(query, operation)
 

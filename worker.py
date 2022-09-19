@@ -20,39 +20,37 @@ from fame.common.constants import MODULES_ROOT
 from fame.common.pip import pip_install
 
 
-UNIX_INSTALL_SCRIPTS = {
-    "install.sh": ["sh", "{}"],
-    "install.py": ["python", "{}"]
-}
+UNIX_INSTALL_SCRIPTS = {"install.sh": ["sh", "{}"], "install.py": ["python", "{}"]}
 
-WIN_INSTALL_SCRIPTS = {
-    "install.cmd": ["{}"],
-    "install.py": ["python", "{}"]
-}
+WIN_INSTALL_SCRIPTS = {"install.cmd": ["{}"], "install.py": ["python", "{}"]}
 
 
 class Worker:
     def __init__(self, queues, celery_args, refresh_interval):
         self.queues = list(set(queues))
-        self.celery_args = [arg for arg in celery_args.split(' ') if arg]
+        self.celery_args = [arg for arg in celery_args.split(" ") if arg]
         self.refresh_interval = refresh_interval
 
     def update_modules(self):
         # Module updates are only needed for remote workers
         if fame_config.remote:
             # First, backup current code
-            backup_path = os.path.join(fame_config.temp_path, 'modules_backup_{}'.format(uuid4()))
+            backup_path = os.path.join(
+                fame_config.temp_path, "modules_backup_{}".format(uuid4())
+            )
             os.makedirs(backup_path, exist_ok=True)
             for module in os.listdir(MODULES_ROOT):
                 move(os.path.join(MODULES_ROOT, module), backup_path)
 
             # Replace current code with code fetched from web server
-            url = urljoin(fame_config.remote, '/modules/download')
+            url = urljoin(fame_config.remote, "/modules/download")
             try:
-                response = requests.get(url, stream=True, headers={'X-API-KEY': fame_config.api_key})
+                response = requests.get(
+                    url, stream=True, headers={"X-API-KEY": fame_config.api_key}
+                )
                 response.raise_for_status()
 
-                with ZipFile(BytesIO(response.content), 'r') as zipf:
+                with ZipFile(BytesIO(response.content), "r") as zipf:
                     zipf.extractall(MODULES_ROOT)
 
                 rmtree(backup_path)
@@ -68,15 +66,15 @@ class Worker:
         for module in ModuleInfo.get_collection().find():
             module = ModuleInfo(module)
 
-            if 'error' in module:
-                del module['error']
+            if "error" in module:
+                del module["error"]
 
-            if module['type'] == "Processing":
-                should_update = (module['queue'] in self.queues)
-            elif module['type'] in ["Threat Intelligence", "Reporting", "Filetype"]:
+            if module["type"] == "Processing":
+                should_update = module["queue"] in self.queues
+            elif module["type"] in ["Threat Intelligence", "Reporting", "Filetype"]:
                 should_update = True
             else:
-                should_update = (not fame_config.remote)
+                should_update = not fame_config.remote
 
             if should_update:
                 self.update_python_requirements(module)
@@ -88,36 +86,46 @@ class Worker:
         requirements = self._module_requirements(module)
 
         if requirements:
-            print(("Installing requirements for '{}' ({})".format(module['name'], requirements)))
+            print(
+                (
+                    "Installing requirements for '{}' ({})".format(
+                        module["name"], requirements
+                    )
+                )
+            )
 
-            rcode, output = pip_install('-r', requirements)
+            rcode, output = pip_install("-r", requirements)
 
             # In case pip failed
             if rcode:
-                self._module_installation_error(requirements, module, output.decode('utf-8', errors='replace'))
+                self._module_installation_error(
+                    requirements, module, output.decode("utf-8", errors="replace")
+                )
 
     def launch_install_scripts(self, module):
         scripts = self._module_install_scripts(module)
 
         for script in scripts:
             try:
-                print(("Launching installation script '{}'".format(' '.join(script))))
+                print(("Launching installation script '{}'".format(" ".join(script))))
                 check_output(script, stderr=STDOUT)
             except CalledProcessError as e:
-                self._module_installation_error(' '.join(script), module, e.output.decode('utf-8', errors='replace'))
+                self._module_installation_error(
+                    " ".join(script), module, e.output.decode("utf-8", errors="replace")
+                )
             except Exception as e:
-                self._module_installation_error(' '.join(script), module, e)
+                self._module_installation_error(" ".join(script), module, e)
 
     def _module_installation_error(self, cmd, module, errors):
         errors = "{}: error on '{}':\n\n{}".format(cmd, gethostname(), errors)
 
-        module['enabled'] = False
-        module['error'] = errors
+        module["enabled"] = False
+        module["error"] = errors
 
         print(errors)
 
     def _module_requirements(self, module):
-        return module.get_file('requirements.txt')
+        return module.get_file("requirements.txt")
 
     def _module_install_scripts(self, module):
         results = []
@@ -170,8 +178,8 @@ class Worker:
             self.process = self._new_celery_worker()
 
             while True:
-                updates = Internals.get(name='updates')
-                if updates['last_update'] > self.last_run:
+                updates = Internals.get(name="updates")
+                if updates["last_update"] > self.last_run:
                     # Stop running worker
                     os.kill(self.process.pid, signal.SIGTERM)
                     self.process.wait()
@@ -195,17 +203,42 @@ class Worker:
                     pass
 
     def _new_celery_worker(self):
-        return Popen(['celery', '-A', 'fame.core.celeryctl', 'worker', '-Q', ','.join(self.queues)] + self.celery_args)
+        return Popen(
+            [
+                "celery",
+                "-A",
+                "fame.core.celeryctl",
+                "worker",
+                "-Q",
+                ",".join(self.queues),
+            ]
+            + self.celery_args
+        )
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Launches a FAME worker.')
-    parser.add_argument('queues', metavar='queue', type=str, nargs='*',
-                        help='The task queues that this worker will handle.')
-    parser.add_argument('-c', '--celery_args', type=str, default='',
-                        help='Additional arguments for the celery worker.')
-    parser.add_argument('-r', '--refresh_interval', type=int, default=30,
-                        help='Frequency at which the worker will check for updates.')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Launches a FAME worker.")
+    parser.add_argument(
+        "queues",
+        metavar="queue",
+        type=str,
+        nargs="*",
+        help="The task queues that this worker will handle.",
+    )
+    parser.add_argument(
+        "-c",
+        "--celery_args",
+        type=str,
+        default="",
+        help="Additional arguments for the celery worker.",
+    )
+    parser.add_argument(
+        "-r",
+        "--refresh_interval",
+        type=int,
+        default=30,
+        help="Frequency at which the worker will check for updates.",
+    )
 
     args = parser.parse_args()
 
@@ -213,14 +246,14 @@ if __name__ == '__main__':
 
     # Default queue is 'unix'
     if len(queues) == 0:
-        if sys.platform == 'win32':
-            queues = ['windows']
+        if sys.platform == "win32":
+            queues = ["windows"]
         else:
-            queues = ['unix']
+            queues = ["unix"]
 
     # A local worker should also take care of updates
     if not fame_config.remote:
-        queues.append('updates')
+        queues.append("updates")
 
     fame_init()
     Worker(queues, args.celery_args, args.refresh_interval).start()

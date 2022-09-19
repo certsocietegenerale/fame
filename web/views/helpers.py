@@ -44,56 +44,59 @@ def clean_objects(instances, filters):
 
 
 def clean_analyses(analyses):
-    analyses = clean_objects(analyses, {'see_logs': ['logs']})
+    analyses = clean_objects(analyses, {"see_logs": ["logs"]})
 
     return analyses
 
 
 def enrich_comments(obj):
-    if 'comments' in obj:
-        for comment in obj['comments']:
-            if 'analyst' in comment:
-                analyst = store.users.find_one({'_id': comment['analyst']})
-                comment['analyst'] = clean_users(analyst)
+    if "comments" in obj:
+        for comment in obj["comments"]:
+            if "analyst" in comment:
+                analyst = store.users.find_one({"_id": comment["analyst"]})
+                comment["analyst"] = clean_users(analyst)
 
     return obj
 
 
 def clean_files(files):
-    files = clean_objects(files, {'': ['filepath']})
+    files = clean_objects(files, {"": ["filepath"]})
 
     return files
 
 
 def clean_users(users):
-    users = clean_objects(users, {
-        '': ['auth_token', 'pwd_hash'],
-        'manage_users': ['api_key', 'default_sharing', 'groups', 'permissions']
-    })
+    users = clean_objects(
+        users,
+        {
+            "": ["auth_token", "pwd_hash"],
+            "manage_users": ["api_key", "default_sharing", "groups", "permissions"],
+        },
+    )
 
     return users
 
 
 def clean_modules(modules):
-    modules = clean_objects(modules, {'': ['diffs']})
+    modules = clean_objects(modules, {"": ["diffs"]})
 
     return modules
 
 
 def clean_repositories(repositories):
-    repositories = clean_objects(repositories, {'': ['ssh_cmd']})
+    repositories = clean_objects(repositories, {"": ["ssh_cmd"]})
 
     return repositories
 
 
 def user_has_groups_and_sharing(user):
-    if len(user['groups']) > 0 and len(user['default_sharing']) > 0:
+    if len(user["groups"]) > 0 and len(user["default_sharing"]) > 0:
         return True
     return False
 
 
 def user_if_enabled(user):
-    if user and user['enabled']:
+    if user and user["enabled"]:
         return user
 
     return None
@@ -108,28 +111,34 @@ def convert_to_seconds(s):
 
 
 def disconnect_if_inactive(user):
-    if not user or 'last_activity' not in user or fame_config.max_inactivity_time is None:
+    if (
+        not user
+        or "last_activity" not in user
+        or fame_config.max_inactivity_time is None
+    ):
         return user
 
     ts = datetime.now().timestamp()
-    if user['last_activity'] + convert_to_seconds(fame_config.max_inactivity_time) > ts:
-        user.update_value('last_activity', ts)
+    if user["last_activity"] + convert_to_seconds(fame_config.max_inactivity_time) > ts:
+        user.update_value("last_activity", ts)
         return user
     return None
 
 
 def file_download(filepath):
-    with open(filepath, 'rb') as fd:
+    with open(filepath, "rb") as fd:
         response = make_response(fd.read())
 
-    response.headers["Content-Disposition"] = "attachment; filename={0}".format(basename(filepath)).encode('latin-1', errors='ignore')
+    response.headers["Content-Disposition"] = "attachment; filename={0}".format(
+        basename(filepath)
+    ).encode("latin-1", errors="ignore")
 
     return response
 
 
 def get_or_404(objectmanager, *args, **kwargs):
-    if '_id' in kwargs:
-        kwargs['_id'] = ObjectId(kwargs['_id'])
+    if "_id" in kwargs:
+        kwargs["_id"] = ObjectId(kwargs["_id"])
 
     result = objectmanager.find_one(kwargs)
     if result:
@@ -139,7 +148,6 @@ def get_or_404(objectmanager, *args, **kwargs):
 
 
 def requires_permission(permission):
-
     def wrapper(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -149,6 +157,7 @@ def requires_permission(permission):
                 abort(403)
 
         return inner
+
     return wrapper
 
 
@@ -161,8 +170,8 @@ def different_origin(referer, target):
 
 
 def csrf_protect():
-    if request.method not in ('GET', 'HEAD', 'OPTIONS', 'TRACE'):
-        referer = request.headers.get('Referer')
+    if request.method not in ("GET", "HEAD", "OPTIONS", "TRACE"):
+        referer = request.headers.get("Referer")
 
         if referer is None or different_origin(referer, request.url_root):
             raise Forbidden(description="Referer check failed.")
@@ -183,6 +192,6 @@ def comments_enabled():
     comments_enabled = False
 
     if config:
-        comments_enabled = config.get_values()['enable']
+        comments_enabled = config.get_values()["enable"]
 
     return comments_enabled

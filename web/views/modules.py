@@ -6,7 +6,13 @@ from flask_classful import FlaskView, route
 
 from web.views.negotiation import render, redirect, validation_error, render_json
 from web.views.mixins import UIView
-from web.views.helpers import get_or_404, requires_permission, file_download, clean_modules, clean_repositories
+from web.views.helpers import (
+    get_or_404,
+    requires_permission,
+    file_download,
+    clean_modules,
+    clean_repositories,
+)
 from fame.common.constants import FAME_ROOT, MODULES_ROOT
 from fame.common.utils import get_class, tempdir
 from fame.common.exceptions import MissingConfiguration
@@ -18,7 +24,7 @@ from fame.core.module_dispatcher import dispatcher
 
 
 def get_name(module):
-    return module['name']
+    return module["name"]
 
 
 def get_deploy_key():
@@ -26,7 +32,7 @@ def get_deploy_key():
 
     key = None
     try:
-        with open(keyfile, 'r') as fd:
+        with open(keyfile, "r") as fd:
             key = fd.read()
     except Exception:
         pass
@@ -36,62 +42,63 @@ def get_deploy_key():
 
 def update_config(settings, options=False):
     for config in settings:
-        value = request.form.get("config_{}".format(config['name']))
+        value = request.form.get("config_{}".format(config["name"]))
 
-        if value == '':
-            config['value'] = None
-            if 'default' not in config:
-                flash('{} is required'.format(config['name']), 'danger')
+        if value == "":
+            config["value"] = None
+            if "default" not in config:
+                flash("{} is required".format(config["name"]), "danger")
                 return validation_error()
         else:
-            if config['type'] == "bool":
-                config['value'] = (value is not None) and (value not in ['0', 'False'])
+            if config["type"] == "bool":
+                config["value"] = (value is not None) and (value not in ["0", "False"])
             else:
                 if value is None:
                     continue
 
-                if config['type'] == "integer":
+                if config["type"] == "integer":
                     try:
-                        config['value'] = int(value, 0)
+                        config["value"] = int(value, 0)
                     except ValueError:
-                        flash('{} must be an integer'.format(config['name']), 'danger')
+                        flash("{} must be an integer".format(config["name"]), "danger")
                         return validation_error()
                 else:
-                    config['value'] = value
+                    config["value"] = value
 
         if options:
-            option = request.form.get("config_{}_option".format(config['name']))
-            config['option'] = (option is not None) and (option not in ['0', 'False'])
+            option = request.form.get("config_{}_option".format(config["name"]))
+            config["option"] = (option is not None) and (option not in ["0", "False"])
 
     return None
 
 
 def update_queue(module, new_queue):
-    if new_queue == '':
-        flash('queue cannot be empty', 'danger')
+    if new_queue == "":
+        flash("queue cannot be empty", "danger")
         return validation_error()
-    elif module['queue'] != new_queue:
-        module.update_setting_value('queue', new_queue)
+    elif module["queue"] != new_queue:
+        module.update_setting_value("queue", new_queue)
         updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
         updates.update_value("last_update", time())
 
-        flash('Workers will reload once they are done with their current tasks', 'success')
+        flash(
+            "Workers will reload once they are done with their current tasks", "success"
+        )
 
 
 def update_priority(module, new_priority):
     if not new_priority:
-        new_priority = '100'
+        new_priority = "100"
 
     try:
-        module.update_setting_value('priority', int(new_priority))
+        module.update_setting_value("priority", int(new_priority))
     except ValueError:
-        flash('priority must be an integer', 'danger')
+        flash("priority must be an integer", "danger")
         return validation_error()
 
 
 class ModulesView(FlaskView, UIView):
-
-    @requires_permission('manage_modules')
+    @requires_permission("manage_modules")
     def index(self):
         """Get the list of modules.
 
@@ -181,17 +188,17 @@ class ModulesView(FlaskView, UIView):
             ]
         """
         types = {
-            'Preloading': [],
-            'Processing': [],
-            'Reporting': [],
-            'Threat Intelligence': [],
-            'Antivirus': [],
-            'Virtualization': [],
-            'Filetype': []
+            "Preloading": [],
+            "Processing": [],
+            "Reporting": [],
+            "Threat Intelligence": [],
+            "Antivirus": [],
+            "Virtualization": [],
+            "Filetype": [],
         }
 
         for module in ModuleInfo.get_collection().find():
-            types[module['type']].append(clean_modules(module))
+            types[module["type"]].append(clean_modules(module))
 
         for type in types:
             types[type] = sorted(types[type], key=get_name)
@@ -200,10 +207,13 @@ class ModulesView(FlaskView, UIView):
 
         repositories = clean_repositories(list(Repository.get_collection().find()))
 
-        return render({'modules': types, 'configs': configs, 'repositories': repositories}, 'modules/index.html')
+        return render(
+            {"modules": types, "configs": configs, "repositories": repositories},
+            "modules/index.html",
+        )
 
-    @requires_permission('manage_modules')
-    @route('/<id>/disable', methods=['POST'])
+    @requires_permission("manage_modules")
+    @route("/<id>/disable", methods=["POST"])
     def disable(self, id):
         """Disable a module
 
@@ -215,13 +225,13 @@ class ModulesView(FlaskView, UIView):
         :>json Module module: resulting module.
         """
         module = ModuleInfo(get_or_404(ModuleInfo.get_collection(), _id=id))
-        module.update_value('enabled', False)
+        module.update_value("enabled", False)
         dispatcher.reload()
 
-        return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
+        return redirect({"module": clean_modules(module)}, url_for("ModulesView:index"))
 
-    @requires_permission('manage_modules')
-    @route('/<id>/enable', methods=['POST'])
+    @requires_permission("manage_modules")
+    @route("/<id>/enable", methods=["POST"])
     def enable(self, id):
         """Enable a module
 
@@ -236,34 +246,51 @@ class ModulesView(FlaskView, UIView):
         """
         module = ModuleInfo(get_or_404(ModuleInfo.get_collection(), _id=id))
 
-        if 'error' in module:
-            flash("Cannot enable '{}' because of errors installing dependencies.".format(module['name']), 'danger')
-            return validation_error(url_for('ModulesView:index'))
+        if "error" in module:
+            flash(
+                "Cannot enable '{}' because of errors installing dependencies.".format(
+                    module["name"]
+                ),
+                "danger",
+            )
+            return validation_error(url_for("ModulesView:index"))
 
         # See if module is properly configured
-        module_class = get_class(module['path'], module['class'])
+        module_class = get_class(module["path"], module["class"])
         module_class.info = module
         try:
             module_class()
         except MissingConfiguration as e:
             if e.name:
-                flash("You must configure '{}' before trying to enable '{}'".format(e.name, module['name']), 'warning')
-                return validation_error(url_for('ModulesView:configuration', id=e.id))
+                flash(
+                    "You must configure '{}' before trying to enable '{}'".format(
+                        e.name, module["name"]
+                    ),
+                    "warning",
+                )
+                return validation_error(url_for("ModulesView:configuration", id=e.id))
             else:
-                flash("You must configure '{}' before trying to enable it.".format(module['name']), 'warning')
-                return validation_error(url_for('ModulesView:configure', id=module['_id']))
+                flash(
+                    "You must configure '{}' before trying to enable it.".format(
+                        module["name"]
+                    ),
+                    "warning",
+                )
+                return validation_error(
+                    url_for("ModulesView:configure", id=module["_id"])
+                )
 
-        module.update_value('enabled', True)
+        module.update_value("enabled", True)
         dispatcher.reload()
 
         readme = module.get_readme()
         if readme:
-            flash(readme, 'persistent')
+            flash(readme, "persistent")
 
-        return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
+        return redirect({"module": clean_modules(module)}, url_for("ModulesView:index"))
 
-    @requires_permission('manage_modules')
-    @route('/<id>/configuration', methods=['GET', 'POST'])
+    @requires_permission("manage_modules")
+    @route("/<id>/configuration", methods=["GET", "POST"])
     def configuration(self, id):
         """Configure a named configuration.
 
@@ -283,18 +310,18 @@ class ModulesView(FlaskView, UIView):
         config = Config(get_or_404(Config.get_collection(), _id=id))
 
         if request.method == "POST":
-            errors = update_config(config['config'])
+            errors = update_config(config["config"])
             if errors is not None:
                 return errors
 
             config.save()
             dispatcher.reload()
-            return redirect({'config': config}, url_for('ModulesView:index'))
+            return redirect({"config": config}, url_for("ModulesView:index"))
         else:
-            return render({'config': config}, 'modules/configuration.html')
+            return render({"config": config}, "modules/configuration.html")
 
-    @requires_permission('manage_modules')
-    @route('/<id>/configure', methods=['GET', 'POST'])
+    @requires_permission("manage_modules")
+    @route("/<id>/configure", methods=["GET", "POST"])
     def configure(self, id):
         """Configure a module.
 
@@ -322,38 +349,51 @@ class ModulesView(FlaskView, UIView):
             Preloading modules).
         """
         module = ModuleInfo(get_or_404(ModuleInfo.get_collection(), _id=id))
-        module['readme'] = module.get_readme()
+        module["readme"] = module.get_readme()
 
         if request.method == "POST":
-            if module['type'] == 'Filetype':
-                if 'acts_on' in request.form:
-                    module.update_setting_value('acts_on', request.form.get('acts_on', ''))
-            elif module['type'] == 'Processing':
-                if 'acts_on' in request.form:
-                    module.update_setting_value('acts_on', request.form.get('acts_on', ''))
+            if module["type"] == "Filetype":
+                if "acts_on" in request.form:
+                    module.update_setting_value(
+                        "acts_on", request.form.get("acts_on", "")
+                    )
+            elif module["type"] == "Processing":
+                if "acts_on" in request.form:
+                    module.update_setting_value(
+                        "acts_on", request.form.get("acts_on", "")
+                    )
 
-                if 'triggered_by' in request.form:
-                    module.update_setting_value('triggered_by', request.form.get('triggered_by', ''))
+                if "triggered_by" in request.form:
+                    module.update_setting_value(
+                        "triggered_by", request.form.get("triggered_by", "")
+                    )
 
-                if 'queue' in request.form:
-                    update_queue(module, request.form.get('queue', ''))
+                if "queue" in request.form:
+                    update_queue(module, request.form.get("queue", ""))
 
-            elif module['type'] == "Preloading":
-                if 'queue' in request.form:
-                    update_queue(module, request.form.get('queue', ''))
+            elif module["type"] == "Preloading":
+                if "queue" in request.form:
+                    update_queue(module, request.form.get("queue", ""))
 
-                if 'priority' in request.form:
-                    update_priority(module, request.form.get('priority', ''))
+                if "priority" in request.form:
+                    update_priority(module, request.form.get("priority", ""))
 
-            errors = update_config(module['config'], options=(module['type'] in ['Preloading', 'Processing']))
+            errors = update_config(
+                module["config"],
+                options=(module["type"] in ["Preloading", "Processing"]),
+            )
             if errors is not None:
                 return errors
 
             module.save()
             dispatcher.reload()
-            return redirect({'module': clean_modules(module)}, url_for('ModulesView:index'))
+            return redirect(
+                {"module": clean_modules(module)}, url_for("ModulesView:index")
+            )
         else:
-            return render({'module': clean_modules(module)}, 'modules/module_configuration.html')
+            return render(
+                {"module": clean_modules(module)}, "modules/module_configuration.html"
+            )
 
     def list(self):
         """List enabled Processing and Preloading modules
@@ -362,12 +402,14 @@ class ModulesView(FlaskView, UIView):
 
         :>json list modules: list of enabled modules.
         """
-        modules = ModuleInfo.get_collection().find({'enabled': True, 'type': {'$in': ['Processing', 'Preloading']}})
+        modules = ModuleInfo.get_collection().find(
+            {"enabled": True, "type": {"$in": ["Processing", "Preloading"]}}
+        )
 
         return render_json(clean_modules(list(modules)))
 
-    @requires_permission('manage_modules')
-    @route('/reload', methods=['POST'])
+    @requires_permission("manage_modules")
+    @route("/reload", methods=["POST"])
     def reload(self):
         """Reload the workers
 
@@ -383,12 +425,14 @@ class ModulesView(FlaskView, UIView):
         updates = Internals(get_or_404(Internals.get_collection(), name="updates"))
         updates.update_value("last_update", time())
 
-        flash('Workers will reload once they are done with their current tasks', 'success')
+        flash(
+            "Workers will reload once they are done with their current tasks", "success"
+        )
 
-        return redirect('ok', url_for('ModulesView:index'))
+        return redirect("ok", url_for("ModulesView:index"))
 
-    @requires_permission('manage_modules')
-    @route('/repository/<id>/update', methods=['POST'])
+    @requires_permission("manage_modules")
+    @route("/repository/<id>/update", methods=["POST"])
     def repository_update(self, id):
         """Update a repository
 
@@ -403,10 +447,12 @@ class ModulesView(FlaskView, UIView):
         repository = Repository(get_or_404(Repository.get_collection(), _id=id))
         repository.pull()
 
-        return redirect({'repository': clean_repositories(repository)}, url_for('ModulesView:index'))
+        return redirect(
+            {"repository": clean_repositories(repository)}, url_for("ModulesView:index")
+        )
 
-    @requires_permission('manage_modules')
-    @route('/repository/<id>/delete', methods=['POST'])
+    @requires_permission("manage_modules")
+    @route("/repository/<id>/delete", methods=["POST"])
     def repository_delete(self, id):
         """Delete a repository
 
@@ -421,10 +467,10 @@ class ModulesView(FlaskView, UIView):
         repository.delete()
         dispatcher.reload()
 
-        return redirect('ok', url_for('ModulesView:index'))
+        return redirect("ok", url_for("ModulesView:index"))
 
-    @requires_permission('manage_modules')
-    @route('/repository/new', methods=['GET', 'POST'])
+    @requires_permission("manage_modules")
+    @route("/repository/new", methods=["GET", "POST"])
     def repository_new(self):
         """Add a repository
 
@@ -443,42 +489,56 @@ class ModulesView(FlaskView, UIView):
         deploy_key = get_deploy_key()
         repository = Repository()
 
-        if request.method == 'POST':
-            for field in ['name', 'address']:
+        if request.method == "POST":
+            for field in ["name", "address"]:
                 repository[field] = request.form.get(field)
                 if repository[field] is None or repository[field] == "":
-                    flash("{} is required.".format(field), 'danger')
+                    flash("{} is required.".format(field), "danger")
                     return validation_error()
 
                 existing_repository = Repository.get(**{field: repository[field]})
                 if existing_repository:
-                    flash("There is already a repository with this {}.".format(field), 'danger')
+                    flash(
+                        "There is already a repository with this {}.".format(field),
+                        "danger",
+                    )
                     return validation_error()
 
-            value = request.form.get('private')
-            repository['private'] = (value is not None) and (value not in ['0', 'False'])
+            value = request.form.get("private")
+            repository["private"] = (value is not None) and (
+                value not in ["0", "False"]
+            )
 
-            if repository['private'] and deploy_key is None:
-                flash("Private repositories are disabled because of a problem with your installation (you do not have a deploy key in 'conf/id_rsa.pub')", 'danger')
+            if repository["private"] and deploy_key is None:
+                flash(
+                    "Private repositories are disabled because of a problem with your installation (you do not have a deploy key in 'conf/id_rsa.pub')",
+                    "danger",
+                )
                 return validation_error()
 
-            repository['status'] = 'cloning'
+            repository["status"] = "cloning"
             repository.save()
             repository.clone()
-            return redirect({'repository': clean_repositories(repository)}, url_for('ModulesView:index'))
+            return redirect(
+                {"repository": clean_repositories(repository)},
+                url_for("ModulesView:index"),
+            )
 
-        return render({'repository': repository, 'deploy_key': deploy_key}, 'modules/repository_new.html')
+        return render(
+            {"repository": repository, "deploy_key": deploy_key},
+            "modules/repository_new.html",
+        )
 
-    @requires_permission('worker')
-    @route('/download', methods=['GET'])
+    @requires_permission("worker")
+    @route("/download", methods=["GET"])
     def download(self):
         # First, create a zip file with the modules
-        path = os.path.join(tempdir(), 'modules.zip')
-        with ZipFile(path, 'w') as zipf:
+        path = os.path.join(tempdir(), "modules.zip")
+        with ZipFile(path, "w") as zipf:
             for root, dirs, files in os.walk(MODULES_ROOT):
                 for filename in files:
                     # Ignore pyc files
-                    if not filename.endswith('.pyc'):
+                    if not filename.endswith(".pyc"):
                         filepath = os.path.join(root, filename)
                         zipf.write(filepath, os.path.relpath(filepath, MODULES_ROOT))
 

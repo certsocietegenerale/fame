@@ -13,13 +13,11 @@ def should_render_as_html():
 def render_json(data):
     body = dumps(data)
 
-    return Response(response=body, mimetype='application/json')
+    return Response(response=body, mimetype="application/json")
 
 
 def render_html(data, template, ctx=None):
-    ctx = ctx or {
-        'data': data
-    }
+    ctx = ctx or {"data": data}
 
     return render_template(template, **ctx)
 
@@ -45,4 +43,4 @@ def validation_error(path=None):
 
         return flask_redirect(request.referrer)
 
-    return render_json({'errors': get_flashed_messages()})
+    return render_json({"errors": get_flashed_messages()})

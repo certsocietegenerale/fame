@@ -9,42 +9,60 @@ from web.views.negotiation import render
 from web.views.mixins import UIView
 
 
-ACTION_NEW = 'new'
-ACTION_UPDATE = 'update'
-ACTION_REMOVED = 'removed'
+ACTION_NEW = "new"
+ACTION_UPDATE = "update"
+ACTION_REMOVED = "removed"
 
 
 def clean_record(record):
-    record['target'] = record['_id']['target']
-    record['monitor'] = record['_id']['monitor']
-    record['botnet'] = record['_id']['botnet']
-    record['type'] = record['_id']['type']
-    del record['_id']
+    record["target"] = record["_id"]["target"]
+    record["monitor"] = record["_id"]["monitor"]
+    record["botnet"] = record["_id"]["botnet"]
+    record["type"] = record["_id"]["type"]
+    del record["_id"]
 
 
 def targets_aggregation():
-    return store.config_blocks.aggregate([
-        {'$sort': {'updated': 1}},
-        {'$group': {
-            '_id': {'target': '$target', 'monitor': '$monitor', 'botnet': '$botnet', 'type': '$type'},
-            'count': {'$sum': 1},
-            'last_action': {'$last': '$action'}
-        }}
-    ])
+    return store.config_blocks.aggregate(
+        [
+            {"$sort": {"updated": 1}},
+            {
+                "$group": {
+                    "_id": {
+                        "target": "$target",
+                        "monitor": "$monitor",
+                        "botnet": "$botnet",
+                        "type": "$type",
+                    },
+                    "count": {"$sum": 1},
+                    "last_action": {"$last": "$action"},
+                }
+            },
+        ]
+    )
 
 
 def get_monitor(monitors, record):
-    if record['monitor'] not in monitors:
-        monitors[record['monitor']] = {'count': 0, 'botnets': set(), 'active_botnets': set(), 'targets': {}}
+    if record["monitor"] not in monitors:
+        monitors[record["monitor"]] = {
+            "count": 0,
+            "botnets": set(),
+            "active_botnets": set(),
+            "targets": {},
+        }
 
-    return monitors[record['monitor']]
+    return monitors[record["monitor"]]
 
 
 def get_target(monitor, record):
-    if record['target'] not in monitor['targets']:
-        monitor['targets'][record['target']] = {'count': 0, 'botnets': set(), 'active_botnets': set()}
+    if record["target"] not in monitor["targets"]:
+        monitor["targets"][record["target"]] = {
+            "count": 0,
+            "botnets": set(),
+            "active_botnets": set(),
+        }
 
-    return monitor['targets'][record['target']]
+    return monitor["targets"][record["target"]]
 
 
 def increment(dicts, key, value=1):
@@ -73,7 +91,7 @@ class ConfigsView(FlaskView, UIView):
         if redir:
             return redir
 
-        if not current_user.has_permission('configs'):
+        if not current_user.has_permission("configs"):
             abort(404)
 
     def index(self):
@@ -121,12 +139,12 @@ class ConfigsView(FlaskView, UIView):
             monitor = get_monitor(monitors, record)
             target = get_target(monitor, record)
 
-            increment([monitor, target], 'count', record['count'])
-            add([monitor, target], 'botnets', record['botnet'])
-            if record['last_action'] != ACTION_REMOVED:
-                add([monitor, target], 'active_botnets', record['botnet'])
+            increment([monitor, target], "count", record["count"])
+            add([monitor, target], "botnets", record["botnet"])
+            if record["last_action"] != ACTION_REMOVED:
+                add([monitor, target], "active_botnets", record["botnet"])
 
-        return render(monitors, 'configs/index.html')
+        return render(monitors, "configs/index.html")
 
     def show(self):
         """Get a malware configuration timeline.
@@ -173,7 +191,7 @@ class ConfigsView(FlaskView, UIView):
                     }
                 }
         """
-        query = build_query(['monitor', 'target', 'botnet', 'type'])
+        query = build_query(["monitor", "target", "botnet", "type"])
 
         history = {}
         monitors = set()
@@ -181,31 +199,33 @@ class ConfigsView(FlaskView, UIView):
         types = set()
         botnets = set()
         config_blocks = []
-        for block in store.config_blocks.find(query).sort('updated'):
+        for block in store.config_blocks.find(query).sort("updated"):
             config_blocks.append(block)
-            monitors.add(block['monitor'])
-            targets.add(block['target'])
-            types.add(block['type'])
-            botnets.add(block['botnet'])
+            monitors.add(block["monitor"])
+            targets.add(block["target"])
+            types.add(block["type"])
+            botnets.add(block["botnet"])
 
-            label = "{}:{}:{}".format(block['target'], block['type'], block['botnet'])
-            if block['action'] == ACTION_UPDATE:
-                block['diff'] = ''.join(ndiff(history[label].splitlines(1), block['content'].splitlines(1)))
+            label = "{}:{}:{}".format(block["target"], block["type"], block["botnet"])
+            if block["action"] == ACTION_UPDATE:
+                block["diff"] = "".join(
+                    ndiff(history[label].splitlines(1), block["content"].splitlines(1))
+                )
 
-            if block['action'] != ACTION_REMOVED:
-                history[label] = block['content']
+            if block["action"] != ACTION_REMOVED:
+                history[label] = block["content"]
 
         result = {
-            'config_blocks': config_blocks,
-            'monitors': monitors,
-            'targets': targets,
-            'types': types,
-            'botnets': botnets
+            "config_blocks": config_blocks,
+            "monitors": monitors,
+            "targets": targets,
+            "types": types,
+            "botnets": botnets,
         }
 
-        return render(result, 'configs/show.html')
+        return render(result, "configs/show.html")
 
     def delete(self, id):
         store.config_blocks.remove(ObjectId(id))
 
-        return 'ok'
+        return "ok"

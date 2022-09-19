@@ -24,7 +24,9 @@ from web.views.mixins import UIView
 
 
 def return_file(file):
-    analyses = list(current_user.analyses.find({"_id": {"$in": file["file"]["analysis"]}}))
+    analyses = list(
+        current_user.analyses.find({"_id": {"$in": file["file"]["analysis"]}})
+    )
     file["av_modules"] = [m.name for m in dispatcher.get_antivirus_modules()]
 
     for analysis in analyses:
@@ -36,7 +38,11 @@ def return_file(file):
     return render(
         file,
         "files/show.html",
-        ctx={"data": file, "options": dispatcher.options, "comments_enabled": comments_enabled()},
+        ctx={
+            "data": file,
+            "options": dispatcher.options,
+            "comments_enabled": comments_enabled(),
+        },
     )
 
 
@@ -56,11 +62,23 @@ class FilesView(FlaskView, UIView):
         """
         page = int(request.args.get("page", 1))
 
-        files = current_user.files.find().sort("_id", DESCENDING).limit(PER_PAGE).skip((page - 1) * PER_PAGE)
-        pagination = Pagination(page=page, per_page=PER_PAGE, total=current_user.files.count_documents(), css_framework="bootstrap3")
+        files = (
+            current_user.files.find()
+            .sort("_id", DESCENDING)
+            .limit(PER_PAGE)
+            .skip((page - 1) * PER_PAGE)
+        )
+        pagination = Pagination(
+            page=page,
+            per_page=PER_PAGE,
+            total=current_user.files.count_documents(),
+            css_framework="bootstrap3",
+        )
         files = {"files": clean_files(list(files))}
 
-        return render(files, "files/index.html", ctx={"data": files, "pagination": pagination})
+        return render(
+            files, "files/index.html", ctx={"data": files, "pagination": pagination}
+        )
 
     def get(self, id):
         """Get the object with `id`.
@@ -85,7 +103,9 @@ class FilesView(FlaskView, UIView):
         :>json list parent_analyses: list of analyses (as ObjectIds) that extracted this object.
         :>json dict antivirus: dict with antivirus names as keys.
         """
-        file = {"file": enrich_comments(clean_files(get_or_404(current_user.files, _id=id)))}
+        file = {
+            "file": enrich_comments(clean_files(get_or_404(current_user.files, _id=id)))
+        }
         return return_file(file)
 
     @route("/hash/<file_hash>", methods=["GET"])
@@ -105,7 +125,13 @@ class FilesView(FlaskView, UIView):
             abort(400)
 
         hash_filter = {hash_type[len(file_hash)]: file_hash.lower()}
-        return return_file({"file": enrich_comments(clean_files(get_or_404(current_user.files, **hash_filter)))})
+        return return_file(
+            {
+                "file": enrich_comments(
+                    clean_files(get_or_404(current_user.files, **hash_filter))
+                )
+            }
+        )
 
     @route("/md5/<md5>", methods=["GET"])
     def get_md5(self, md5):
@@ -117,7 +143,13 @@ class FilesView(FlaskView, UIView):
 
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
-        return return_file({"file": enrich_comments(clean_files(get_or_404(current_user.files, md5=md5.lower())))})
+        return return_file(
+            {
+                "file": enrich_comments(
+                    clean_files(get_or_404(current_user.files, md5=md5.lower()))
+                )
+            }
+        )
 
     @route("/sha1/<sha1>", methods=["GET"])
     def get_sha1(self, sha1):
@@ -129,7 +161,13 @@ class FilesView(FlaskView, UIView):
 
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
-        return return_file({"file": enrich_comments(clean_files(get_or_404(current_user.files, sha1=sha1.lower())))})
+        return return_file(
+            {
+                "file": enrich_comments(
+                    clean_files(get_or_404(current_user.files, sha1=sha1.lower()))
+                )
+            }
+        )
 
     @route("/sha256/<sha256>", methods=["GET"])
     def get_sha256(self, sha256):
@@ -142,7 +180,11 @@ class FilesView(FlaskView, UIView):
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
         return return_file(
-            {"file": enrich_comments(clean_files(get_or_404(current_user.files, sha256=sha256.lower())))}
+            {
+                "file": enrich_comments(
+                    clean_files(get_or_404(current_user.files, sha256=sha256.lower()))
+                )
+            }
         )
 
     @requires_permission("worker")
@@ -182,7 +224,9 @@ class FilesView(FlaskView, UIView):
                 f.update_value(["antivirus", module], True)
                 break
         else:
-            return make_response("antivirus module '{}' not present / enabled.".format(module))
+            return make_response(
+                "antivirus module '{}' not present / enabled.".format(module)
+            )
 
         return make_response("ok")
 
@@ -193,7 +237,10 @@ class FilesView(FlaskView, UIView):
         group = request.form.get("group")
 
         if group in f["owners"]:
-            flash("This group submitted this file themselves. You cannot neuralize them.", "danger")
+            flash(
+                "This group submitted this file themselves. You cannot neuralize them.",
+                "danger",
+            )
         else:
             f.remove_group(group)
 
@@ -236,7 +283,9 @@ class FilesView(FlaskView, UIView):
                 if analysis_id:
                     get_or_404(current_user.analyses, _id=analysis_id)
 
-                f.add_comment(current_user["_id"], comment, analysis_id, probable_name, notify)
+                f.add_comment(
+                    current_user["_id"], comment, analysis_id, probable_name, notify
+                )
             else:
                 flash("Comment should not be empty", "danger")
 

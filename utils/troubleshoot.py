@@ -11,7 +11,9 @@ try:
 except ImportError:
     from importlib_metadata import distribution
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
+sys.path.append(
+    os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+)
 
 from fame.common.config import fame_config  # noqa: E402
 from fame.core.config import Config, incomplete_config  # noqa: E402
@@ -30,7 +32,7 @@ def dependencies():
     print("########## DEPENDENCIES ###########\n")
     pipmain = distribution("pip").entry_points[0].load()
 
-    pipmain(['freeze'])
+    pipmain(["freeze"])
     print("\n")
 
 
@@ -47,13 +49,21 @@ def mongodb():
     print("########## MongoDB ##########\n")
 
     try:
-        connection = MongoClient(fame_config.mongo_host, int(fame_config.mongo_port), serverSelectionTimeoutMS=10000)
+        connection = MongoClient(
+            fame_config.mongo_host,
+            int(fame_config.mongo_port),
+            serverSelectionTimeoutMS=10000,
+        )
         db = connection[fame_config.mongo_db]
 
         if fame_config.mongo_user and fame_config.mongo_password:
-            db.authenticate(fame_config.mongo_user, quote_plus(fame_config.mongo_password), mechanism='SCRAM-SHA-1')
+            db.authenticate(
+                fame_config.mongo_user,
+                quote_plus(fame_config.mongo_password),
+                mechanism="SCRAM-SHA-1",
+            )
 
-        print(("Version: {}".format(connection.server_info()['version'])))
+        print(("Version: {}".format(connection.server_info()["version"])))
         print(("Authorization check: {}\n".format(test_mongodb_connection(db))))
         return True
     except Exception as e:
@@ -65,7 +75,9 @@ def configuration():
     print("########## Configuration ##########\n")
     fame_init()
     for config in Config.find():
-        print(("{}: {}".format(config['name'], not incomplete_config(config['config']))))
+        print(
+            ("{}: {}".format(config["name"], not incomplete_config(config["config"])))
+        )
 
     print("\nModules:\n")
 
@@ -73,13 +85,19 @@ def configuration():
         state = "Disabled"
         configured = "Configured"
 
-        if module['enabled']:
+        if module["enabled"]:
             state = "Enabled"
 
-        if incomplete_config(module['config']):
+        if incomplete_config(module["config"]):
             configured = "Not Configured"
 
-        print(("{: <25} {: <20} {: <10} {: <15}".format(module['name'], module['type'], state, configured)))
+        print(
+            (
+                "{: <25} {: <20} {: <10} {: <15}".format(
+                    module["name"], module["type"], state, configured
+                )
+            )
+        )
 
 
 def main():
@@ -89,5 +107,5 @@ def main():
         configuration()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

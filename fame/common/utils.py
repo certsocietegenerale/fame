@@ -27,15 +27,15 @@ def u(string):
         return str(string)
     except UnicodeDecodeError:
         try:
-            return str(string, 'latin-1')
+            return str(string, "latin-1")
         except UnicodeDecodeError:
-            return str(string, errors='replace')
+            return str(string, errors="replace")
 
 
 def get_class(module, klass):
     try:
         m = __import__(module)
-        for part in module.split('.')[1:]:
+        for part in module.split(".")[1:]:
             m = getattr(m, part)
 
         return getattr(m, klass)
@@ -46,7 +46,7 @@ def get_class(module, klass):
 def list_value(list_of_values):
     result = set()
 
-    for value in list_of_values.split(','):
+    for value in list_of_values.split(","):
         value = value.strip()
         if value != "":
             result.add(value)
@@ -57,7 +57,7 @@ def list_value(list_of_values):
 def ordered_list_value(list_of_values):
     result = []
 
-    for value in list_of_values.split(','):
+    for value in list_of_values.split(","):
         value = value.strip()
         result.append(value)
 
@@ -66,10 +66,12 @@ def ordered_list_value(list_of_values):
 
 def send_file_to_remote(file, url):
     if isinstance(file, str):
-        file = open(file, 'rb')
+        file = open(file, "rb")
 
     url = urljoin(fame_config.remote, url)
-    response = requests.post(url, files={'file': file}, headers={'X-API-KEY': fame_config.api_key})
+    response = requests.post(
+        url, files={"file": file}, headers={"X-API-KEY": fame_config.api_key}
+    )
     response.raise_for_status()
 
     file.close()
@@ -82,7 +84,7 @@ def unique_for_key(li, key):
 
 
 def tempdir():
-    tempdir = os.path.join(fame_config.temp_path, str(uuid4()).replace('-', ''))
+    tempdir = os.path.join(fame_config.temp_path, str(uuid4()).replace("-", ""))
 
     try:
         os.makedirs(tempdir)
@@ -97,7 +99,7 @@ def save_response(response, filepath):
     filename = secure_filename(os.path.basename(filepath))
     filepath = os.path.join(tmp, filename)
 
-    with open(filepath, 'wb') as out:
+    with open(filepath, "wb") as out:
         copyfileobj(response.raw, out)
 
     return filepath

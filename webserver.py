@@ -28,25 +28,27 @@ try:
 except OperationFailure:
     print("/!\\ Could not connect to MongoDB database.")
 
-app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
+app = Flask(__name__, template_folder="web/templates", static_folder="web/static")
 app.secret_key = fame_config.secret_key
-app.config['TEMPLATES_AUTO_RELOAD'] = True
-if 'https://' in fame_config.fame_url:
-    app.config['SESSION_COOKIE_SECURE'] = True
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+if "https://" in fame_config.fame_url:
+    app.config["SESSION_COOKIE_SECURE"] = True
 
 # Set two tempalte folders (one is for modules)
-template_loader = jinja2.ChoiceLoader([
-    jinja2.FileSystemLoader('web/templates'),
-    jinja2.FileSystemLoader('fame/modules'),
-])
+template_loader = jinja2.ChoiceLoader(
+    [
+        jinja2.FileSystemLoader("web/templates"),
+        jinja2.FileSystemLoader("fame/modules"),
+    ]
+)
 app.jinja_loader = template_loader
 
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = '/login'
+login_manager.login_view = "/login"
 
-auth_module = import_module('web.auth.{}.views'.format(fame_config.auth))
+auth_module = import_module("web.auth.{}.views".format(fame_config.auth))
 app.register_blueprint(auth_module.auth)
 
 
@@ -57,7 +59,7 @@ def load_user(token):
 
 @login_manager.request_loader
 def api_auth(request):
-    api_key = request.headers.get('X-API-KEY')
+    api_key = request.headers.get("X-API-KEY")
     user = User.get(api_key=api_key)
 
     if user:
@@ -67,8 +69,8 @@ def api_auth(request):
 
 
 # Template Filters
-@app.template_filter('date')
-def filter_date(value, format='%Y-%m-%d %H:%M'):
+@app.template_filter("date")
+def filter_date(value, format="%Y-%m-%d %H:%M"):
     return value.strftime(format)
 
 
@@ -80,7 +82,7 @@ def to_json(value):
 @app.template_filter()
 def smart_join(value, separator=", "):
     if value is None:
-        return ''
+        return ""
     if isinstance(value, str):
         return value
     else:
@@ -90,7 +92,7 @@ def smart_join(value, separator=", "):
 @app.template_filter()
 def form_value(value):
     if value is None:
-        return ''
+        return ""
     else:
         return value
 
@@ -129,9 +131,9 @@ def unique(li):
 @app.template_filter()
 def avatar(user_id):
     if os.path.exists(os.path.join(AVATARS_ROOT, "{}.png".format(user_id))):
-        return url_for('static', filename="img/avatars/{}.png".format(user_id))
+        return url_for("static", filename="img/avatars/{}.png".format(user_id))
     else:
-        return url_for('static', filename="img/avatars/default.png")
+        return url_for("static", filename="img/avatars/default.png")
 
 
 @app.template_global()
@@ -141,7 +143,7 @@ def delete_query(*new_values):
     for key in new_values:
         del args[key]
 
-    return '{}?{}'.format(request.path, url_encode(args))
+    return "{}?{}".format(request.path, url_encode(args))
 
 
 @app.template_global()
@@ -149,12 +151,12 @@ def modify_query(key, value):
     args = request.args.copy()
     args[key] = value
 
-    return '{}?{}'.format(request.path, url_encode(args))
+    return "{}?{}".format(request.path, url_encode(args))
 
 
-@app.route('/')
+@app.route("/")
 def root():
-    return redirect(urljoin(fame_config.fame_url, '/analyses/'))
+    return redirect(urljoin(fame_config.fame_url, "/analyses/"))
 
 
 FilesView.register(app)
@@ -164,5 +166,5 @@ SearchView.register(app)
 ConfigsView.register(app)
 UsersView.register(app)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True, port=4200, host="0.0.0.0")

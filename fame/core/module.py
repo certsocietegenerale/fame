@@ -8,26 +8,36 @@ from markdown2 import markdown
 from datetime import datetime, timedelta
 
 from fame.common.constants import MODULES_ROOT
-from fame.common.exceptions import ModuleInitializationError, ModuleExecutionError, MissingConfiguration
-from fame.common.utils import iterify, is_iterable, list_value, save_response, ordered_list_value
+from fame.common.exceptions import (
+    ModuleInitializationError,
+    ModuleExecutionError,
+    MissingConfiguration,
+)
+from fame.common.utils import (
+    iterify,
+    is_iterable,
+    list_value,
+    save_response,
+    ordered_list_value,
+)
 from fame.common.mongo_dict import MongoDict
 from fame.core.config import Config, apply_config_update, incomplete_config
 from fame.core.internals import Internals
 
 
 def init_config_values(info):
-    for config in info['config']:
-        config['value'] = None
+    for config in info["config"]:
+        config["value"] = None
 
-        if config['type'] == 'bool' and config['default']:
-            config['value'] = config['default']
+        if config["type"] == "bool" and config["default"]:
+            config["value"] = config["default"]
 
 
 class ModuleInfo(MongoDict):
-    collection_name = 'modules'
+    collection_name = "modules"
 
     def get_file(self, filename):
-        path = os.path.join(MODULES_ROOT, *(self['path'].split('.')[2:]))
+        path = os.path.join(MODULES_ROOT, *(self["path"].split(".")[2:]))
 
         if os.path.isdir(path):
             filepath = os.path.join(path, filename)
@@ -40,36 +50,36 @@ class ModuleInfo(MongoDict):
         return None
 
     def get_readme(self):
-        readme = self.get_file('README.md')
+        readme = self.get_file("README.md")
 
         if readme:
-            with open(readme, 'r') as f:
+            with open(readme, "r") as f:
                 readme = markdown(f.read(), extras=["code-friendly"])
 
         return readme
 
     def details_template(self):
-        return '/'.join(self['path'].split('.')[2:-1]) + '/details.html'
+        return "/".join(self["path"].split(".")[2:-1]) + "/details.html"
 
     def update_config(self, new_info):
-        if self['type'] == 'Processing':
-            self['generates'] = new_info['generates']
-            self._update_diffed_value('queue', new_info['queue'])
-            self._update_diffed_value('acts_on', new_info['acts_on'])
-            self._update_diffed_value('triggered_by', new_info['triggered_by'])
+        if self["type"] == "Processing":
+            self["generates"] = new_info["generates"]
+            self._update_diffed_value("queue", new_info["queue"])
+            self._update_diffed_value("acts_on", new_info["acts_on"])
+            self._update_diffed_value("triggered_by", new_info["triggered_by"])
 
-        elif self['type'] == 'Preloading':
-            self._update_diffed_value('queue', new_info['queue'])
-            self._update_diffed_value('priority', new_info['priority'])
+        elif self["type"] == "Preloading":
+            self._update_diffed_value("queue", new_info["queue"])
+            self._update_diffed_value("priority", new_info["priority"])
 
-        elif self['type'] == 'Filetype':
-            self._update_diffed_value('acts_on', new_info['acts_on'])
+        elif self["type"] == "Filetype":
+            self._update_diffed_value("acts_on", new_info["acts_on"])
 
-        self['description'] = new_info['description']
-        self['config'] = apply_config_update(self['config'], new_info['config'])
+        self["description"] = new_info["description"]
+        self["config"] = apply_config_update(self["config"], new_info["config"])
 
-        if self['enabled'] and incomplete_config(self['config']):
-            self['enabled'] = False
+        if self["enabled"] and incomplete_config(self["config"]):
+            self["enabled"] = False
 
         self.save()
 
@@ -88,63 +98,60 @@ class ModuleInfo(MongoDict):
             self[name] = value
         else:
             if self[name] != value:
-                self['diffs'][name] = value
+                self["diffs"][name] = value
                 self[name] = value
 
     def _init_list_diff(self, name):
-        if 'diffs' not in self:
-            self['diffs'] = {}
+        if "diffs" not in self:
+            self["diffs"] = {}
 
-        if name not in self['diffs']:
-            self['diffs'][name] = {
-                'added': [],
-                'removed': []
-            }
+        if name not in self["diffs"]:
+            self["diffs"][name] = {"added": [], "removed": []}
 
     def _add_value(self, name, value):
         self._init_list_diff(name)
 
-        if value in self['diffs'][name]['removed']:
-            self['diffs'][name]['removed'].remove(value)
+        if value in self["diffs"][name]["removed"]:
+            self["diffs"][name]["removed"].remove(value)
         else:
-            self['diffs'][name]['added'].append(value)
+            self["diffs"][name]["added"].append(value)
 
     def _remove_value(self, name, value):
         self._init_list_diff(name)
 
-        if value in self['diffs'][name]['added']:
-            self['diffs'][name]['added'].remove(value)
+        if value in self["diffs"][name]["added"]:
+            self["diffs"][name]["added"].remove(value)
         else:
-            self['diffs'][name]['removed'].append(value)
+            self["diffs"][name]["removed"].append(value)
 
     def _update_diffed_value(self, name, value):
         if is_iterable(value):
             self._init_list_diff(name)
             self[name] = value
 
-            if name in self['diffs']:
+            if name in self["diffs"]:
                 new_removed = []
-                for element in self['diffs'][name]['removed']:
+                for element in self["diffs"][name]["removed"]:
                     if element in self[name]:
                         self[name].remove(element)
                         new_removed.append(element)
 
-                self['diffs'][name]['removed'] = new_removed
+                self["diffs"][name]["removed"] = new_removed
 
                 new_added = []
-                for element in self['diffs'][name]['added']:
+                for element in self["diffs"][name]["added"]:
                     if element not in self[name]:
                         self[name].append(element)
                         new_added.append(element)
 
-                self['diffs'][name]['added'] = new_added
+                self["diffs"][name]["added"] = new_added
         else:
             self[name] = value
-            if name in self['diffs']:
-                if self['diffs'][name] == value:
-                    del self['diffs'][name]
+            if name in self["diffs"]:
+                if self["diffs"][name] == value:
+                    del self["diffs"][name]
                 else:
-                    self[name] = self['diffs'][name]
+                    self[name] = self["diffs"][name]
 
 
 class Module(object):
@@ -200,6 +207,7 @@ class Module(object):
                     }
                 }
     """
+
     name = None
     config = []
     named_configs = {}
@@ -246,17 +254,21 @@ class Module(object):
         for named_config in self.named_configs:
             config = Config.get(name=named_config)
             if config is None:
-                raise MissingConfiguration("Missing '{}' configuration".format(named_config))
+                raise MissingConfiguration(
+                    "Missing '{}' configuration".format(named_config)
+                )
 
             setattr(self, named_config, config.get_values())
 
-        for config in self.info['config']:
-            if (config['value'] is None) and ('default' not in config):
-                raise MissingConfiguration("Missing configuration value: {}".format(config['name']))
+        for config in self.info["config"]:
+            if (config["value"] is None) and ("default" not in config):
+                raise MissingConfiguration(
+                    "Missing configuration value: {}".format(config["name"])
+                )
 
-            setattr(self, config['name'], config['value'])
-            if config['value'] is None:
-                setattr(self, config['name'], config['default'])
+            setattr(self, config["name"], config["value"])
+            if config["value"] is None:
+                setattr(self, config["name"], config["default"])
 
     def log(self, level, message):
         """Add a log message to the analysis
@@ -270,9 +282,9 @@ class Module(object):
     @classmethod
     def named_config(cls, name):
         config = {
-            'name': name,
-            'description': cls.named_configs[name]['description'],
-            'config': cls.named_configs[name]['config']
+            "name": name,
+            "description": cls.named_configs[name]["description"],
+            "config": cls.named_configs[name]["config"],
         }
 
         init_config_values(config)
@@ -316,11 +328,12 @@ class ProcessingModule(Module):
             The default value is ``{}``, which means the module does not
             use any permission.
     """
+
     acts_on = []
     generates = []
     triggered_by = []
     permissions = {}
-    queue = 'unix'
+    queue = "unix"
 
     def __init__(self, with_config=True):
         Module.__init__(self, with_config)
@@ -409,7 +422,7 @@ class ProcessingModule(Module):
 
     def execute(self, analysis):
         self._analysis = analysis
-        self.init_options(analysis['options'])
+        self.init_options(analysis["options"])
         return self.run()
 
     def each(self, target):
@@ -432,7 +445,9 @@ class ProcessingModule(Module):
         Raises:
             ModuleExecutionError: if any error occurs during the analysis.
         """
-        self.log("warning", "no 'each' method defined. Module should define 'each' or 'run'")
+        self.log(
+            "warning", "no 'each' method defined. Module should define 'each' or 'run'"
+        )
         return False
 
     def each_with_type(self, target, file_type):
@@ -478,21 +493,23 @@ class ProcessingModule(Module):
 
         # Process all the files available for this module,
         # if 'acts_on' is defined
-        if self.info['acts_on']:
-            for source_type in iterify(self.info['acts_on']):
+        if self.info["acts_on"]:
+            for source_type in iterify(self.info["acts_on"]):
                 for target in self._analysis.get_files(source_type):
                     if self._try_each(target, source_type):
                         result = True
         # Otherwise, only run on main target
         else:
-            return self._try_each(self._analysis.get_main_file(), self._analysis._file['type'])
+            return self._try_each(
+                self._analysis.get_main_file(), self._analysis._file["type"]
+            )
 
         return result
 
     def _try_each(self, target, file_type):
         try:
-            if file_type == 'url':
-                with open(target, 'r') as fd:
+            if file_type == "url":
+                with open(target, "r") as fd:
                     target = fd.read()
 
             return self.each_with_type(target, file_type)
@@ -515,7 +532,7 @@ class ProcessingModule(Module):
             "acts_on": iterify(cls.acts_on),
             "generates": iterify(cls.generates),
             "triggered_by": iterify(cls.triggered_by),
-            "queue": cls.queue
+            "queue": cls.queue,
         }
 
         init_config_values(info)
@@ -537,48 +554,49 @@ class IsolatedProcessingModule(ProcessingModule):
             the VM should be restored to a clean state. It is set to ``False`` by
             default.
     """
+
     vm_config = [
         {
-            'name': 'virtualization',
-            'type': 'str',
-            'default': 'virtualbox',
-            'description': 'Name of the VirtualizationModule to use.'
+            "name": "virtualization",
+            "type": "str",
+            "default": "virtualbox",
+            "description": "Name of the VirtualizationModule to use.",
         },
         {
-            'name': 'label',
-            'type': 'str',
-            'description': 'Label of the virtual machine to use. Several VMs can be specified by using a comma-delimited list of labels.'
+            "name": "label",
+            "type": "str",
+            "description": "Label of the virtual machine to use. Several VMs can be specified by using a comma-delimited list of labels.",
         },
         {
-            'name': 'snapshot',
-            'type': 'str',
-            'default': None,
-            'description': 'Name of the snapshot to use to restore clean state.'
+            "name": "snapshot",
+            "type": "str",
+            "default": None,
+            "description": "Name of the snapshot to use to restore clean state.",
         },
         {
-            'name': 'ip_address',
-            'type': 'str',
-            'default': '127.0.0.1',
-            'description': 'IP address of the guest. 127.0.0.1 can only be used with NAT and port forwarding. When using muliple VMs, specify all IP addresses in a comma-delimited list.'
+            "name": "ip_address",
+            "type": "str",
+            "default": "127.0.0.1",
+            "description": "IP address of the guest. 127.0.0.1 can only be used with NAT and port forwarding. When using muliple VMs, specify all IP addresses in a comma-delimited list.",
         },
         {
-            'name': 'port',
-            'type': 'str',
-            'default': '4242',
-            'description': 'Port the agent is listening to. You might have to change this value if you are using NAT and port forwarding. When using muliple VMs, specify all ports in a comma-delimited list.'
+            "name": "port",
+            "type": "str",
+            "default": "4242",
+            "description": "Port the agent is listening to. You might have to change this value if you are using NAT and port forwarding. When using muliple VMs, specify all ports in a comma-delimited list.",
         },
         {
-            'name': 'always_ready',
-            'type': 'bool',
-            'default': True,
-            'description': 'Make sure the VM is always started and ready to execute a new task.'
+            "name": "always_ready",
+            "type": "bool",
+            "default": True,
+            "description": "Make sure the VM is always started and ready to execute a new task.",
         },
         {
-            'name': 'restore_after',
-            'type': 'integer',
-            'default': 10,
-            'description': 'Only used when always_ready is used. Specifies the number of times this module can be executed before having to clean up the virtual machine.'
-        }
+            "name": "restore_after",
+            "type": "integer",
+            "default": 10,
+            "description": "Only used when always_ready is used. Specifies the number of times this module can be executed before having to clean up the virtual machine.",
+        },
     ]
 
     def initialize(self):
@@ -590,13 +608,18 @@ class IsolatedProcessingModule(ProcessingModule):
         self.ports = ordered_list_value(self.port)
 
         if not (len(self.labels) == len(self.ip_addresses) == len(self.ports)):
-            raise ModuleInitializationError(self, "List values for 'label', 'ip_address' and 'port' must contain exactly the same number of elements.")
+            raise ModuleInitializationError(
+                self,
+                "List values for 'label', 'ip_address' and 'port' must contain exactly the same number of elements.",
+            )
 
     def __init__(self, with_config=True):
         ProcessingModule.__init__(self, with_config)
 
-        setattr(self.__class__, 'initialize', IsolatedProcessingModule.initialize)
-        setattr(self.__class__, 'each_with_type', IsolatedProcessingModule.each_with_type)
+        setattr(self.__class__, "initialize", IsolatedProcessingModule.initialize)
+        setattr(
+            self.__class__, "each_with_type", IsolatedProcessingModule.each_with_type
+        )
 
     def _url(self, path):
         if self.task_id:
@@ -617,7 +640,9 @@ class IsolatedProcessingModule(ProcessingModule):
 
             return response
         except Exception as e:
-            raise ModuleExecutionError("Error communicating with agent ({}): {}".format(path, e))
+            raise ModuleExecutionError(
+                "Error communicating with agent ({}): {}".format(path, e)
+            )
 
     def _get(self, path, **kwargs):
         return self._make_request("GET", path, **kwargs).json()
@@ -626,8 +651,8 @@ class IsolatedProcessingModule(ProcessingModule):
         return self._make_request("POST", path, **kwargs).json()
 
     def _new_task(self):
-        response = self._get('/new_task')
-        self.task_id = response['task_id']
+        response = self._get("/new_task")
+        self.task_id = response["task_id"]
 
         if self.task_id is None:
             raise ModuleExecutionError("Could not get valid task id.")
@@ -636,73 +661,84 @@ class IsolatedProcessingModule(ProcessingModule):
         result = {}
 
         for setting in self.config:
-            result[setting['name']] = getattr(self, setting['name'])
+            result[setting["name"]] = getattr(self, setting["name"])
 
         return result
 
     def _send_module(self):
         fd = open(inspect.getsourcefile(self.__class__))
-        result = self._post('/module_update', files={'file': fd})
+        result = self._post("/module_update", files={"file": fd})
         fd.close()
 
-        result = self._post('/module_update_info', json={'name': self.name, 'config': self._get_config()})
+        result = self._post(
+            "/module_update_info",
+            json={"name": self.name, "config": self._get_config()},
+        )
 
-        if result['status'] != 'ok':
-            raise ModuleInitializationError(self, result['error'])
+        if result["status"] != "ok":
+            raise ModuleInitializationError(self, result["error"])
 
     def _get_file(self, filepath):
-        response = self._make_request('POST', '/get_file', data={'filepath': filepath}, stream=True)
+        response = self._make_request(
+            "POST", "/get_file", data={"filepath": filepath}, stream=True
+        )
 
         return save_response(response, filepath)
 
     def _get_results(self):
-        results = self._get('/results')
+        results = self._get("/results")
 
-        self.results = results['results']
-        self.should_restore = results['should_restore']
-        self.tags = results['_results']['tags']
+        self.results = results["results"]
+        self.should_restore = results["should_restore"]
+        self.tags = results["_results"]["tags"]
 
-        for level, message in results['_results']['logs']:
+        for level, message in results["_results"]["logs"]:
             self.log(level, message)
 
-        for name in results['_results']['probable_names']:
+        for name in results["_results"]["probable_names"]:
             self.add_probable_name(name)
 
-        for extraction in results['_results']['extractions']:
-            self.add_extraction(extraction, results['_results']['extractions'][extraction])
+        for extraction in results["_results"]["extractions"]:
+            self.add_extraction(
+                extraction, results["_results"]["extractions"][extraction]
+            )
 
-        for ioc in results['_results']['iocs']:
-            self.add_ioc(ioc, results['_results']['iocs'][ioc])
+        for ioc in results["_results"]["iocs"]:
+            self.add_ioc(ioc, results["_results"]["iocs"][ioc])
 
-        for file_type in results['_results']['generated_files']:
+        for file_type in results["_results"]["generated_files"]:
             local_files = []
 
-            for remote_file in results['_results']['generated_files'][file_type]:
+            for remote_file in results["_results"]["generated_files"][file_type]:
                 local_files.append(self._get_file(remote_file))
 
             self.register_files(file_type, local_files)
 
-        for f in results['_results']['extracted_files']:
+        for f in results["_results"]["extracted_files"]:
             self.add_extracted_file(self._get_file(f))
 
-        for name in results['_results']['support_files']:
-            self.add_support_file(name, self._get_file(results['_results']['support_files'][name]))
+        for name in results["_results"]["support_files"]:
+            self.add_support_file(
+                name, self._get_file(results["_results"]["support_files"][name])
+            )
 
-        return results['_results']['result']
+        return results["_results"]["result"]
 
     def _use_vm(self, index):
         self.locked_label = self.labels[index]
-        self.base_url = "http://{}:{}".format(self.ip_addresses[index], self.ports[index])
+        self.base_url = "http://{}:{}".format(
+            self.ip_addresses[index], self.ports[index]
+        )
         self.vm_record = "{}|{}".format(self.virtualization, self.locked_label)
 
     def _acquire_lock(self):
         LOCK_TIMEOUT = timedelta(minutes=120)
         WAIT_STEP = 15
 
-        vms = Internals.get(name='virtual_machines')
+        vms = Internals.get(name="virtual_machines")
 
         if vms is None:
-            vms = Internals({'name': 'virtual_machines'})
+            vms = Internals({"name": "virtual_machines"})
             vms.save()
 
         locked_vm = False
@@ -712,15 +748,17 @@ class IsolatedProcessingModule(ProcessingModule):
 
                 last_locked = "{}.last_locked".format(self.vm_record)
 
-                if vms.update_value([self.vm_record, 'locked'], True):
-                    vms.update_value([self.vm_record, 'last_locked'], datetime.now())
+                if vms.update_value([self.vm_record, "locked"], True):
+                    vms.update_value([self.vm_record, "last_locked"], datetime.now())
                     locked_vm = True
                     break
 
                 expired_date = datetime.now() - LOCK_TIMEOUT
-                if vms._update({'$set': {last_locked: datetime.now()}},
-                               {last_locked: {'$lt': expired_date}}):
-                    vms.update_value([self.vm_record, 'locked'], True)
+                if vms._update(
+                    {"$set": {last_locked: datetime.now()}},
+                    {last_locked: {"$lt": expired_date}},
+                ):
+                    vms.update_value([self.vm_record, "locked"], True)
                     locked_vm = True
                     break
 
@@ -728,27 +766,34 @@ class IsolatedProcessingModule(ProcessingModule):
                 sleep(WAIT_STEP)
 
     def _release_lock(self):
-        vms = Internals.get(name='virtual_machines')
-        vms.update_value([self.vm_record, 'locked'], False)
+        vms = Internals.get(name="virtual_machines")
+        vms.update_value([self.vm_record, "locked"], False)
 
     def _init_vm(self):
         from fame.core.module_dispatcher import dispatcher
+
         self._vm = dispatcher.get_virtualization_module(self.virtualization)
 
         if self._vm is None:
-            raise ModuleExecutionError('missing (or disabled) virtualization module: {}'.format(self.virtualization))
+            raise ModuleExecutionError(
+                "missing (or disabled) virtualization module: {}".format(
+                    self.virtualization
+                )
+            )
 
         self._vm.initialize(self.locked_label, self.base_url, self.snapshot)
         self._vm.prepare()
 
     def _restore_vm(self):
         if self.always_ready:
-            vms = Internals.get(name='virtual_machines')
+            vms = Internals.get(name="virtual_machines")
 
             if self.name not in vms[self.vm_record]:
                 vms.update_value([self.vm_record, self.name], 1)
             else:
-                vms.update_value([self.vm_record, self.name], vms[self.vm_record][self.name] + 1)
+                vms.update_value(
+                    [self.vm_record, self.name], vms[self.vm_record][self.name] + 1
+                )
 
             if vms[self.vm_record][self.name] >= self.restore_after:
                 self.should_restore = True
@@ -785,22 +830,22 @@ class IsolatedProcessingModule(ProcessingModule):
         # First, send target and start processing
         kwargs = {}
 
-        if target_type == 'url':
-            kwargs['data'] = {'url': target}
+        if target_type == "url":
+            kwargs["data"] = {"url": target}
         else:
-            fd = open(target, 'rb')
-            kwargs['files'] = {'file': fd}
+            fd = open(target, "rb")
+            kwargs["files"] = {"file": fd}
 
-        self._post('/module_each/{}'.format(target_type), **kwargs)
+        self._post("/module_each/{}".format(target_type), **kwargs)
 
-        if target_type != 'url':
+        if target_type != "url":
             fd.close()
 
         # Then, wait for processing to be over
-        ready = self._get('/ready')['ready']
+        ready = self._get("/ready")["ready"]
         while not ready:
             sleep(5)
-            ready = self._get('/ready')['ready']
+            ready = self._get("/ready")["ready"]
 
     @classmethod
     def static_info(cls):
@@ -813,7 +858,7 @@ class IsolatedProcessingModule(ProcessingModule):
             "acts_on": iterify(cls.acts_on),
             "generates": iterify(cls.generates),
             "triggered_by": iterify(cls.triggered_by),
-            "queue": cls.queue
+            "queue": cls.queue,
         }
 
         init_config_values(info)
@@ -892,7 +937,7 @@ class ThreatIntelligenceModule(Module):
                 list of tags delimited with ``,``).
         """
         for ioc in iocs:
-            self.ioc_submission(analysis, ioc['value'], ioc['tags'])
+            self.ioc_submission(analysis, ioc["value"], ioc["tags"])
 
     def ioc_submission(self, analysis, ioc, tags):
         """To implement. Perform a single IOC submission.
@@ -924,7 +969,7 @@ class ThreatIntelligenceModule(Module):
         for method in methods:
             for cls in inspect.getmro(method.__self__.__class__):
                 if method.__name__ in cls.__dict__:
-                    if cls.__name__ != 'ThreatIntelligenceModule':
+                    if cls.__name__ != "ThreatIntelligenceModule":
                         return True
         return False
 
@@ -1088,13 +1133,17 @@ class VirtualizationModule(Module):
             self.start()
 
         started_at = datetime.now()
-        while (started_at + timedelta(seconds=self.TIMEOUT) > datetime.now()):
+        while started_at + timedelta(seconds=self.TIMEOUT) > datetime.now():
             if self.is_ready():
                 break
             sleep(5)
         else:
             if should_raise:
-                raise ModuleExecutionError("could not restore virtual machine '{}' before timeout.".format(self.vm_label))
+                raise ModuleExecutionError(
+                    "could not restore virtual machine '{}' before timeout.".format(
+                        self.vm_label
+                    )
+                )
 
     def prepare(self):
         if not (self.is_running() and self.is_ready()):
@@ -1135,7 +1184,7 @@ class PreloadingModule(Module):
             The smallest values are used first (defaults to 100).
     """
 
-    queue = 'unix'
+    queue = "unix"
     priority = 100
 
     def __init__(self, with_config=True):
@@ -1144,7 +1193,7 @@ class PreloadingModule(Module):
         self.tags = []
 
     def preload(self, target):
-        """ To implement.
+        """To implement.
 
         Args:
             target (string): the hash that is to be analyzed
@@ -1164,16 +1213,20 @@ class PreloadingModule(Module):
     def execute(self, analysis):
         try:
             self._analysis = analysis
-            self.init_options(analysis['options'])
+            self.init_options(analysis["options"])
             return self.preload(self._analysis.get_main_file())
         except ModuleExecutionError as e:
-            self.log("error", "Could not run on %s: %s" % (
-                self._analysis.get_main_file(), e))
+            self.log(
+                "error", "Could not run on %s: %s" % (self._analysis.get_main_file(), e)
+            )
             return False
         except Exception:
             tb = traceback.format_exc()
-            self.log("error", "Exception occurred while execting module on %s.\n %s" % (
-                self._analysis.get_main_file(), tb))
+            self.log(
+                "error",
+                "Exception occurred while execting module on %s.\n %s"
+                % (self._analysis.get_main_file(), tb),
+            )
             return False
 
     @classmethod
@@ -1185,7 +1238,7 @@ class PreloadingModule(Module):
             "config": cls.config,
             "diffs": {},
             "queue": cls.queue,
-            "priority": cls.priority
+            "priority": cls.priority,
         }
 
         init_config_values(info)

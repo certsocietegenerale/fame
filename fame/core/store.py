@@ -11,7 +11,11 @@ class Store:
 
     def init(self):
         # Connection
-        self._con = MongoClient(fame_config.mongo_host, int(fame_config.mongo_port), serverSelectionTimeoutMS=10000)
+        self._con = MongoClient(
+            fame_config.mongo_host,
+            int(fame_config.mongo_port),
+            serverSelectionTimeoutMS=10000,
+        )
         self.db = self._con[fame_config.mongo_db]
 
         # Collections
@@ -35,7 +39,9 @@ class Store:
         # Authenticate
         if fame_config.mongo_user and fame_config.mongo_password:
             self.db.authenticate(
-                fame_config.mongo_user, quote_plus(fame_config.mongo_password), mechanism="SCRAM-SHA-1"
+                fame_config.mongo_user,
+                quote_plus(fame_config.mongo_password),
+                mechanism="SCRAM-SHA-1",
             )
 
         # Create indexes
