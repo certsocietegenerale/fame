@@ -33,6 +33,15 @@
                     </div>
 
                     <div class="row">
+                        <label for="address" class="col-sm-2 control-label">Branch *</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" name="branch" value="{{data.repository.branch}}" required />
+                            <p class="help-block">Branch of the git repository. Usually 'master' or 'main'.</p>
+                        </div>
+                        <div class="col-sm-2"></div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-sm-2"></div>
                         <div class="col-sm-8">
                             <label class="checkbox checkbox-inline">

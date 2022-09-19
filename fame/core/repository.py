@@ -56,7 +56,10 @@ class Repository(MongoDict):
     def do_clone(self):
         print(("[+] Cloning '{}'".format(self['name'])))
         try:
-            Repo.clone_from(self['address'], self.path(), env=dict(GIT_SSH_COMMAND=self['ssh_cmd']))
+            if 'branch' in self and self['branch']:
+                Repo.clone_from(self['address'], self.path(), env=dict(GIT_SSH_COMMAND=self['ssh_cmd']), branch=self['branch'])
+            else:
+                Repo.clone_from(self['address'], self.path(), env=dict(GIT_SSH_COMMAND=self['ssh_cmd']))
 
             dispatcher.update_modules(self)
             if self['status'] == 'cloning':

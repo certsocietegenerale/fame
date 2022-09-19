@@ -154,7 +154,8 @@ class ModulesView(FlaskView, UIView):
                     "address": "git@github.com:certsocietegenerale/fame_modules.git",
                     "name": "community",
                     "private": false,
-                    "status": "active"
+                    "status": "active",
+                    "branch": "master"
                 },
                 ...
             ]
@@ -437,6 +438,7 @@ class ModulesView(FlaskView, UIView):
 
         :form name: name of the repository (should be a valid package name).
         :form address: HTTPs or SSH address of the repository.
+        :form branch: branch of the repository
         :form private: boolean specifying if the repository is private. See
             Administration Guide for more details on private repositories.
         """
@@ -444,16 +446,20 @@ class ModulesView(FlaskView, UIView):
         repository = Repository()
 
         if request.method == 'POST':
-            for field in ['name', 'address']:
+            for field in ['name', 'address', 'branch']:
                 repository[field] = request.form.get(field)
                 if repository[field] is None or repository[field] == "":
                     flash("{} is required.".format(field), 'danger')
                     return validation_error()
 
-                existing_repository = Repository.get(**{field: repository[field]})
-                if existing_repository:
-                    flash("There is already a repository with this {}.".format(field), 'danger')
-                    return validation_error()
+            existing_repository = Repository.get(**{'name': repository['name']})
+            if existing_repository:
+                flash("There is already a repository with this name.".format(field), 'danger')
+                return validation_error()
+            existing_repository = Repository.get(**{'branch': repository['branch'], 'address':repository['address']})
+            if existing_repository:
+                flash("There is already a repository with this address/branch couple.".format(field), 'danger')
+                return validation_error()
 
             value = request.form.get('private')
             repository['private'] = (value is not None) and (value not in ['0', 'False'])

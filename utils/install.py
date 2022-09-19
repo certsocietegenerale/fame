@@ -147,7 +147,8 @@ def add_community_repository():
             'name': 'community',
             'address': 'https://github.com/certsocietegenerale/fame_modules.git',
             'private': False,
-            'status': 'cloning'
+            'status': 'cloning',
+            'branch': 'master'
         })
         repo.save()
         repo.do_clone()
