@@ -11,11 +11,11 @@ from web.views.negotiation import render, redirect, validation_error
 from web.views.helpers import requires_permission, get_or_404, clean_users
 
 
-auth_module = import_module('web.auth.{}.views'.format(fame_config.auth))
+auth_module = import_module("web.auth.{}.views".format(fame_config.auth))
 
 
 class UsersView(FlaskView, UIView):
-    @requires_permission('manage_users')
+    @requires_permission("manage_users")
     def index(self):
         """Get all users.
 
@@ -34,25 +34,25 @@ class UsersView(FlaskView, UIView):
         """
         users = {"users": clean_users(list(User.find()))}
 
-        return render(users, 'users/index.html')
+        return render(users, "users/index.html")
 
-    @requires_permission('manage_users')
-    @route('/new', methods=['GET'])
+    @requires_permission("manage_users")
+    @route("/new", methods=["GET"])
     def new(self):
-        context = {'user': {}, 'permissions': dispatcher.permissions}
+        context = {"user": {}, "permissions": dispatcher.permissions}
 
-        return render(context, 'users/new.html')
+        return render(context, "users/new.html")
 
     def _valid_form(self, name, email, groups, previous_email=None):
-        for var in ['name', 'email', 'groups']:
+        for var in ["name", "email", "groups"]:
             if not locals()[var]:
-                flash('"{}" is required'.format(var), 'danger')
+                flash('"{}" is required'.format(var), "danger")
                 return False
 
         if (previous_email is None) or (previous_email != email):
-            existing_user = User.get_collection().find_one({'email': email})
+            existing_user = User.get_collection().find_one({"email": email})
             if existing_user:
-                flash('User with email "{}" already exists.'.format(email), 'danger')
+                flash('User with email "{}" already exists.'.format(email), "danger")
                 return False
 
         return True
@@ -63,15 +63,15 @@ class UsersView(FlaskView, UIView):
         for permission in dispatcher.permissions:
             value = request.form.get("permission_{}".format(permission))
 
-            if (value is not None) and (value not in ['0', 'False']):
+            if (value is not None) and (value not in ["0", "False"]):
                 current_permissions.add(permission)
             else:
                 current_permissions.discard(permission)
 
         return list(current_permissions)
 
-    @requires_permission('manage_users')
-    @route('/create', methods=['POST'])
+    @requires_permission("manage_users")
+    @route("/create", methods=["POST"])
     def create(self):
         """Create a user.
 
@@ -88,31 +88,33 @@ class UsersView(FlaskView, UIView):
         :form permission_VALUE: specify a value different than ``0`` or ``False``
             for all permissions the user should have.
         """
-        name = request.form.get('name')
-        email = request.form.get('email').lower()
-        groups = [g for g in request.form.get('groups', '').split(',') if g]
+        name = request.form.get("name")
+        email = request.form.get("email").lower()
+        groups = [g for g in request.form.get("groups", "").split(",") if g]
 
         if not self._valid_form(name, email, groups):
             return validation_error()
 
-        user = User({
-            'name': name,
-            'email': email.lower(),
-            'groups': groups,
-            'default_sharing': groups,
-            'permissions': self.get_permissions(),
-            'enabled': True
-        })
+        user = User(
+            {
+                "name": name,
+                "email": email.lower(),
+                "groups": groups,
+                "default_sharing": groups,
+                "permissions": self.get_permissions(),
+                "enabled": True,
+            }
+        )
 
         if not auth_module.create_user(user):
             return validation_error()
 
         user.save()
 
-        return redirect({'user': clean_users(user)}, url_for('UsersView:index'))
+        return redirect({"user": clean_users(user)}, url_for("UsersView:index"))
 
-    @requires_permission('manage_users')
-    @route('/<id>/update', methods=['POST'])
+    @requires_permission("manage_users")
+    @route("/<id>/update", methods=["POST"])
     def update(self, id):
         """Update a user.
 
@@ -129,25 +131,27 @@ class UsersView(FlaskView, UIView):
         :form permission_VALUE: specify a value different than ``0`` or ``False``
             for all permissions the user should have.
         """
-        name = request.form.get('name')
-        email = request.form.get('email').lower()
-        groups = [g for g in request.form.get('groups', '').split(',') if g]
+        name = request.form.get("name")
+        email = request.form.get("email").lower()
+        groups = [g for g in request.form.get("groups", "").split(",") if g]
 
         user = User(get_or_404(User.get_collection(), _id=id))
 
-        if not self._valid_form(name, email, groups, user['email']):
+        if not self._valid_form(name, email, groups, user["email"]):
             return validation_error()
 
-        user['name'] = name
-        user['email'] = email
-        user['groups'] = groups
-        user['permissions'] = self.get_permissions(user['permissions'])
+        user["name"] = name
+        user["email"] = email
+        user["groups"] = groups
+        user["permissions"] = self.get_permissions(user["permissions"])
         user.save()
 
-        return redirect({'user': clean_users(user)}, url_for('UsersView:get', id=user['_id']))
+        return redirect(
+            {"user": clean_users(user)}, url_for("UsersView:get", id=user["_id"])
+        )
 
-    @requires_permission('manage_users')
-    @route('/<id>/enable', methods=['POST'])
+    @requires_permission("manage_users")
+    @route("/<id>/enable", methods=["POST"])
     def enable(self, id):
         """Enable a user.
 
@@ -160,12 +164,12 @@ class UsersView(FlaskView, UIView):
         :>json User user: modified user.
         """
         user = User(get_or_404(User.get_collection(), _id=id))
-        user.update_value('enabled', True)
+        user.update_value("enabled", True)
 
-        return redirect({'user': clean_users(user)}, url_for('UsersView:index'))
+        return redirect({"user": clean_users(user)}, url_for("UsersView:index"))
 
-    @requires_permission('manage_users')
-    @route('/<id>/disable', methods=['POST'])
+    @requires_permission("manage_users")
+    @route("/<id>/disable", methods=["POST"])
     def disable(self, id):
         """Disable a user.
 
@@ -178,12 +182,15 @@ class UsersView(FlaskView, UIView):
         :>json User user: modified user.
         """
         user = User(get_or_404(User.get_collection(), _id=id))
-        user.update_value('enabled', False)
+        user.update_value("enabled", False)
 
-        return redirect({'user': clean_users(user)}, url_for('UsersView:index'))
+        return redirect({"user": clean_users(user)}, url_for("UsersView:index"))
 
     def ensure_permission(self, id):
-        if not ((str(current_user['_id']) == id) or current_user.has_permission('manage_users')):
+        if not (
+            (str(current_user["_id"]) == id)
+            or current_user.has_permission("manage_users")
+        ):
             abort(403)
 
     def get(self, id):
@@ -206,9 +213,12 @@ class UsersView(FlaskView, UIView):
         self.ensure_permission(id)
         user = User(get_or_404(User.get_collection(), _id=id))
 
-        return render({'user': clean_users(user), 'permissions': dispatcher.permissions}, 'users/profile.html')
+        return render(
+            {"user": clean_users(user), "permissions": dispatcher.permissions},
+            "users/profile.html",
+        )
 
-    @route('/<id>/default_sharing', methods=['POST'])
+    @route("/<id>/default_sharing", methods=["POST"])
     def default_sharing(self, id):
         """Change a user's default sharing.
 
@@ -223,20 +233,20 @@ class UsersView(FlaskView, UIView):
         self.ensure_permission(id)
 
         user = User(get_or_404(User.get_collection(), _id=id))
-        groups = request.form.get('groups', '').split(',')
+        groups = request.form.get("groups", "").split(",")
 
         for group in groups:
-            if group in user['groups']:
+            if group in user["groups"]:
                 break
         else:
-            flash('You have to at least keep one of your groups.', 'danger')
+            flash("You have to at least keep one of your groups.", "danger")
             return redirect(request.referrer)
 
-        user.update_value('default_sharing', groups)
+        user.update_value("default_sharing", groups)
 
-        return redirect({'user': clean_users(user)}, request.referrer)
+        return redirect({"user": clean_users(user)}, request.referrer)
 
-    @route('/<id>/reset_api', methods=['POST'])
+    @route("/<id>/reset_api", methods=["POST"])
     def reset_api(self, id):
         """Reset a user's API key.
 
@@ -251,6 +261,6 @@ class UsersView(FlaskView, UIView):
         self.ensure_permission(id)
 
         user = User(get_or_404(User.get_collection(), _id=id))
-        user.update_value('api_key', User.generate_api_key())
+        user.update_value("api_key", User.generate_api_key())
 
-        return redirect({'user': clean_users(user)}, request.referrer)
+        return redirect({"user": clean_users(user)}, request.referrer)

@@ -25,9 +25,11 @@ def _check_ldap_settings_present():
         return True
 
     return (
-        _check("ldap_uri") and _check("ldap_user") and
-        _check("ldap_password") and _check("ldap_filter_dn") and
-        _check("ldap_filter_email")
+        _check("ldap_uri")
+        and _check("ldap_user")
+        and _check("ldap_password")
+        and _check("ldap_filter_dn")
+        and _check("ldap_filter_email")
     )
 
 
@@ -49,8 +51,9 @@ def _find_user_by_email(con, email):
         return None
 
     users = con.search_s(
-        fame_config.ldap_filter_dn, ldap.SCOPE_SUBTREE,
-        filterstr=fame_config.ldap_filter_email.format(email)
+        fame_config.ldap_filter_dn,
+        ldap.SCOPE_SUBTREE,
+        filterstr=fame_config.ldap_filter_email.format(email),
     )
 
     ldap_user = None
@@ -59,20 +62,25 @@ def _find_user_by_email(con, email):
         user = users[0][1]
 
         principal = None
-        if 'userPrincipalName' in user and len(user['userPrincipalName']) != 0:
-            principal = user['userPrincipalName'][0].decode()
+        if "userPrincipalName" in user and len(user["userPrincipalName"]) != 0:
+            principal = user["userPrincipalName"][0].decode()
 
-        full_name = user['cn'][0].decode()
-        email = user['mail'][0].decode()
-        enabled = (int(user['userAccountControl'][0].decode()) & 0x2) == 0
-        groups = [group for group in [x.decode().lower().split(",")[0].lstrip("cn=") for x in user['memberOf']]]
+        full_name = user["cn"][0].decode()
+        email = user["mail"][0].decode()
+        enabled = (int(user["userAccountControl"][0].decode()) & 0x2) == 0
+        groups = [
+            group
+            for group in [
+                x.decode().lower().split(",")[0].lstrip("cn=") for x in user["memberOf"]
+            ]
+        ]
 
         ldap_user = {
             "principal": principal or full_name,
             "name": full_name,
             "mail": email,
             "enabled": enabled,
-            "groups": groups
+            "groups": groups,
         }
 
     return ldap_user
@@ -87,7 +95,7 @@ def ldap_authenticate(email, password):
 
     if ldap_user:
         try:
-            con.simple_bind_s(ldap_user['principal'], password)
+            con.simple_bind_s(ldap_user["principal"], password)
             return ldap_user
         except ldap.INVALID_CREDENTIALS:
             # forward exception to view
@@ -97,13 +105,15 @@ def ldap_authenticate(email, password):
 
 
 def auth_token(user):
-    return codecs.encode(os.urandom(12), 'hex').decode() + make_secure_token(user['email'], os.urandom(32))
+    return codecs.encode(os.urandom(12), "hex").decode() + make_secure_token(
+        user["email"], os.urandom(32)
+    )
 
 
 def password_reset_token(user):
     signer = TimestampSigner(fame_config.secret_key)
 
-    return signer.sign(str(user['_id']))
+    return signer.sign(str(user["_id"]))
 
 
 def validate_password_reset_token(token):
@@ -121,19 +131,21 @@ def get_mapping(collection, name):
 
 
 def create_user(ldap_user):
-    groups = get_mapping(ldap_user['groups'], "groups")
-    default_sharing = get_mapping(ldap_user['groups'], "default_sharing")
+    groups = get_mapping(ldap_user["groups"], "groups")
+    default_sharing = get_mapping(ldap_user["groups"], "default_sharing")
     permissions = get_mapping(ldap_user["groups"], "permissions")
 
-    user = User({
-        'name': ldap_user['name'],
-        'email': ldap_user['mail'],
-        'enabled': ldap_user['enabled'],
-        'groups': groups,
-        'default_sharing': default_sharing,
-        'permissions': permissions,
-        'last_activity', datetime.now().timestamp(),
-    })
+    user = User(
+        {
+            "name": ldap_user["name"],
+            "email": ldap_user["mail"],
+            "enabled": ldap_user["enabled"],
+            "groups": groups,
+            "default_sharing": default_sharing,
+            "permissions": permissions,
+            "last_activity": datetime.now().timestamp(),
+        }
+    )
     user.save()
     user.generate_avatar()
 
@@ -141,25 +153,25 @@ def create_user(ldap_user):
 
 
 def update_or_create_user(ldap_user):
-    user = User.get(email=ldap_user['mail'])
+    user = User.get(email=ldap_user["mail"])
 
     if user:
         # update groups
-        groups = get_mapping(ldap_user['groups'], "groups")
-        user.update_value('groups', groups)
+        groups = get_mapping(ldap_user["groups"], "groups")
+        user.update_value("groups", groups)
 
         # update default sharings
-        default_sharing = get_mapping(ldap_user['groups'], "default_sharing")
-        user.update_value('default_sharing', default_sharing)
+        default_sharing = get_mapping(ldap_user["groups"], "default_sharing")
+        user.update_value("default_sharing", default_sharing)
 
         # update permissions
         permissions = get_mapping(ldap_user["groups"], "permissions")
-        user.update_value('permissions', permissions)
+        user.update_value("permissions", permissions)
 
         # enable/disable user
-        user.update_value('enabled', ldap_user['enabled'])
+        user.update_value("enabled", ldap_user["enabled"])
 
-        user.update_value('last_activity', datetime.now().timestamp())
+        user.update_value("last_activity", datetime.now().timestamp())
 
         return user_if_enabled(user)
 
@@ -174,7 +186,7 @@ def authenticate(email, password):
         user = User.get(email=email)
         if user:
             print(("Disabling user {}: not available in LDAP".format(email)))
-            user.update_value('enabled', False)
+            user.update_value("enabled", False)
 
         return user
 

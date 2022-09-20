@@ -16,7 +16,7 @@ def auth_token(user):
 def password_reset_token(user):
     signer = TimestampSigner(fame_config.secret_key)
 
-    return signer.sign(str(user['_id']))
+    return signer.sign(str(user["_id"]))
 
 
 def validate_password_reset_token(token):
@@ -29,18 +29,20 @@ def create_user(name, email, groups, default_sharing, permissions, password=None
     user = User.get(email=email.lower())
 
     if user:
-        print("/!\ User with this email address already exists.")
+        print("/!\\ User with this email address already exists.")
     else:
-        user = User({
-            'name': name,
-            'email': email.lower(),
-            'groups': groups,
-            'default_sharing': default_sharing,
-            'permissions': permissions,
-            'enabled': True
-        })
+        user = User(
+            {
+                "name": name,
+                "email": email.lower(),
+                "groups": groups,
+                "default_sharing": default_sharing,
+                "permissions": permissions,
+                "enabled": True,
+            }
+        )
         if password:
-            user['pwd_hash'] = generate_password_hash(password)
+            user["pwd_hash"] = generate_password_hash(password)
         user.save()
         print("[+] User created.")
 
@@ -54,10 +56,10 @@ def authenticate(email, password):
     user = User.get(email=email.lower())
 
     if user_if_enabled(user):
-        if 'pwd_hash' in user:
-            if check_password_hash(user['pwd_hash'], password):
-                user.update_value('auth_token', auth_token(user))
-                user.update_value('last_activity', datetime.now().timestamp())
+        if "pwd_hash" in user:
+            if check_password_hash(user["pwd_hash"], password):
+                user.update_value("auth_token", auth_token(user))
+                user.update_value("last_activity", datetime.now().timestamp())
                 login_user(user)
                 return user
 
@@ -65,5 +67,5 @@ def authenticate(email, password):
 
 
 def change_password(user, password):
-    user.update_value('pwd_hash', generate_password_hash(password))
-    user.update_value('auth_token', auth_token(user))
+    user.update_value("pwd_hash", generate_password_hash(password))
+    user.update_value("auth_token", auth_token(user))

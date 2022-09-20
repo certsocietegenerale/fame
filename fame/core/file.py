@@ -33,23 +33,22 @@ def _hash_by_length(hash):
 
 
 class File(MongoDict):
-    collection_name = 'files'
+    collection_name = "files"
 
-    def __init__(self, values=None, filename=None, stream=None, create=True,
-                 hash=""):
+    def __init__(self, values=None, filename=None, stream=None, create=True, hash=""):
         # When only passing a dict
         if isinstance(values, dict):
-            self['comments'] = []
+            self["comments"] = []
             MongoDict.__init__(self, values)
 
         else:
             MongoDict.__init__(self, {})
-            self['probable_names'] = []
-            self['parent_analyses'] = []
-            self['groups'] = []
-            self['owners'] = []
-            self['comments'] = []
-            self['analysis'] = []
+            self["probable_names"] = []
+            self["parent_analyses"] = []
+            self["groups"] = []
+            self["owners"] = []
+            self["comments"] = []
+            self["analysis"] = []
 
             if hash:
                 self._init_with_hash(hash)
@@ -65,17 +64,17 @@ class File(MongoDict):
         existing_file = None
 
         if sha256:
-            self['sha256'] = sha256
-            existing_file = self.collection.find_one({'sha256': sha256})
+            self["sha256"] = sha256
+            existing_file = self.collection.find_one({"sha256": sha256})
         elif sha1:
-            self['sha1'] = sha1
-            existing_file = self.collection.find_one({'sha1': sha1})
+            self["sha1"] = sha1
+            existing_file = self.collection.find_one({"sha1": sha1})
         elif md5:
-            self['md5'] = md5
-            existing_file = self.collection.find_one({'md5': md5})
+            self["md5"] = md5
+            existing_file = self.collection.find_one({"md5": md5})
         else:
             # otherwise, try the hash as filename (aka hash submission)
-            self.collection.find_one({'names': [hash]})
+            self.collection.find_one({"names": [hash]})
 
         if existing_file:
             self.existing = True
@@ -93,9 +92,9 @@ class File(MongoDict):
         # If the file already exists in the database, update it
         self.existing = False
         existing_file = (
-            self.collection.find_one({'sha256': self['sha256']}) or
-            self.collection.find_one({'sha1': self['sha1']}) or
-            self.collection.find_one({'md5': self['md5']})
+            self.collection.find_one({"sha256": self["sha256"]})
+            or self.collection.find_one({"sha1": self["sha1"]})
+            or self.collection.find_one({"md5": self["md5"]})
         )
 
         if existing_file:
@@ -103,106 +102,113 @@ class File(MongoDict):
             self.existing = True
 
         # If the file doesn't exist, or exists as a hash submission, compute default properties and save
-        if create and ((existing_file is None) or (self['type'] == 'hash')):
+        if create and ((existing_file is None) or (self["type"] == "hash")):
             self._store_file(filename, stream)
             self._compute_default_properties()
             self.save()
 
-    def add_comment(self, analyst_id, comment, analysis_id=None, probable_name=None, notify=None):
+    def add_comment(
+        self, analyst_id, comment, analysis_id=None, probable_name=None, notify=None
+    ):
         if probable_name:
             self.add_probable_name(probable_name)
 
-        self.append_to('comments', {
-            'analyst': analyst_id,
-            'comment': comment,
-            'analysis': analysis_id,
-            'probable_name': probable_name,
-            'date': datetime.datetime.now()
-        })
+        self.append_to(
+            "comments",
+            {
+                "analyst": analyst_id,
+                "comment": comment,
+                "analysis": analysis_id,
+                "probable_name": probable_name,
+                "date": datetime.datetime.now(),
+            },
+        )
         if notify is not None and analysis_id is not None:
             self.notify_new_comment(analysis_id, analyst_id, comment)
 
     def notify_new_comment(self, analysis_id, commentator_id, comment):
-        commentator = store.users.find_one({'_id': commentator_id})
-        analysis = store.analysis.find_one({'_id': ObjectId(analysis_id)})
-        analyst_id = analysis['analyst']
+        commentator = store.users.find_one({"_id": commentator_id})
+        analysis = store.analysis.find_one({"_id": ObjectId(analysis_id)})
+        analyst_id = analysis["analyst"]
         recipients = set()
         # First let's add submiter analyst and check if he is not commentator
         if commentator_id != analyst_id:
-            analyst = store.users.find_one({'_id': analysis['analyst']})
-            recipients.add(analyst['email'])
+            analyst = store.users.find_one({"_id": analysis["analyst"]})
+            recipients.add(analyst["email"])
         # iter on commentators and add them as recipient
-        for comment in self['comments']:
-            if comment['analyst'] not in [analyst_id, commentator_id]:
-                recipient = store.users.find_one({'_id': comment['analyst']})
-                recipients.add(recipient['email'])
+        for comment in self["comments"]:
+            if comment["analyst"] not in [analyst_id, commentator_id]:
+                recipient = store.users.find_one({"_id": comment["analyst"]})
+                recipients.add(recipient["email"])
         if len(recipients):
             config = Config.get(name="email").get_values()
             analysis_url = "{0}/analyses/{1}".format(fame_config.fame_url, analysis_id)
-            body = notification_body_tpl.format(commentator['name'],
-                                                analysis_url,
-                                                comment['comment'])
+            body = notification_body_tpl.format(
+                commentator["name"], analysis_url, comment["comment"]
+            )
             email_server = EmailServer()
             if email_server.is_connected:
                 msg = email_server.new_message("[FAME] New comment on analysis", body)
                 msg.send(list(recipients))
 
     def add_probable_name(self, probable_name):
-        for name in self['probable_names']:
+        for name in self["probable_names"]:
             if name.find(probable_name) != -1 or probable_name.find(name) != -1:
                 break
         else:
-            self.append_to('probable_names', probable_name)
+            self.append_to("probable_names", probable_name)
 
     def add_owners(self, owners):
         for owner in owners:
-            self.append_to('owners', owner)
+            self.append_to("owners", owner)
 
     def remove_group(self, group):
         # Update file
-        self.remove_from('groups', group)
+        self.remove_from("groups", group)
 
         # Update previous analysis
-        for analysis_id in self['analysis']:
-            analysis = Analysis(store.analysis.find_one({'_id': ObjectId(analysis_id)}))
-            analysis.remove_from('groups', group)
+        for analysis_id in self["analysis"]:
+            analysis = Analysis(store.analysis.find_one({"_id": ObjectId(analysis_id)}))
+            analysis.remove_from("groups", group)
 
     def add_groups(self, groups):
         # Update file
         for group in groups:
-            self.append_to('groups', group)
+            self.append_to("groups", group)
 
         # Update previous analysis
-        for analysis_id in self['analysis']:
-            analysis = Analysis(store.analysis.find_one({'_id': ObjectId(analysis_id)}))
+        for analysis_id in self["analysis"]:
+            analysis = Analysis(store.analysis.find_one({"_id": ObjectId(analysis_id)}))
             for group in groups:
-                analysis.append_to('groups', group)
+                analysis.append_to("groups", group)
 
     # Tries to perform 'module_name' on this file
     def analyze(self, groups, analyst, modules=None, options=None):
-        analysis = Analysis({
-            'file': self['_id'],
-            'modules': modules or [],
-            'options': options or {},
-            'groups': list(set(groups + self['groups'])),
-            'analyst': analyst
-        })
+        analysis = Analysis(
+            {
+                "file": self["_id"],
+                "modules": modules or [],
+                "options": options or {},
+                "groups": list(set(groups + self["groups"])),
+                "analyst": analyst,
+            }
+        )
         analysis.save()
 
         self.add_groups(groups)
-        self.append_to('analysis', analysis['_id'])
+        self.append_to("analysis", analysis["_id"])
 
         analysis.resume()
 
         return analysis
 
     def add_parent_analysis(self, analysis):
-        self.append_to('parent_analyses', analysis['_id'])
+        self.append_to("parent_analyses", analysis["_id"])
 
     # Update existing record
     def _add_to_previous(self, existing_record, name):
         self.update(existing_record)
-        self.append_to('names', name)
+        self.append_to("names", name)
 
     # Compute Hashes for current file
     def _compute_hashes(self, stream):
@@ -220,89 +226,89 @@ class File(MongoDict):
                 stream.seek(0, 0)
                 break
 
-        self['md5'] = md5.hexdigest()
-        self['sha1'] = sha1.hexdigest()
-        self['sha256'] = sha256.hexdigest()
+        self["md5"] = md5.hexdigest()
+        self["sha1"] = sha1.hexdigest()
+        self["sha256"] = sha256.hexdigest()
 
     # Compute default properties
     # For now, just 'name' and 'type'
     def _compute_default_properties(self, hash_only=False):
         if not hash_only:
-            self['names'] = [os.path.basename(self['filepath'])]
-            self['detailed_type'] = magic.from_file(self['filepath'])
-            self['mime'] = magic.from_file(self['filepath'], mime=True)
-            self['size'] = os.path.getsize(self['filepath'])
+            self["names"] = [os.path.basename(self["filepath"])]
+            self["detailed_type"] = magic.from_file(self["filepath"])
+            self["mime"] = magic.from_file(self["filepath"], mime=True)
+            self["size"] = os.path.getsize(self["filepath"])
 
         # Init antivirus status
-        self['antivirus'] = {}
+        self["antivirus"] = {}
 
         for module in dispatcher.get_antivirus_modules():
-            self['antivirus'][module.name] = False
+            self["antivirus"][module.name] = False
 
         self._set_type(hash_only)
 
     # initialize all necessary values for hash analysis
     def _init_hash(self, hash):
-        self['type'] = 'hash'
-        self['names'] = [hash]
-        self['filepath'] = hash
+        self["type"] = "hash"
+        self["names"] = [hash]
+        self["filepath"] = hash
 
     # Convert mime/types into clearer type
     def _set_type(self, hash_only=False):
         if hash_only:
             # cannot say anything about the file if we only know the hash
-            self['type'] = "hash"
+            self["type"] = "hash"
             return
 
         config = Config.get(name="types").get_values()
         config = ConfigObject(from_string=config.mappings)
-        detailed_types = config.get('details')
-        extensions = config.get('extensions')
+        detailed_types = config.get("details")
+        extensions = config.get("extensions")
 
-        self['type'] = self['mime']
+        self["type"] = self["mime"]
 
         # First, look at extensions
         for ext in extensions:
-            if self['filepath'].split('.')[-1].lower() == ext:
-                self['type'] = extensions.get(ext)
+            if self["filepath"].split(".")[-1].lower() == ext:
+                self["type"] = extensions.get(ext)
                 break
         # Otherwise, look in 'detailed_types'
         else:
             for t in detailed_types:
-                if self['detailed_type'].lower().startswith(t.lower()):
-                    self['type'] = detailed_types.get(t)
+                if self["detailed_type"].lower().startswith(t.lower()):
+                    self["type"] = detailed_types.get(t)
                     break
             # Or mime types
             else:
                 types = config.get("types")
-                if types.get(self['mime']) is not None:
-                    self['type'] = types.get(self['mime'])
+                if types.get(self["mime"]) is not None:
+                    self["type"] = types.get(self["mime"])
 
         # Run Filetype modules, starting with the most specific ones
-        filetype_modules = dispatcher.get_filetype_modules_for(self['type'])
-        filetype_modules += dispatcher.get_filetype_modules_for('*')
+        filetype_modules = dispatcher.get_filetype_modules_for(self["type"])
+        filetype_modules += dispatcher.get_filetype_modules_for("*")
 
         for module in filetype_modules:
             try:
-                known_type = module.recognize(self['filepath'], self['type'])
+                known_type = module.recognize(self["filepath"], self["type"])
                 if known_type:
-                    self['type'] = known_type
+                    self["type"] = known_type
                     break
-            except:
+            except Exception:
                 pass
 
     def _store_file(self, filename, stream):
-        self['filepath'] = '{0}/{1}'.format(self['sha256'], filename)
-        self['filepath'] = os.path.join(fame_config.storage_path, self['filepath'])
+        self["filepath"] = "{0}/{1}".format(self["sha256"], filename)
+        self["filepath"] = os.path.join(fame_config.storage_path, self["filepath"])
 
         # Create parent dirs if they don't exist
         try:
-            os.makedirs(os.path.join(fame_config.storage_path, self['sha256']))
-        except:
+            os.makedirs(os.path.join(fame_config.storage_path, self["sha256"]))
+        except Exception:
             pass
 
         # Save file contents
-        with open(self['filepath'], "wb") as fd:
+        with open(self["filepath"], "wb") as fd:
             while True:
                 data = stream.read(4096)
                 if data:
@@ -311,5 +317,6 @@ class File(MongoDict):
                     stream.seek(0, 0)
                     break
 
+
 # For cyclic imports
-from fame.core.analysis import Analysis
+from fame.core.analysis import Analysis  # noqa: E305

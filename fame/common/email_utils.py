@@ -11,51 +11,51 @@ from fame.common.exceptions import MissingConfiguration
 
 
 NAMED_CONFIG = {
-    'email': {
-        'description': 'For FAME to be able to send emails.',
-        'config': [
+    "email": {
+        "description": "For FAME to be able to send emails.",
+        "config": [
             {
-                'name': 'host',
-                'type': 'str',
-                'default': 'localhost',
-                'description': 'Hostname or IP address of SMTP server'
+                "name": "host",
+                "type": "str",
+                "default": "localhost",
+                "description": "Hostname or IP address of SMTP server",
             },
             {
-                'name': 'port',
-                'type': 'integer',
-                'default': 25,
-                'description': 'Port on which the SMTP server is listening'
+                "name": "port",
+                "type": "integer",
+                "default": 25,
+                "description": "Port on which the SMTP server is listening",
             },
             {
-                'name': 'username',
-                'type': 'str',
-                'default': '',
-                'description': 'Username if SMTP server requires authentication'
+                "name": "username",
+                "type": "str",
+                "default": "",
+                "description": "Username if SMTP server requires authentication",
             },
             {
-                'name': 'password',
-                'type': 'str',
-                'default': '',
-                'description': 'Password if SMTP server requires authentication'
+                "name": "password",
+                "type": "str",
+                "default": "",
+                "description": "Password if SMTP server requires authentication",
             },
             {
-                'name': 'tls',
-                'type': 'bool',
-                'default': False,
-                'description': 'Use TLS to connect to SMTP server ?'
+                "name": "tls",
+                "type": "bool",
+                "default": False,
+                "description": "Use TLS to connect to SMTP server ?",
             },
             {
-                'name': 'from_address',
-                'type': 'str',
-                'description': 'Email address used for "From"'
+                "name": "from_address",
+                "type": "str",
+                "description": 'Email address used for "From"',
             },
             {
-                'name': 'replyto',
-                'type': 'str',
-                'default': None,
-                'description': 'Email address used for "Reply-to" if different from "From"'
+                "name": "replyto",
+                "type": "str",
+                "default": None,
+                "description": 'Email address used for "Reply-to" if different from "From"',
             },
-        ]
+        ],
     }
 }
 
@@ -69,10 +69,10 @@ class EmailMessage:
         self.server = server
 
         self.msg = MIMEMultipart()
-        self.msg['Subject'] = subject
-        self.msg['From'] = server.config.from_address
-        self.msg['Reply-to'] = server.config.replyto or server.config.from_address
-        self.msg['Return-path'] = server.config.replyto or server.config.from_address
+        self.msg["Subject"] = subject
+        self.msg["From"] = server.config.from_address
+        self.msg["Reply-to"] = server.config.replyto or server.config.from_address
+        self.msg["Return-path"] = server.config.replyto or server.config.from_address
         self.msg.preamble = subject
 
     def add_content(self, text, content_type="plain"):
@@ -84,19 +84,19 @@ class EmailMessage:
 
         with open(filepath, "rb") as f:
             part = MIMEApplication(f.read(), Name=os.path.basename(filepath))
-            part['Content-Disposition'] = 'attachment; filename="{0}"'.format(filename)
+            part["Content-Disposition"] = 'attachment; filename="{0}"'.format(filename)
             self.msg.attach(part)
 
     def send(self, to, cc=[], bcc=[]):
         recipients = to + cc + bcc
 
-        self.msg['To'] = ','.join(to)
+        self.msg["To"] = ",".join(to)
         if cc:
-            self.msg['Cc'] = ','.join(cc)
+            self.msg["Cc"] = ",".join(cc)
         if bcc:
-            self.msg['Bcc'] = ','.join(bcc)
+            self.msg["Bcc"] = ",".join(bcc)
 
-        self.server.smtp.sendmail(self.msg['From'], recipients, self.msg.as_string())
+        self.server.smtp.sendmail(self.msg["From"], recipients, self.msg.as_string())
 
 
 class EmailServer:
@@ -122,7 +122,7 @@ class EmailServer:
                     self.is_connected = True
                 else:
                     status = self.smtp.noop()[0]
-                    self.is_connected = (status == 250)
+                    self.is_connected = status == 250
             except Exception as e:
                 print(e)
                 self.is_connected = False
@@ -141,8 +141,10 @@ class EmailServer:
             template = self.env.get_template(template)
             body = template.render(**context)
             msg = EmailMessage(self, subject)
-            msg.add_content(body, 'html')
+            msg.add_content(body, "html")
 
             return msg
         else:
-            raise MissingConfiguration("No 'template_path' specified when EmailServer was created.")
+            raise MissingConfiguration(
+                "No 'template_path' specified when EmailServer was created."
+            )

@@ -19,8 +19,8 @@ class MissingConfiguration(Exception):
     def __init__(self, description, config=None):
         self.name = None
         if config:
-            self.name = config['name']
-            self.id = config['_id']
+            self.name = config["name"]
+            self.id = config["_id"]
 
         self._description = description
 
