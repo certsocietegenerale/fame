@@ -110,7 +110,7 @@ class Analysis(MongoDict):
         filename = os.path.basename(filepath)
         f = File(filename=filename, stream=fd, create=False)
 
-        if not f.existing:
+        if not f.existing or f['type'] == 'hash':
             if fame_config.remote:
                 response = send_file_to_remote(filepath, '/files/')
                 f = File(response.json()['file'])
