@@ -380,11 +380,14 @@ class Analysis(MongoDict):
                 url = urljoin(fame_config.remote, '/analyses/{}/get_file/{}'.format(self['_id'], pathhash))
                 response = requests.get(url, stream=True, headers={'X-API-KEY': fame_config.api_key})
                 response.raise_for_status()
-                f = open(local_path, 'ab')
-                for chunk in response.iter_content(1024):
-                    f.write(chunk)
+                try:
+                    f = open(local_path, 'xb')
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                    f.close()
+                except FileExistsError:
+                    pass
 
-                f.close()
 
             return local_path
         else:
