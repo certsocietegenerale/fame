@@ -51,7 +51,8 @@ RUN apt-get update && apt-get install -y \
 RUN groupadd -r fame && \
     useradd -M -r -d /opt/fame -g fame -G docker fame && \
     install -d -m 0755 -o fame -g fame /opt/fame && \
-    echo 'fame ALL=(root) NOPASSWD: /usr/bin/dockerd ""' > /etc/sudoers.d/fame
+    echo 'fame ALL=(root) NOPASSWD: /usr/bin/dockerd ""' > /etc/sudoers.d/fame && \
+    echo 'fame ALL=(root) NOPASSWD: /bin/rm -f /var/run/docker.sock /var/run/docker/containerd/containerd.sock /var/run/docker.pid /var/run/docker/containerd/containerd.pid' >> /etc/sudoers.d/fame
 
 COPY . /opt/fame
 
