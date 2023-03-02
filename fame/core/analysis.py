@@ -5,6 +5,8 @@ import traceback
 from shutil import copy
 from hashlib import md5
 from urllib.parse import urljoin
+from bson.json_util import loads as bson_loads
+from json import dumps
 
 from fame.common.config import fame_config
 from fame.common.utils import iterify, u, send_file_to_remote
@@ -113,7 +115,7 @@ class Analysis(MongoDict):
         if not f.existing or f['type'] == 'hash':
             if fame_config.remote:
                 response = send_file_to_remote(filepath, '/files/')
-                f = File(response.json()['file'])
+                f = File(bson_loads(dumps(response.json()['file'])))
             else:
                 f = File(filename=os.path.basename(filepath), stream=fd)
 
