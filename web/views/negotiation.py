@@ -5,9 +5,10 @@ from bson.json_util import dumps
 
 
 def should_render_as_html():
-    best = request.accept_mimetypes.best_match(["text/html", "application/json"])
+    best_accept = request.accept_mimetypes.best_match(["text/html", "application/json"])
+    api_key = bool(request.headers.get('X-API-KEY'))
 
-    return best == "text/html"
+    return best_accept == "text/html" and not api_key
 
 
 def render_json(data):
