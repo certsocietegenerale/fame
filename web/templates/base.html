@@ -154,13 +154,6 @@
                             </a>
                         </li>
                         {% endif %}
-                        {% if current_user.has_permission('reviewed') %}
-                        <li>
-                           <a href="{{ url_for('AnalysesView:reviewed') }}">
-                               Review
-                            </a>
-                        </li>
-                        {% endif %}
                         <li>
                             <a href="{{ url_for('FilesView:index') }}">
                                 Objects

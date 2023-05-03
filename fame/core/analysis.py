@@ -409,13 +409,6 @@ class Analysis(MongoDict):
 
         return results
 
-    def set_reviewed(self, analyst=None):
-        if analyst is not None :
-            self['reviewed'] = analyst
-        else:
-            self['reviewed'] = None
-        self.save()
-
     def _reporting_hook(self, hook_name):
         for module in dispatcher.get_reporting_modules():
             try:

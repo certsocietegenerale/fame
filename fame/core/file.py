@@ -50,6 +50,7 @@ class File(MongoDict):
             self['owners'] = []
             self['comments'] = []
             self['analysis'] = []
+            self['reviewed'] = None
 
             if hash:
                 self._init_with_hash(hash)
@@ -185,7 +186,8 @@ class File(MongoDict):
             'modules': modules or [],
             'options': options or {},
             'groups': list(set(groups + self['groups'])),
-            'analyst': analyst
+            'analyst': analyst,
+            'reviewed': self['reviewed']
         })
         analysis.save()
 
@@ -198,6 +200,19 @@ class File(MongoDict):
 
     def add_parent_analysis(self, analysis):
         self.append_to('parent_analyses', analysis['_id'])
+
+    def review(self, analyst=None):
+        if analyst is not None :
+            self['reviewed'] = analyst
+        else:
+            self['reviewed'] = None
+        self.save()
+
+        # Update previous analysis
+        for analysis_id in self['analysis']:
+            analysis = Analysis(store.analysis.find_one({'_id': ObjectId(analysis_id)}))
+            analysis['reviewed'] = self['reviewed']
+            analysis.save()
 
     # Update existing record
     def _add_to_previous(self, existing_record, name):

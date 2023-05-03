@@ -44,7 +44,7 @@ class ModuleDispatcher(object):
             ('submit_iocs', 'Allows user to send observables to Threat Intelligence modules.'),
             ('add_probable_name', "Allows user to set an object's probable name"),
             ('see_logs', 'Allows user to access the log section of anlyses. This could reveal information on the underlying system.'),
-            ('review', 'Allows user to access the review page. This is reserved to the CERT members that analyses submissions.')
+            ('review', 'Allows user to review analyses. This is reserved to users analyzing submissions.')
         ])
 
         self.load_all_modules()

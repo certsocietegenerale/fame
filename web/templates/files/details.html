@@ -16,23 +16,22 @@
                             </form>
                         </span>
                     {% endfor %}
-
                     <a href="#" id="add-sharing-group">+</a>
-                    <span class="filter-btn">
-                        <form method="POST" action="/analyses/{{analysis._id}}/reviewed">
-                            <input type="hidden" name="reviewed" value="{{'True' if analysis.reviewed is none else ''}}" />
-                            <input type="submit" class="btn {{ 'btn-primary' if analysis.reviewed is none else 'btn-danger' }}" value="{{'Review' if analysis.reviewed is none else 'Unreview'}}">
-                        </form>
-                    </span>
                     <form id="add-sharing-group-form" class="hidden" method="post" action="{{url_for('FilesView:add_group', id=file._id)}}">
                         <input type="text" name="group" value="" />
                     </form>
                 </div>
-
                 <h4 class="title">Object Details</h4>
-
             </div>
-            <div class="content">
+            {% if current_user.has_permission('review') %}
+                <span class="review-btn">
+                    <form method="POST" action="{{url_for('FilesView:review', id=file._id)}}">
+                        <input type="hidden" name="reviewed" value="{{'True' if file.reviewed is none else ''}}" />
+                        <input type="submit" class="btn btn-fill {{ 'btn-success' if file.reviewed is none else 'btn-danger' }}" value="{{'Review' if file.reviewed is none else 'Unreview'}}">
+                    </form>
+                </span>
+            {% endif %}
+            <div class="content file-name">
                 <div class="row">
                     <div class="col-sm-2 text-right"><strong>Name(s)</strong></div>
                     <div class="col-sm-10">{{file.names|join(', ')}}</div>
@@ -115,7 +114,6 @@
                             </script>
                         </ul>
                     </div>
-
                 </div>
             </div>
         </div>

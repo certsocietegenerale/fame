@@ -50,17 +50,30 @@ class FilesView(FlaskView, UIView):
         objects appear first.
 
         :query page: page number.
+        :query filter: (optional) set filter. can be "to_review" or "reviewed"
         :type page: int
 
         :>json list files: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
         page = int(request.args.get("page", 1))
+        filter_arg = request.args.get('filter')
+        filter_query = {}
+        if current_user.has_permission('review'):
+            if filter_arg == 'reviewed':
+                filter_query = {"reviewed": { "$exists": True, "$nin": [None, False] } }
+            elif filter_arg == 'to_review':
+                filter_query = { "reviewed": { "$exists": True, "$eq": None } }
 
-        files = current_user.files.find().sort("_id", DESCENDING).limit(PER_PAGE).skip((page - 1) * PER_PAGE)
+        files = current_user.files.find(filter_query).sort("_id", DESCENDING).limit(PER_PAGE).skip((page - 1) * PER_PAGE)
         pagination = Pagination(page=page, per_page=PER_PAGE, total=files.count(), css_framework="bootstrap3")
         files = {"files": clean_files(list(files))}
 
-        return render(files, "files/index.html", ctx={"data": files, "pagination": pagination})
+        for f in files['files']:
+            if 'reviewed' in f:
+                reviewer = store.users.find_one({'_id': f['reviewed']})
+                f['reviewed'] = clean_users(reviewer)
+
+        return render(files, "files/index.html", ctx={"data": files, "pagination": pagination, "filter": filter_arg})
 
     def get(self, id):
         """Get the object with `id`.
@@ -84,6 +97,7 @@ class FilesView(FlaskView, UIView):
         :>json list analysis: list of analyses' ObjectIds.
         :>json list parent_analyses: list of analyses (as ObjectIds) that extracted this object.
         :>json dict antivirus: dict with antivirus names as keys.
+        :>json dict reviewed: analyst's ObjectId if review has been performed
         """
         file = {"file": enrich_comments(clean_files(get_or_404(current_user.files, _id=id)))}
         return return_file(file)
@@ -205,6 +219,25 @@ class FilesView(FlaskView, UIView):
         group = request.form.get("group")
 
         f.add_groups([group])
+
+        return redirect(request.referrer)
+
+    @requires_permission("review")
+    @route('/<id>/review', methods=["POST"])
+    def review(self, id):
+        """Set review value state of a file
+
+        .. :quickref: File; set review state
+        Set the review state of a file.
+
+        :form bool reviewed: if the file has been reviewed or not
+        """
+        f = File(get_or_404(current_user.files, _id=id))
+        reviewed = request.form.get('reviewed')
+        if reviewed:
+            f.review(current_user['_id'])
+        else:
+            f.review(None)
 
         return redirect(request.referrer)
 

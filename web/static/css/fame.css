@@ -482,12 +482,24 @@ td.user-actions .btn {
     opacity: 0.3;
 }
 
-.filter-btn {
-    position:relative;
-    top: 1em;
+@media(min-width:768px) {
+     .review-btn {
+        position: absolute;
+        right: 2em;
+        top: 3.5em;
+        z-index: 1;
+    }
 }
 
-.filter-btn form input{
-    position:absolute;
-    z-index: 99;
+@media(max-width:768px) {
+    .review-btn {
+       position: relative;
+       float: right;
+       right: 13px;
+       top: 4px;
+    }
+
+    .file-name {
+       clear: both;
+    }
 }
