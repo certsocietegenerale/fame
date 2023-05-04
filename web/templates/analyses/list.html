@@ -38,7 +38,7 @@
                         </thead>
                         <tbody>
                             {% for analysis in data['analyses'] %}
-                                <tr class="{{ 'reviewed' if current_user.has_permission('review') and analysis.reviewed }}">
+                                <tr class="{{ 'reviewed' if current_user.has_permission('review') and analysis.reviewed is not none }}">
                                     <td class="list-avatar avatar">
                                         {% if analysis.analyst %}
                                             <img class="img-circle" src="{{analysis.analyst._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.analyst.name}}" />

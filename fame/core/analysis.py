@@ -141,6 +141,12 @@ class Analysis(MongoDict):
         else:
             self.log('warning', "Tried to change type of generated file '{}'".format(filepath))
 
+    def skip_review(self, skip=True):
+        if skip:
+            self._file.review(False)
+        else:
+            self._file.review(None)
+
     def add_support_file(self, module_name, name, filepath):
         self.log('debug', "Adding support file '{}' at '{}'".format(name, filepath))
 

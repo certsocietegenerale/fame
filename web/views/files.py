@@ -69,7 +69,7 @@ class FilesView(FlaskView, UIView):
         files = {"files": clean_files(list(files))}
 
         for f in files['files']:
-            if 'reviewed' in f:
+            if 'reviewed' in f and f['reviewed']:
                 reviewer = store.users.find_one({'_id': f['reviewed']})
                 f['reviewed'] = clean_users(reviewer)
 

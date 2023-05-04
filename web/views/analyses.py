@@ -90,7 +90,7 @@ class AnalysesView(FlaskView, UIView):
             if 'analyst' in analysis:
                 analyst = store.users.find_one({'_id': analysis['analyst']})
                 analysis['analyst'] = clean_users(analyst)
-            if 'reviewed' in analysis:
+            if 'reviewed' in analysis and analysis['reviewed']:
                 reviewer = store.users.find_one({'_id': analysis['reviewed']})
                 analysis['reviewed'] = clean_users(reviewer)
 

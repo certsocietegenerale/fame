@@ -202,7 +202,7 @@ class File(MongoDict):
         self.append_to('parent_analyses', analysis['_id'])
 
     def review(self, analyst=None):
-        if analyst is not None :
+        if analyst is not None:
             self['reviewed'] = analyst
         else:
             self['reviewed'] = None
