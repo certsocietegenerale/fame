@@ -13,7 +13,7 @@ function enable_checkboxes() {
 function auto_update(url, time, selector) {
   setTimeout(function () {
     if (should_refresh) {
-      $.get(url).success(function (html) {
+      $.get(url).done(function (html) {
         if (should_refresh) {
           html = $(html);
           $(selector).each(function (i) {
@@ -43,7 +43,7 @@ function add_options() {
   $('select[data-addoptions]').each(function (index) {
     select = $(this);
     url = select.data('addoptions');
-    $.getJSON(url).success(add_options_to_select(select));
+    $.getJSON(url).done(add_options_to_select(select));
   });
 }
 
@@ -63,7 +63,7 @@ function enable_delete_links() {
     $.ajax({
       url: url,
       method: 'DELETE'
-    }).success(function (data) {
+    }).done(function (data) {
       parent.remove();
     });
 
@@ -171,7 +171,7 @@ function enable_ioc_submission() {
       type: 'POST',
       url: url,
       data: JSON.stringify(iocs),
-      success: callback,
+      done: callback,
       error: errorCallback,
       contentType: 'application/json',
     });
@@ -232,7 +232,7 @@ function enable_av_submission() {
     $.ajax({
       type: 'POST',
       url: url,
-      success: callback,
+      done: callback,
       error: errorCallback,
       contentType: 'application/json',
     });
