@@ -138,10 +138,40 @@ virustotal_public
         })
         extracted.save()
 
+def create_safe_domains():
+    safe_domains = Config.get(name='safe_domains')
+    if safe_domains is None:
+        safe_domains = Config({
+            'name': 'safe_domains',
+            'description': 'Define (sub)domains which are trusted and should not be analyzed',
+            'config': [
+                {
+                    'name': 'trusted_domains',
+                    'description': 'Safe (sub)domains which should not be analyzed. Users will still be able to force analysis but will be warned before doing so. Only enter domains you own or fully trust in this field\n',
+                    'type': 'text',
+                    'default': """*.mycompany.lan
+www.mycompany.com
+""",
+                    'value': None
+                },
+                {
+                    'name': 'untrusted_domains',
+                    'description': '(sub)domains which should be considered as untrusted despite being part of a trusted (sub)domain',
+                    'type': 'text',
+                    'default': """*.untrusted-subdomain.mycompany.lan
+untrusted-subdomain.www.mycompany.com
+""",
+                    'value': None
+                }
+            ]
+        })
+
+        safe_domains.save()
 
 def create_initial_data():
     create_types()
     create_internals()
+    create_safe_domains()
     create_comment_configuration()
     create_extracted_schedule()
 

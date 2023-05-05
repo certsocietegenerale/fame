@@ -11,6 +11,7 @@ from flask_login import current_user
 from flask_classful import FlaskView, route
 from flask_paginate import Pagination
 from werkzeug.utils import secure_filename
+from urllib.parse import urlparse
 
 from fame.common.config import fame_config
 from fame.core.module_dispatcher import dispatcher
@@ -287,6 +288,39 @@ class AnalysesView(FlaskView, UIView):
                     return redirect(analysis, url_for('AnalysesView:get', id=analysis['analysis']['_id']))
             else:
                 return render_template('analyses/new.html', options=dispatcher.options)
+
+    @route('/is_safe_url', methods=["POST"])
+    def is_safe_url(self):
+        safe = False
+        url = request.form.get('url', '').strip().strip('/')
+        config = Config.get(name="safe_domains")
+
+        if config and url:
+            config = config.get_values()
+            trusted_domains = [d.strip() for d in config['trusted_domains'].split('\n')]
+            untrusted_domains = [d.strip() for d in config['untrusted_domains'].split('\n')]
+
+            parsed_url = urlparse(url)
+            if not parsed_url.netloc:
+                parsed_url = urlparse("http://" + url)
+            if parsed_url.netloc:
+                for domain in trusted_domains:
+                    if domain.startswith('*.'):
+                       if parsed_url.netloc.endswith(domain[2:]):
+                           safe = True
+                    else:
+                       if parsed_url.netloc == domain:
+                           safe = True
+
+                for domain in untrusted_domains:
+                    if domain.startswith('*.'):
+                       if parsed_url.netloc.endswith(domain[2:]):
+                           safe = False
+                    else:
+                       if parsed_url.netloc == domain:
+                           safe = False
+
+        return jsonify({"is_safe": safe})
 
     @requires_permission("submit_iocs")
     @route('/<id>/submit_iocs/<module>', methods=["POST"])
