@@ -35,7 +35,7 @@
                         </thead>
                         <tbody>
                             {% for file in data['files'] %}
-                                                <tr class="{{ 'reviewed' if current_user.has_permission('review') and file.reviewed is not none }}">
+                                                <tr class="{{ 'reviewed' if current_user.has_permission('review') and file.reviewed is defined and file.reviewed is not none }}">
                 					<td class="file-name">{{file.names|join(', ')}}</td>
                 					<td class="file-type">{{file.type}}</td>
                 					<td class="file-md5"><a href="{{ url_for('FilesView:get', id=file._id) }}">{{file.md5}}<a></td>

@@ -24,11 +24,11 @@
                 <h4 class="title">Object Details</h4>
             </div>
             {% if current_user.has_permission('review') %}
-                {% set reviewed = 'True' if (file.reviewed is none or file.reviewed == False) else '' %}
+                {% set not_reviewed = 'True' if(file.reviewed is not defined or file.reviewed is none or file.reviewed == False) else '' %}
                 <span class="review-btn">
                     <form method="POST" action="{{url_for('FilesView:review', id=file._id)}}">
-                        <input type="hidden" name="reviewed" value="{{ reviewed }}" />
-                        <input type="submit" class="btn btn-fill {{ 'btn-success' if reviewed == 'True' else 'btn-danger' }}" value="{{'Review' if reviewed == 'True' else 'Unreview'}}">
+                        <input type="hidden" name="reviewed" value="{{ not_reviewed }}" />
+                        <input type="submit" class="btn btn-fill {{ 'btn-success' if not_reviewed == 'True' else 'btn-danger' }}" value="{{'Review' if not_reviewed == 'True' else 'Unreview'}}">
                     </form>
                 </span>
             {% endif %}

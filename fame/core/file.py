@@ -187,7 +187,7 @@ class File(MongoDict):
             'options': options or {},
             'groups': list(set(groups + self['groups'])),
             'analyst': analyst,
-            'reviewed': self['reviewed']
+            'reviewed': self['reviewed'] if 'reviewed' in self else None # We can't use .get() here as it would embed the entire user object
         })
         analysis.save()
 

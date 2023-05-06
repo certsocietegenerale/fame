@@ -142,9 +142,9 @@ class Analysis(MongoDict):
             self.log('warning', "Tried to change type of generated file '{}'".format(filepath))
 
     def skip_review(self, skip=True):
-        if skip:
+        if skip and (not 'reviewed' in self._file or self._file['reviewed'] is None):
             self._file.review(False)
-        else:
+        elif not 'reviewed' in self._file or not self._file['reviewed']:
             self._file.review(None)
 
     def add_support_file(self, module_name, name, filepath):
