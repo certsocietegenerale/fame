@@ -34,8 +34,8 @@ services:
     volumes:
       - modules:/opt/fame/fame/modules/
       - env:/opt/fame/env/
-      - storage:/opt/fame/fame/storage/
-      - temp:/opt/fame/fame/temp/
+      - storage:/opt/fame/storage/
+      - temp:/opt/fame/temp/
       - avatars:/opt/fame/web/static/img/avatars/
     entrypoint: /bin/sh
     command: -c "wait-for -t 0 fame_db:27017 && /opt/fame/docker/docker-entrypoint.sh web"
