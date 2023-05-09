@@ -343,6 +343,13 @@ class ProcessingModule(Module):
             new_type (string): new FAME file type."""
         self._analysis.change_type(location, new_type)
 
+    def skip_review(self, skip=True):
+        """Skip the review of an analysis.
+
+        Args:
+            skip (optional): True if the analysis review should be skipped, False otherwise."""
+        self._analysis.skip_review(skip)
+
     def add_extracted_file(self, location, automatic_analysis=True):
         """Create a new file that deserves its own analysis.
 
@@ -1153,6 +1160,13 @@ class PreloadingModule(Module):
             for the given hash
         """
         raise NotImplementedError
+
+    def skip_review(self, skip=True):
+        """Skip the review of an analysis.
+
+        Args:
+            skip (optional): True if the analysis review should be skipped, False otherwise."""
+        self._analysis.skip_review(skip)
 
     def add_preloaded_file(self, filepath=None, fd=None):
         self._analysis.add_preloaded_file(filepath, fd)

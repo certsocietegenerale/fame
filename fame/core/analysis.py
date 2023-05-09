@@ -55,6 +55,7 @@ class Analysis(MongoDict):
         self['end_date'] = None
         self['groups'] = []
         self['analyst'] = []
+        self['reviewed'] = None
         MongoDict.__init__(self, values)
 
         self._file = File(store.files.find_one({'_id': self['file']}))
@@ -141,6 +142,12 @@ class Analysis(MongoDict):
                 self._file.analyze(self['groups'], self['analyst'], None, self['options'])
         else:
             self.log('warning', "Tried to change type of generated file '{}'".format(filepath))
+
+    def skip_review(self, skip=True):
+        if skip and (not 'reviewed' in self._file or self._file['reviewed'] is None):
+            self._file.review(False)
+        elif not 'reviewed' in self._file or not self._file['reviewed']:
+            self._file.review(None)
 
     def add_support_file(self, module_name, name, filepath):
         self.log('debug', "Adding support file '{}' at '{}'".format(name, filepath))

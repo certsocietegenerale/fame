@@ -4,6 +4,20 @@
             <div class="header">
                 <h4 class="title">Objects</h4>
                 <p class="category">Most recent first</p>
+                {% if current_user.has_permission('review') %}
+                    <div class="dropdown pull-right">
+                      <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                        {% if filter == 'reviewed' %} Reviewed {% elif filter == 'to_review' %} To review {% else %} Filter {% endif %}
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                        <li><a href="{{ url_for('FilesView:index') }}">All</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="{{ url_for('FilesView:index', filter='reviewed') }}">Reviewed</a></li>
+                        <li><a href="{{ url_for('FilesView:index', filter='to_review')}}">To review</a></li>
+                      </ul>
+                    </div>
+                {% endif %}
             </div>
             <div class="content">
                 <div class="table-responsive table-full-width">
@@ -14,15 +28,25 @@
                                 <th>Type</th>
                                 <th>MD5</th>
                                 <th>Classification</th>
+                                {% if current_user.has_permission('review') %}
+                                    <th>Reviewed by</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
                             {% for file in data['files'] %}
-                				<tr>
+                                                <tr class="{{ 'reviewed' if current_user.has_permission('review') and file.reviewed is defined and file.reviewed is not none }}">
                 					<td class="file-name">{{file.names|join(', ')}}</td>
                 					<td class="file-type">{{file.type}}</td>
                 					<td class="file-md5"><a href="{{ url_for('FilesView:get', id=file._id) }}">{{file.md5}}<a></td>
                 					<td class="file-probable-names">{{file.probable_names|join(', ')}}</td>
+                                                        {% if current_user.has_permission('review') %}
+                                                            <td class="list-avatar avatar">
+                                                                {% if file.reviewed %}
+                                                                    <img class="img-circle" src="{{file.reviewed._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{file.reviewed.name}}" />
+                                                                {% endif %}
+                                                            </td>
+                                                        {% endif %}
                 	  			</tr>
                   			{% endfor %}
                         </tbody>

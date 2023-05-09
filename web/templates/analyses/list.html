@@ -4,6 +4,20 @@
             <div class="header">
                 <h4 class="title">Analyses</h4>
                 <p class="category">Most recent first</p>
+                {% if current_user.has_permission('review') %}
+                    <div class="dropdown pull-right">
+                      <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                        {% if filter == 'reviewed' %} Reviewed {% elif filter == 'to_review' %} To review {% else %} Filter {% endif %}
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                        <li><a href="{{ url_for('AnalysesView:index') }}">All</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="{{ url_for('AnalysesView:index', filter='reviewed') }}">Reviewed</a></li>
+                        <li><a href="{{ url_for('AnalysesView:index', filter='to_review')}}">To review</a></li>
+                      </ul>
+                    </div>
+                {% endif %}
             </div>
             <div class="content">
                 <div class="table-responsive table-full-width">
@@ -17,11 +31,14 @@
                                 <th>Target</th>
                                 <th>Probable Names</th>
                                 <th>Extractions</th>
+                                {% if current_user.has_permission('review') %}
+                                    <th>Reviewed by</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
                             {% for analysis in data['analyses'] %}
-                                <tr>
+                                <tr class="{{ 'reviewed' if current_user.has_permission('review') and analysis.reviewed is defined and analysis.reviewed is not none }}">
                                     <td class="list-avatar avatar">
                                         {% if analysis.analyst %}
                                             <img class="img-circle" src="{{analysis.analyst._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.analyst.name}}" />
@@ -36,6 +53,13 @@
                                     <td>{{analysis.module if analysis.module != None}}</td>
                                     <td>{{analysis.file.probable_names|join(', ')}}</td>
                                     <td>{{analysis.extractions|join(', ', attribute='label')}}</td>
+                                    {% if current_user.has_permission('review') %}
+                                        <td class="list-avatar avatar">
+                                            {% if analysis.reviewed %}
+                                                <img class="img-circle" src="{{analysis.reviewed._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.reviewed.name}}" />
+                                            {% endif %}
+                                        </td>
+                                    {% endif %}
                                 </tr>
                             {% endfor %}
                         </tbody>

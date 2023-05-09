@@ -477,3 +477,29 @@ td.user-actions .btn {
 #change-file-type {
     font-size: 12px;
 }
+
+.reviewed {
+    opacity: 0.3;
+}
+
+@media(min-width:768px) {
+     .review-btn {
+        position: absolute;
+        right: 2em;
+        top: 3.5em;
+        z-index: 1;
+    }
+}
+
+@media(max-width:768px) {
+    .review-btn {
+       position: relative;
+       float: right;
+       right: 13px;
+       top: 4px;
+    }
+
+    .file-name {
+       clear: both;
+    }
+}

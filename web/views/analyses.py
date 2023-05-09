@@ -67,12 +67,21 @@ class AnalysesView(FlaskView, UIView):
 
         :query page: page number.
         :type page: int
+        :query filter: (optional) set filter. can be "to_review" or "reviewed"
 
         :>json list analyses: list of analyses (see :http:get:`/analyses/(id)` for details on the format of an analysis).
         """
         page = int(request.args.get('page', 1))
 
-        analyses = current_user.analyses.find().sort('_id', DESCENDING).limit(PER_PAGE).skip((page - 1) * PER_PAGE)
+        filter_query = {}
+        filter_arg = request.args.get('filter')
+        if current_user.has_permission('review'):
+            if filter_arg == 'reviewed':
+                filter_query = {"reviewed": { "$exists": True, "$nin": [None, False] } }
+            elif filter_arg == 'to_review':
+                filter_query = { "reviewed": { "$exists": True, "$eq": None } }
+
+        analyses = current_user.analyses.find(filter_query).sort('_id', DESCENDING).limit(PER_PAGE).skip((page - 1) * PER_PAGE)
         pagination = Pagination(page=page, per_page=PER_PAGE, total=current_user.analyses.count_documents(), css_framework='bootstrap3')
         analyses = {'analyses': clean_analyses(list(analyses))}
         for analysis in analyses['analyses']:
@@ -82,8 +91,11 @@ class AnalysesView(FlaskView, UIView):
             if 'analyst' in analysis:
                 analyst = store.users.find_one({'_id': analysis['analyst']})
                 analysis['analyst'] = clean_users(analyst)
+            if 'reviewed' in analysis and analysis['reviewed']:
+                reviewer = store.users.find_one({'_id': analysis['reviewed']})
+                analysis['reviewed'] = clean_users(reviewer)
 
-        return render(analyses, 'analyses/index.html', ctx={'data': analyses, 'pagination': pagination})
+        return render(analyses, 'analyses/index.html', ctx={'data': analyses, 'pagination': pagination, "filter": filter_arg})
 
     def get(self, id):
         """Get the analysis with `id`.
@@ -96,6 +108,7 @@ class AnalysesView(FlaskView, UIView):
 
         :>json dict _id: ObjectId dict.
         :>json dict analyst: analyst's ObjectId.
+        :>json dict reviewed: analyst's ObjectId if review has been performed
         :>json dict date: date dict.
         :>json list executed_modules: list of executed modules.
         :>json list pending_modules: list of pending modules.
