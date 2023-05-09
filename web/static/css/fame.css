@@ -503,3 +503,7 @@ td.user-actions .btn {
        clear: both;
     }
 }
+
+td > .small {
+  word-break: break-word;
+}
