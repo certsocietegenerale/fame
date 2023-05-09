@@ -1,4 +1,4 @@
-Flask~=2.1.0
+Flask==2.2.5
 Werkzeug==2.2.3
 #Flask-Classful~=0.14.2
 # Flask-Classful is not yet compatible with werkzeug-2.2
