@@ -82,7 +82,7 @@ class AnalysesView(FlaskView, UIView):
                 filter_query = { "reviewed": { "$exists": True, "$eq": None } }
 
         analyses = current_user.analyses.find(filter_query).sort('_id', DESCENDING).limit(PER_PAGE).skip((page - 1) * PER_PAGE)
-        pagination = Pagination(page=page, per_page=PER_PAGE, total=current_user.analyses.count_documents(), css_framework='bootstrap3')
+        pagination = Pagination(page=page, per_page=PER_PAGE, total=current_user.analyses.count_documents(filter_query), css_framework='bootstrap3')
         analyses = {'analyses': clean_analyses(list(analyses))}
         for analysis in analyses['analyses']:
             file = current_user.files.find_one({'_id': analysis['file']})
