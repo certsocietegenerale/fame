@@ -146,7 +146,7 @@ class Analysis(MongoDict):
     def skip_review(self, skip=True):
         if skip and (not 'reviewed' in self._file or self._file['reviewed'] is None):
             self._file.review(False)
-        elif not 'reviewed' in self._file or not self._file['reviewed']:
+        elif not skip and (not 'reviewed' in self._file or not self._file['reviewed']):
             self._file.review(None)
 
     def add_support_file(self, module_name, name, filepath):
