@@ -1,6 +1,6 @@
 
 $("form[id='submit']").on("submit", function(event) {
-  if($('.nav-pills a[href="#url"]').attr('aria-expanded')) {
+  if($('.nav-pills a[href="#url"]').attr('aria-expanded') == "true") {
     let parser = document.createElement('a');
 
     parser.href = $("input[name='url']").val();
@@ -21,14 +21,14 @@ $("form[id='submit']").on("submit", function(event) {
         context: $(this),
         data: { url: $("input[name='url']").val()},
       }).done(function (data) {
-          msg = "This URL seems to point to a safe domain. Are you sure you want to analyze it?\nYou can force the analysis by clicking on \"OK\"."
+          msg = "This URL seems to point to an internal or fully trusted domain. Are you sure you want to analyze it?\nYou can force the analysis by clicking on \"OK\"."
           if(!data.is_safe || confirm(msg)) {
             this.off('submit');
             this.submit();
           }
       });
     }
-  } else if ($('.nav-pills a[href="#hash"]').attr('aria-expanded')) {
+  } else if ($('.nav-pills a[href="#hash"]').attr('aria-expanded') == "true") {
     let hash = $("input[name='hash']").val();
     if (!/^[a-fA-F0-9]{32}$/.test(hash) // MD5
      && !/^[a-fA-F0-9]{40}$/.test(hash) // SHA1
