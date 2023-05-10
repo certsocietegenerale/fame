@@ -285,6 +285,7 @@ class Analysis(MongoDict):
                 was_resumed = True
             except DispatchingException:
                 self.log('warning', 'no preloading module was able to find a file for submitted hash')
+                self.skip_review()
 
                 for module in list(self['waiting_modules']):
                     self._cancel_module(module)
