@@ -105,6 +105,9 @@ class File(MongoDict):
 
         # If the file doesn't exist, or exists as a hash submission, compute default properties and save
         if create and ((existing_file is None) or (self['type'] == 'hash')):
+            # if file exists as hash submission: reset review status
+            if existing_file and self['type'] == 'hash':
+                self.review(None)
             self._store_file(filename, stream)
             self._compute_default_properties()
             self.save()
