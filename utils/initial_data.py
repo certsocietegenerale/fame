@@ -151,6 +151,7 @@ def create_safe_domains():
                     'type': 'text',
                     'default': """*.mycompany.lan
 www.mycompany.com
+192.168.0.0/24
 """,
                     'value': None
                 },
@@ -160,6 +161,7 @@ www.mycompany.com
                     'type': 'text',
                     'default': """*.untrusted-subdomain.mycompany.lan
 untrusted-subdomain.www.mycompany.com
+192.168.0.88/30
 """,
                     'value': None
                 }

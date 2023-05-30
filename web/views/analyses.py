@@ -1,4 +1,5 @@
 import os
+import ipaddress
 from io import BytesIO
 from shutil import copyfileobj
 from hashlib import md5
@@ -316,22 +317,38 @@ class AnalysesView(FlaskView, UIView):
             parsed_url = urlparse(url)
             if not parsed_url.netloc:
                 parsed_url = urlparse("http://" + url)
-            if parsed_url.netloc:
+            parsed_url = parsed_url.netloc
+            if parsed_url and ':' in parsed_url:
+                # remove port
+                parsed_url = parsed_url.split(':')[0]
+            if parsed_url:
                 for domain in trusted_domains:
-                    if domain.startswith('*.'):
-                       if parsed_url.netloc.endswith(domain[2:]):
-                           safe = True
-                    else:
-                       if parsed_url.netloc == domain:
-                           safe = True
+                    try:
+                        safe_ip_range = ipaddress.ip_network(domain)
+                        submitted_ip = ipaddress.ip_address(parsed_url)
+                        if submitted_ip in safe_ip_range:
+                            safe = True
+                    except ValueError:
+                        if domain.startswith('*.'):
+                           if parsed_url.endswith(domain[2:]):
+                               safe = True
+                        else:
+                           if parsed_url == domain:
+                               safe = True
 
                 for domain in untrusted_domains:
-                    if domain.startswith('*.'):
-                       if parsed_url.netloc.endswith(domain[2:]):
-                           safe = False
-                    else:
-                       if parsed_url.netloc == domain:
-                           safe = False
+                    try:
+                        safe_ip_range = ipaddress.ip_network(domain)
+                        submitted_ip = ipaddress.ip_address(parsed_url)
+                        if submitted_ip in safe_ip_range:
+                            safe = False
+                    except ValueError:
+                        if domain.startswith('*.'):
+                           if parsed_url.endswith(domain[2:]):
+                               safe = False
+                        else:
+                           if parsed_url == domain:
+                               safe = False
 
         return jsonify({"is_safe": safe})
 
