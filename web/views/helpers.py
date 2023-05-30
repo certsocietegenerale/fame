@@ -16,7 +16,7 @@ from fame.common.config import fame_config
 def remove_field(instance, field):
     try:
         del instance[field]
-    except KeyError:
+    except (KeyError, TypeError):
         pass
 
 
@@ -50,7 +50,7 @@ def clean_analyses(analyses):
 
 
 def enrich_comments(obj):
-    if 'comments' in obj:
+    if 'comments' in obj and isinstance(obj, list):
         for comment in obj['comments']:
             if 'analyst' in comment:
                 analyst = store.users.find_one({'_id': comment['analyst']})
