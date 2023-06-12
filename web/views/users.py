@@ -88,8 +88,8 @@ class UsersView(FlaskView, UIView):
         :form permission_VALUE: specify a value different than ``0`` or ``False``
             for all permissions the user should have.
         """
-        name = request.form.get('name')
-        email = request.form.get('email').lower()
+        name = request.form.get('name').strip()
+        email = request.form.get('email').lower().strip()
         groups = [g for g in request.form.get('groups', '').split(',') if g]
 
         if not self._valid_form(name, email, groups):
@@ -129,8 +129,8 @@ class UsersView(FlaskView, UIView):
         :form permission_VALUE: specify a value different than ``0`` or ``False``
             for all permissions the user should have.
         """
-        name = request.form.get('name')
-        email = request.form.get('email').lower()
+        name = request.form.get('name').strip()
+        email = request.form.get('email').lower().strip()
         groups = [g for g in request.form.get('groups', '').split(',') if g]
 
         user = User(get_or_404(User.get_collection(), _id=id))
