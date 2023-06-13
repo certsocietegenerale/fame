@@ -16,7 +16,7 @@ RUN apt update && \
   zlib1g-dev \
   libmagic-dev \
   apt-transport-https \
-  netcat \
+  netcat-traditional \
   ca-certificates \
   curl \
   gnupg2 \
@@ -25,28 +25,19 @@ RUN apt update && \
   sudo \
   default-jdk \
   unzip \
-  software-properties-common
+  software-properties-common \
+  protobuf-compiler
 
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
-    add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/debian \
-    $(lsb_release -cs) \
-    stable"
-
-RUN curl -o /bin/wait-for https://raw.githubusercontent.com/eficode/wait-for/master/wait-for && \
-    chmod +x /bin/wait-for
-
-# some FAME module require protobuf-compiler >= 3.19.0
-RUN curl -fsSL -o /tmp/protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v21.6/protoc-21.6-linux-x86_64.zip && \
-    unzip /tmp/protoc.zip -d /tmp/protoc && \
-    mv /tmp/protoc/bin/* /usr/local/bin && mv /tmp/protoc/include/* /usr/local/include && \
-    rm -rf /tmp/protoc /tmp/protoc.zip
-
-RUN apt-get update && apt-get install -y \
+    echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" >> /etc/apt/sources.list.d/docker.list && \
+    apt update && apt install -y \
     docker-ce \
     docker-ce-cli \
     containerd.io
 
+
+RUN curl -o /bin/wait-for https://raw.githubusercontent.com/eficode/wait-for/master/wait-for && \
+    chmod +x /bin/wait-for
 
 RUN groupadd -r fame && \
     useradd -M -r -d /opt/fame -g fame -G docker fame && \
@@ -60,7 +51,7 @@ RUN chown -R fame:fame /opt/fame
 
 USER fame
 
-RUN cd /opt/fame && mkdir -p env storage temp && pip3 install virtualenv \
+RUN cd /opt/fame && mkdir -p env storage temp && pip3 install virtualenv --break-system-packages \
     && git config --global user.name fame && git config --global user.email git@fame
 
 CMD ["/opt/fame/docker/docker-entrypoint.sh", "web"]

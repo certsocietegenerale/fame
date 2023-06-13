@@ -3,7 +3,7 @@ import sys
 import inspect
 import importlib
 import traceback
-import collections
+import collections.abc
 from uuid import uuid4
 from tempfile import mkstemp
 from shutil import copyfileobj
@@ -21,7 +21,7 @@ sys.path.append(AGENT_ROOT)
 
 
 def is_iterable(element):
-    return isinstance(element, collections.Iterable) and not isinstance(element, str)
+    return isinstance(element, collections.abc.Iterable) and not isinstance(element, str)
 
 
 def iterify(element):

@@ -1,6 +1,6 @@
 import os
 import requests
-import collections
+import collections.abc
 from time import sleep
 from uuid import uuid4
 from urllib.parse import urljoin
@@ -12,7 +12,7 @@ from fame.common.config import fame_config
 
 
 def is_iterable(element):
-    return isinstance(element, collections.Iterable) and not isinstance(element, str)
+    return isinstance(element, collections.abc.Iterable) and not isinstance(element, str)
 
 
 def iterify(element):
