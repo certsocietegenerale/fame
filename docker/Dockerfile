@@ -23,7 +23,6 @@ RUN apt update && \
   pkg-config \
   libvirt-dev \
   sudo \
-  default-jdk \
   unzip \
   software-properties-common \
   protobuf-compiler
@@ -33,7 +32,8 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
     apt update && apt install -y \
     docker-ce \
     docker-ce-cli \
-    containerd.io
+    containerd.io \
+    default-jdk
 
 
 RUN curl -o /bin/wait-for https://raw.githubusercontent.com/eficode/wait-for/master/wait-for && \
