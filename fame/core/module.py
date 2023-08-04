@@ -487,12 +487,16 @@ class ProcessingModule(Module):
         # if 'acts_on' is defined
         if self.info['acts_on']:
             for source_type in iterify(self.info['acts_on']):
-                for target in self._analysis.get_files(source_type):
-                    if self._try_each(target, source_type):
-                        result = True
+                targets = self._analysis.get_files(source_type)
+                if targets:
+                    for target in targets:
+                        if self._try_each(target, source_type):
+                            result = True
         # Otherwise, only run on main target
         else:
-            return self._try_each(self._analysis.get_main_file(), self._analysis._file['type'])
+            main_file = self._analysis.get_main_file()
+            if main_file:
+                return self._try_each(main_file, self._analysis._file['type'])
 
         return result
 

@@ -391,14 +391,19 @@ class Analysis(MongoDict):
 
                 url = urljoin(fame_config.remote, '/analyses/{}/get_file/{}'.format(self['_id'], pathhash))
                 response = requests.get(url, stream=True, headers={'X-API-KEY': fame_config.api_key})
-                response.raise_for_status()
                 try:
-                    f = open(local_path, 'xb')
-                    for chunk in response.iter_content(1024):
-                        f.write(chunk)
-                    f.close()
-                except FileExistsError:
-                    pass
+                    response.raise_for_status()
+                except requests.exceptions.HTTPError:
+                    self.log("error", "File '{0}' not found on disk, unable to analyze it.".format(pathhash))
+                    return False
+                else:
+                    try:
+                        f = open(local_path, 'xb')
+                        for chunk in response.iter_content(1024):
+                            f.write(chunk)
+                        f.close()
+                    except FileExistsError:
+                        pass
 
 
             return local_path
@@ -416,10 +421,14 @@ class Analysis(MongoDict):
 
         if file_type in self['generated_files']:
             for filepath in self['generated_files'][file_type]:
-                results.append(self.filepath(filepath))
+                local_filepath = self.filepath(filepath)
+                if local_filepath:
+                    results.append(local_filepath)
 
         if self._file['type'] == file_type:
-            results.append(self.get_main_file())
+            main_file = self.get_main_file()
+            if main_file:
+                results.append(main_file)
 
         return results
 
