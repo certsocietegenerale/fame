@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import jinja2
@@ -30,7 +30,7 @@ except:
 app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
 app.secret_key = fame_config.secret_key
 app.config['TEMPLATES_AUTO_RELOAD'] = True
-if 'https://' in fame_config.fame_url:
+if 'fame_url' in fame_config and 'https://' in fame_config.fame_url:
     app.config['SESSION_COOKIE_SECURE'] = True
 
 # Set two tempalte folders (one is for modules)
