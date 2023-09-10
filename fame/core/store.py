@@ -15,11 +15,13 @@ class Store:
                 serverSelectionTimeoutMS=10000,
                 username=fame_config.mongo_user,
                 password=fame_config.mongo_password,
-                authSource=fame_config.mongo_db)
+                authSource=fame_config.mongo_db,
+                unicode_decode_error_handler='replace')
         else:
             self._con = MongoClient(host=fame_config.mongo_host,
                 port=int(fame_config.mongo_port),
-                serverSelectionTimeoutMS=10000)
+                serverSelectionTimeoutMS=10000,
+                unicode_decode_error_handler='replace')
         self.db = self._con[fame_config.mongo_db]
 
         # Collections
