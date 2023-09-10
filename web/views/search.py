@@ -1,9 +1,10 @@
 from flask import request
 from flask_login import current_user
 from flask_classful import FlaskView
+from fame.core.store import store
 
 from web.views.mixins import UIView
-from web.views.helpers import clean_files, clean_analyses
+from web.views.helpers import clean_files, clean_analyses, clean_users
 from web.views.negotiation import render
 
 
@@ -22,5 +23,13 @@ class SearchView(FlaskView, UIView):
             analyses.append(analysis)
 
         results = {'files': clean_files(files), 'analyses': clean_analyses(analyses)}
+        for analysis in analyses:
+            if 'analyst' in analysis:
+                analyst = store.users.find_one({'_id': analysis['analyst']})
+                analysis['analyst'] = clean_users(analyst)
+
+            if 'reviewed' in analysis and analysis['reviewed']:
+                reviewer = store.users.find_one({'_id': analysis['reviewed']})
+                analysis['reviewed'] = clean_users(reviewer)
 
         return render(results, 'search.html')
