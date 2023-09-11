@@ -55,7 +55,7 @@ By default, MongoDB only listens on localhost. If your MongoDB instance is on a 
 
 It is also recommended to enable authentication on the MongoDB server. In order to do this, start by creating an admin user, as well as a user for FAME::
 
-    $ mongo
+    $ mongosh
     > use admin
     switched to db admin
     > db.createUser({ user: "admin", pwd: "SOME_STRONG_PASSWORD", roles: [ { role: "userAdminAnyDatabase", db: "admin" } ] })
@@ -223,7 +223,6 @@ Create the file `/etc/nginx/sites-available/fame` with the following contents::
         location / {
           proxy_pass http://127.0.0.1:4200;
           proxy_set_header X-Forwarded-For $remote_addr;
-          include includes/fame_auth.nginx;
         }
 
         location /static/ {
@@ -237,6 +236,15 @@ Enable your configuration file, and restart nginx::
 
     $ sudo ln -s /etc/nginx/sites-available/fame /etc/nginx/sites-enabled/fame
     $ sudo systemctl restart nginx
+
+Finally, make sure static files can be read by the nginx user::
+
+    $ sudo chown -R www-data:www-data /REPLACE/WITH/YOUR/PATH/fame/web/static
+    $ sudo usermod -aG $USER www-data
+    $ reboot
+    $ # Depending on the location, you may also have to allow user www-data to access the static folder. If you encounter 403 errors, you should verify if all upstream folders have the group execute permission
+    $ stat -c '%A %n' /REPLACE/WITH
+    drwx------ /REPLACE/WITH # <- x permission on group is missing, you have to chmod g+x /REPLACE/WITH/
 
 .. note::
     In most settings, we recommend updating this configuration to use HTTPS instead of HTTP, but this is not described here as each organization handles certificates differently.
