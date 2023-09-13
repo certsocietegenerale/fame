@@ -32,4 +32,9 @@ class SearchView(FlaskView, UIView):
                 reviewer = store.users.find_one({'_id': analysis['reviewed']})
                 analysis['reviewed'] = clean_users(reviewer)
 
+        for file in files:
+            if 'reviewed' in file and file['reviewed']:
+                reviewer = store.users.find_one({'_id': file['reviewed']})
+                file['reviewed'] = clean_users(reviewer)
+
         return render(results, 'search.html')
