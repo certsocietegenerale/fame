@@ -14,16 +14,17 @@ class SearchView(FlaskView, UIView):
 
         files = []
         for file in current_user.files.find({'$text': {'$search': query}}):
+            if 'reviewed' in file and file['reviewed']:
+                reviewer = store.users.find_one({'_id': file['reviewed']})
+                file['reviewed'] = clean_users(reviewer)
+
             files.append(file)
 
         analyses = []
         for analysis in current_user.analyses.find({'$text': {'$search': query}}):
             file = current_user.files.find_one({'_id': analysis['file']})
             analysis['file'] = clean_files(file)
-            analyses.append(analysis)
 
-        results = {'files': clean_files(files), 'analyses': clean_analyses(analyses)}
-        for analysis in analyses:
             if 'analyst' in analysis:
                 analyst = store.users.find_one({'_id': analysis['analyst']})
                 analysis['analyst'] = clean_users(analyst)
@@ -32,9 +33,8 @@ class SearchView(FlaskView, UIView):
                 reviewer = store.users.find_one({'_id': analysis['reviewed']})
                 analysis['reviewed'] = clean_users(reviewer)
 
-        for file in files:
-            if 'reviewed' in file and file['reviewed']:
-                reviewer = store.users.find_one({'_id': file['reviewed']})
-                file['reviewed'] = clean_users(reviewer)
+            analyses.append(analysis)
+
+        results = {'files': clean_files(files), 'analyses': clean_analyses(analyses)}
 
         return render(results, 'search.html')
