@@ -16,3 +16,4 @@ markdown2~=2.4.3
 jinja2~=3.0.3
 virtualenv~=20.13.2
 gunicorn>=21.2.0
+jsonpath-ng>=1.6.0

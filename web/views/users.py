@@ -11,7 +11,7 @@ from web.views.negotiation import render, redirect, validation_error
 from web.views.helpers import requires_permission, get_or_404, clean_users
 
 
-auth_module = import_module('web.auth.{}.views'.format(fame_config.auth))
+auth_module = import_module('web.auth.{}.views'.format(fame_config.auth.split(' ')[0]))
 
 
 class UsersView(FlaskView, UIView):

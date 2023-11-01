@@ -12,7 +12,7 @@ from ldap import SERVER_DOWN, INVALID_CREDENTIALS
 auth = Blueprint('auth', __name__, template_folder='templates')
 
 
-@auth.route('/login', methods=['GET', 'POST'])
+@auth.route('/ad-login', methods=['GET', 'POST'])
 @prevent_csrf
 def login():
     if request.method == 'GET':

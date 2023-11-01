@@ -3,7 +3,7 @@
 {% block title %}Login{% endblock %}
 
 {% block body %}
-    <form method="post" action="{{url_for('auth.login', next=request.args.get('next'))}}">
+    <form method="post" action="{{url_for('auth.ad.login', next=request.args.get('next'))}}">
         <div class="card">
             <div class="content">
                 <div class="form-group">

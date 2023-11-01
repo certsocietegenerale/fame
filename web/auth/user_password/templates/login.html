@@ -3,7 +3,7 @@
 {% block title %}Login{% endblock %}
 
 {% block body %}
-    <form method="post" action="{{url_for('auth.login', next=request.args.get('next'))}}">
+    <form method="post" action="{{url_for('auth.user_password.login', next=request.args.get('next'))}}">
 
         <div class="card">
             <div class="content">
@@ -19,7 +19,7 @@
             <div class="footer text-center">
                 <button type="submit" class="btn btn-fill btn-warning btn-wd">Login</button>
                 <br />
-                <a href="{{url_for('auth.password_reset_form')}}">Reset password</a>
+                <a href="{{url_for('auth.user_password.password_reset_form')}}">Reset password</a>
             </div>
         </div>
 

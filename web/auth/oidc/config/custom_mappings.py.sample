@@ -1,0 +1,31 @@
+# Map which claim will be used by FAME for retrieving email, name, etc..
+CLAIM_MAPPING = {
+  "email": "",
+  "name": "",
+  "role": "",
+}
+
+# Map wihch group/permission each user will have when creating a new account
+# Depending on its role
+ROLE_MAPPING = {
+    "ROLE_1": {
+        "permissions": [
+            "submit_iocs",
+            "configs",
+            "cuckoo_access",
+        ],
+    },
+    "ROLE_2": {
+        "permissions": [
+            "view_logs",
+        ],
+        "default_sharing": [
+            "cert",
+            "users"
+        ],
+        "groups": [
+            "cert",
+            "*",
+        ],
+    }
+}
