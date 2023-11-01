@@ -6,10 +6,12 @@ from importlib import import_module
 from flask import Blueprint, request, redirect, session, render_template
 from flask_login import logout_user
 
-from web.views.helpers import prevent_csrf
+from fame.core.user import User
+from web.views.helpers import prevent_csrf, before_first_request, user_if_enabled
 from fame.common.config import fame_config
 from web.auth.oidc.user_management import (
-    authenticate,
+    authenticate_user,
+    authenticate_api,
     check_oidc_settings_present,
     ClaimMappingError,
 )
@@ -39,7 +41,7 @@ def login():
                 "auth_error.html", error_description=error_description
             )
         try:
-            authenticate(token["access_token"])
+            authenticate_user(token["access_token"])
             session["_flashes"].clear()  # Clear any message asking to log in
 
             redir = request.args.get("next", "/")
@@ -65,3 +67,30 @@ def login():
 def logout():
     logout_user()
     return render_template("logout.html")
+
+
+# Override login_manager.request_loader to include authentication via client credentials flow
+def override_request_loader(app):
+    def api_auth(request):
+        api_key = request.headers.get("X-API-KEY")
+        oidc_token = request.headers.get("Autorization")
+        user = User.get(api_key=api_key)
+
+        if user:
+            user.is_api = True
+        elif oidc_token and oidc_token.lower().startswith("bearer "):
+            args = {"access_token": oidc_token[7:]}
+            tokeninfo_url = (
+                fame_config.oidc_tokeninfo_endpoint + "?" + urllib.parse.urlencode(args)
+            )
+            tokeninfo = requests.get(tokeninfo_url).json()
+
+            if not "error" in tokeninfo.keys():
+                user = authenticate_api(tokeninfo)
+
+        return user_if_enabled(user)
+
+    app.login_manager.request_loader(api_auth)
+
+
+before_first_request.register(override_request_loader)
