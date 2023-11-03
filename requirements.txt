@@ -1,5 +1,5 @@
 Flask==2.2.5
-Werkzeug==2.2.3
+Werkzeug==3.0.1
 Flask-Classful==0.16.0
 flask-paginate~=0.7.0
 Sphinx~=3.2.1

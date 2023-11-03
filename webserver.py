@@ -6,7 +6,7 @@ from json import dumps
 from datetime import datetime
 from flask import Flask, redirect, request, url_for
 from flask_login import LoginManager
-from werkzeug.urls import url_encode
+from werkzeug.urls import urlencode
 from importlib import import_module
 
 from urllib.parse import urljoin
@@ -140,7 +140,7 @@ def delete_query(*new_values):
     for key in new_values:
         del args[key]
 
-    return '{}?{}'.format(request.path, url_encode(args))
+    return '{}?{}'.format(request.path, urlencode(args))
 
 
 @app.template_global()
@@ -148,7 +148,7 @@ def modify_query(key, value):
     args = request.args.copy()
     args[key] = value
 
-    return '{}?{}'.format(request.path, url_encode(args))
+    return '{}?{}'.format(request.path, urlencode(args))
 
 
 @app.route('/')
