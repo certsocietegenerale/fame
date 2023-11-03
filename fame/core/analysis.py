@@ -106,19 +106,20 @@ class Analysis(MongoDict):
         if self.magic_enabled():
             self.queue_modules(dispatcher.triggered_by("_generated_file(%s)" % file_type))
 
-    def add_extracted_file(self, filepath, automatic_analysis=True):
+    def add_extracted_file(self, filepath, filename, automatic_analysis=True):
         self.log('debug', "Adding extracted file '{}'".format(filepath))
 
+        if not filename:
+            filename = os.path.basename(filepath)
         fd = open(filepath, 'rb')
-        filename = os.path.basename(filepath)
         f = File(filename=filename, stream=fd, create=False)
 
         if not f.existing or f['type'] == 'hash':
             if fame_config.remote:
-                response = send_file_to_remote(filepath, '/files/')
+                response = send_file_to_remote(filepath, '/files/', filename)
                 f = File(bson_loads(dumps(response.json()['file'])))
             else:
-                f = File(filename=os.path.basename(filepath), stream=fd)
+                f = File(filename=filename, stream=fd)
 
             # Automatically analyze extracted file if magic is enabled and module did not disable it
             if self.magic_enabled() and automatic_analysis:

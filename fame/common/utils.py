@@ -64,14 +64,19 @@ def ordered_list_value(list_of_values):
     return result
 
 
-def send_file_to_remote(file, url):
+def send_file_to_remote(file, url, filename=''):
     if isinstance(file, str):
         file = open(file, 'rb')
+
+    if filename:
+        file = (filename, file)
 
     url = urljoin(fame_config.remote, url)
     response = requests.post(url, files={'file': file}, headers={'X-API-KEY': fame_config.api_key})
     response.raise_for_status()
 
+    if filename:
+        file = file[1]
     file.close()
 
     return response
@@ -115,3 +120,10 @@ def with_timeout(func, timeout, step):
         sleep(step)
 
     return None
+
+def sanitize_filename(filename, alternative_name):
+    sanitized_filename = secure_filename(filename)
+    if not sanitized_filename or len(sanitized_filename) > 200:
+        sanitized_filename = alternative_name
+    sanitized_filename = sanitized_filename.replace('-', '_')
+    return sanitized_filename

@@ -162,7 +162,7 @@ class FilesView(FlaskView, UIView):
     @requires_permission("worker")
     def post(self):
         file = request.files["file"]
-        f = File(filename=secure_filename(file.filename), stream=file.stream)
+        f = File(filename=file.filename, stream=file.stream)
 
         return render_json({"file": f})
 

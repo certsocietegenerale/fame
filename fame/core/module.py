@@ -350,12 +350,13 @@ class ProcessingModule(Module):
             skip (optional): True if the analysis review should be skipped, False otherwise."""
         self._analysis.skip_review(skip)
 
-    def add_extracted_file(self, location, automatic_analysis=True):
+    def add_extracted_file(self, location, filename='', automatic_analysis=True):
         """Create a new file that deserves its own analysis.
 
         Args:
-            location (string): full path."""
-        self._analysis.add_extracted_file(location, automatic_analysis)
+            location (string): full path.
+            filename (string): file name."""
+        self._analysis.add_extracted_file(location, filename, automatic_analysis)
 
     def add_support_file(self, name, location):
         """Add a support file to this analysis. A support file is a file that

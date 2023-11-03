@@ -6,6 +6,7 @@ import datetime
 
 from fame.core.store import store
 from fame.common.config import ConfigObject, fame_config
+from fame.common.utils import sanitize_filename
 from fame.common.mongo_dict import MongoDict
 from fame.core.module_dispatcher import dispatcher
 from fame.core.config import Config
@@ -109,7 +110,7 @@ class File(MongoDict):
             if existing_file and self['type'] == 'hash':
                 self.review(None)
             self._store_file(filename, stream)
-            self._compute_default_properties()
+            self._compute_default_properties(filename=filename)
             self.save()
 
     def add_comment(self, analyst_id, comment, analysis_id=None, probable_name=None, notify=None):
@@ -244,9 +245,9 @@ class File(MongoDict):
 
     # Compute default properties
     # For now, just 'name' and 'type'
-    def _compute_default_properties(self, hash_only=False):
+    def _compute_default_properties(self, hash_only=False, filename=''):
         if not hash_only:
-            self['names'] = [os.path.basename(self['filepath'])]
+            self['names'] = [filename]
             self['detailed_type'] = magic.from_file(self['filepath'])
             self['mime'] = magic.from_file(self['filepath'], mime=True)
             self['size'] = os.path.getsize(self['filepath'])
@@ -310,6 +311,8 @@ class File(MongoDict):
                 pass
 
     def _store_file(self, filename, stream):
+        filename = sanitize_filename(filename, self['sha256'])
+
         self['filepath'] = '{0}/{1}'.format(self['sha256'], filename)
         self['filepath'] = os.path.join(fame_config.storage_path, self['filepath'])
 
