@@ -67,6 +67,10 @@ def authenticate_user(oidc_token):
             claim[elem] = parse(USER_CLAIM_MAPPING[elem]).find(userinfo)[0].value
         except (ValueError, IndexError):
             if elem == "role":
+                # If user has no role: disable it
+                user = User.get(email=claim["email"])
+                if user:
+                    user.update_value("enabled", False)
                 raise ClaimMappingError(f"No role found for '%s'" % userinfo["sub"])
             else:
                 raise ClaimMappingError(
@@ -78,18 +82,32 @@ def authenticate_user(oidc_token):
                 f"JSON path of claim '%s' is invalid: '%s'. If you are a FAME administrator, please check the claim path in FAME config files."
                 % (elem, e.args[0])
             )
-    role = None
+
+    if isinstance(claim["role"], str):
+        claim["role"] = claim["role"].split(" ")
+
+    role = {}
     for granted_scope in claim["role"]:
-        if not role and granted_scope in ROLE_MAPPING:
-            role = ROLE_MAPPING[granted_scope]
+        if granted_scope in ROLE_MAPPING:
+            for elem in ["permissions", "groups", "default_sharing"]:
+                if elem in ROLE_MAPPING[granted_scope]:
+                    existing_value = role.get(elem, [])
+                    role[elem] = list(
+                        set(existing_value + ROLE_MAPPING[granted_scope][elem])
+                    )
 
     if not role:
+        # If user has no role: disable it
+        user = User.get(email=claim["email"])
+        if user:
+            user.update_value("enabled", False)
+
         raise ClaimMappingError(
-            f"User was given role '%s' but this role is not defined in FAME roles mapping. If you ae a FAME administrator, please check the role mapping in config files."
-            % claim["role"]
+            f"Role(s) found for '%s' (%s) do not allow FAME access."
+            % (userinfo["sub"], ','.join(claim["role"]))
         )
 
-    user = get_or_create_user(claim["email"], claim["name"], role)
+    user = update_or_create_user(claim["email"], claim["name"], role)
     if user:
         user.update_value("last_activity", datetime.now().timestamp())
         user.update_value("auth_token", auth_token(user))
@@ -113,15 +131,25 @@ def authenticate_api(tokeninfo):
     if not role:
         return None
 
-    user = get_or_create_user(claim["email"], claim["name"], role)
+    user = update_or_create_user(claim["email"], claim["name"], role)
     return user
 
 
-def get_or_create_user(mail, name, role):
+def update_or_create_user(mail, name, role):
     user = User.get(email=mail)
 
     if user:
-        return user_if_enabled(user)
+        user.update_value("name", name)
+        user.update_value("enabled", True)
+
+        if role.get("default_sharing"):
+            user.update_value("default_sharing", role.get("default_sharing"))
+        if role.get("permissions"):
+            user.update_value("permissions", role.get("permissions"))
+        if role.get("groups"):
+            user.update_value("groups", role.get("groups"))
+
+        return user
     else:
 
         user = User(

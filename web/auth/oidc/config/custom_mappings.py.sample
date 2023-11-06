@@ -11,8 +11,8 @@ API_CLAIM_MAPPING = {
   "role": "",
 }
 
-# Map wihch group/permission each user will have when creating a new account
-# Depending on its role
+# Map wihch group/permission each user will have
+# Depending on its role(s)
 ROLE_MAPPING = {
     "ROLE_1": {
         "permissions": [
@@ -23,7 +23,7 @@ ROLE_MAPPING = {
     },
     "ROLE_2": {
         "permissions": [
-            "view_logs",
+            "see_logs",
         ],
         "default_sharing": [
             "cert",
