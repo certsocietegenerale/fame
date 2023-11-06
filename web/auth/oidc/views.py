@@ -31,9 +31,17 @@ def login():
             "code": code,
             "redirect_uri": fame_config.fame_url + "/oidc-login",
         }
-        token = requests.post(
-            fame_config.oidc_token_endpoint, auth=auth, data=data
-        ).json()
+        try:
+            token = requests.post(
+                fame_config.oidc_token_endpoint, auth=auth, data=data
+            ).json()
+        except requests.exceptions.RequestException as e:
+            return render_template(
+                "auth_error.html",
+                error_description=f"Unable to contact the OIDC server: %s. If you are a FAME administrator, please check the value of oidc_token_endpoint."
+                % e.args[0],
+            )
+
         if not "access_token" in token:
             # invalid "code" given, invalid clientID/Secret in config, etc..
             error_description = token.get("error_description", "")
@@ -83,7 +91,14 @@ def override_request_loader(app):
             tokeninfo_url = (
                 fame_config.oidc_tokeninfo_endpoint + "?" + urllib.parse.urlencode(args)
             )
-            tokeninfo = requests.get(tokeninfo_url).json()
+            try:
+                tokeninfo = requests.get(tokeninfo_url).json()
+            except requests.exceptions.RequestException as e:
+                print(
+                    "WARNING: Unable to contact the OIDC server: %s. Please check the value of oidc_tokeninfo_endpoint"
+                    % e.args[0]
+                )
+                return False
 
             if not "error" in tokeninfo.keys():
                 user = authenticate_api(tokeninfo)

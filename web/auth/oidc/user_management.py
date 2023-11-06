@@ -50,10 +50,16 @@ def auth_token(user):
 
 
 def authenticate_user(oidc_token):
-    userinfo = requests.get(
-        fame_config.oidc_userinfo_endpoint,
-        headers={"Authorization": "Bearer " + oidc_token},
-    ).json()
+    try:
+        userinfo = requests.get(
+            fame_config.oidc_userinfo_endpoint,
+            headers={"Authorization": "Bearer " + oidc_token},
+        ).json()
+    except requests.exceptions.RequestException as e:
+        return ClaimMappingError(
+            f"Unable to contact the OIDC server: %s. If you are a FAME administrator, please check the value of oidc_userinfo_endpoint."
+            % e.args[0]
+        )
 
     claim = {}
     for elem in ["email", "name", "role"]:

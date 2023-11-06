@@ -17,7 +17,9 @@ In order to use this module, you need to define several settings in the FAME con
 | oidc_client_id          | Client ID of your FAME application.                                                                                                                                            | `11111111-1111-1111-1111-111111111111` |
 | oidc_client_secret      | Password associated with the Client ID.                                                                                                                                        | `ARandomClientSecret`                  |
 
-Then, you need to copy `fame/web/auth/oidc/config/custom_mappings.py.sample` to `fame/web/auth/oidc/config/custom_mappings.py`, and modify the file accordingly. 
+When creating a client ID on the OP, you may be asked to provide a redirect URI. The redirect URI of FAME is `{fame_root}/login-oidc`.
+
+Then, you need to copy `web/auth/oidc/config/custom_mappings.py.sample` to `web/auth/oidc/config/custom_mappings.py`, and modify the file accordingly. 
 
 3 settings need to be set in this file:
 
