@@ -16,7 +16,7 @@ def auth_token(user):
 def password_reset_token(user):
     signer = TimestampSigner(fame_config.secret_key)
 
-    return signer.sign(str(user['_id']))
+    return signer.sign(str(user['_id'])).decode()
 
 
 def validate_password_reset_token(token):
