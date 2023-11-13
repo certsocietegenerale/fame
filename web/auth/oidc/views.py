@@ -50,7 +50,8 @@ def login():
             )
         try:
             authenticate_user(token["access_token"])
-            session["_flashes"].clear()  # Clear any message asking to log in
+            if session.get("_flashes"):
+                session["_flashes"].clear()  # Clear any message asking to log in
 
             redir = request.args.get("next", "/")
             return redirect(urllib.parse.urljoin(fame_config.fame_url, redir))
