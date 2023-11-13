@@ -51,6 +51,9 @@ def create_user(name, email, groups, default_sharing, permissions, password=None
 
 
 def authenticate(email, password):
+    if not email or not password:
+        return None
+
     user = User.get(email=email.lower())
 
     if user_if_enabled(user):
