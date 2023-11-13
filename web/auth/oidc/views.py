@@ -29,7 +29,7 @@ def login():
         data = {
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": urllib.parse.urljoin(request.base_url, "/oidc-login"),
+            "redirect_uri": fame_config.fame_url + "/oidc-login",
         }
         try:
             token = requests.post(
