@@ -23,7 +23,7 @@ def create_user(user):
     user.generate_avatar()
 
     token = password_reset_token(user)
-    reset_url = urljoin(fame_config.fame_url, url_for('auth.password_reset', token=token))
+    reset_url = urljoin(fame_config.fame_url, url_for('auth.user_password.password_reset', token=token))
     email_server = EmailServer(TEMPLATES_DIR)
 
     if email_server.is_connected:
@@ -70,7 +70,7 @@ def password_reset_form():
 
                 if user:
                     token = password_reset_token(user)
-                    reset_url = urljoin(fame_config.fame_url, url_for('auth.password_reset', token=token))
+                    reset_url = urljoin(fame_config.fame_url, url_for('auth.user_password.password_reset', token=token))
 
                     msg = email_server.new_message_from_template("Reset your FAME account's password.", 'mail_reset_password.html', {'user': user, 'url': reset_url})
                     msg.send([user['email']])

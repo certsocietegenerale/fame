@@ -20,7 +20,7 @@ from web.views.modules import ModulesView
 from web.views.search import SearchView
 from web.views.configs import ConfigsView
 from web.views.users import UsersView
-from web.views.helpers import user_if_enabled, disconnect_if_inactive
+from web.views.helpers import user_if_enabled, disconnect_if_inactive, before_first_request
 
 try:
     fame_init()
@@ -43,10 +43,16 @@ app.jinja_loader = template_loader
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = '/login'
 
-auth_module = import_module('web.auth.{}.views'.format(fame_config.auth))
-app.register_blueprint(auth_module.auth)
+for auth_type in fame_config.auth.split(' '):
+    auth_module = import_module('web.auth.{}.views'.format(auth_type))
+    app.register_blueprint(auth_module.auth, name='auth.{}'.format(auth_type))
+
+    # Redirect to the login page of the first authentication method defined in config
+    if login_manager.login_view is None:
+        for rule in app.url_map.iter_rules():
+            if rule.endpoint == 'auth.{}.login'.format(auth_type):
+                login_manager.login_view = rule.rule
 
 
 @login_manager.user_loader
@@ -164,4 +170,5 @@ ConfigsView.register(app)
 UsersView.register(app)
 
 if __name__ == '__main__':
+    before_first_request.execute(app)
     app.run(debug=True, port=4200, host="0.0.0.0")

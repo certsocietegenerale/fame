@@ -1,0 +1,37 @@
+# Mapping for which claim will be used by FAME for retrieving user details (email, name, etc) from the /oauth2/userinfo endpoint
+USER_CLAIM_MAPPING = {
+  "email": "",
+  "name": "",
+  "role": "",
+}
+# Mapping for which claim will be used by FAME for retrieving API account details (email, name, etc) from the /oauth2/tokeninfo endpoint
+API_CLAIM_MAPPING = {
+  "email": "",
+  "name": "",
+  "role": "",
+}
+
+# Map wihch group/permission each user will have
+# Depending on its role(s)
+ROLE_MAPPING = {
+    "ROLE_1": {
+        "permissions": [
+            "submit_iocs",
+            "configs",
+            "cuckoo_access",
+        ],
+    },
+    "ROLE_2": {
+        "permissions": [
+            "see_logs",
+        ],
+        "default_sharing": [
+            "cert",
+            "users"
+        ],
+        "groups": [
+            "cert",
+            "*",
+        ],
+    }
+}

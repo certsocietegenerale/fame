@@ -1,0 +1,13 @@
+{% extends "base_unauthenticated.html" %}
+
+{% block title %}Authentication Error{% endblock %}
+
+{% block body %}
+        <div class="card">
+            <div class="content">
+                    <div class="text-center alert alert-warning">Authentication Error</div>
+                    <p class="text-center">{{ error_description }}</p>
+             </div>
+        </div>
+
+{% endblock %}

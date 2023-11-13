@@ -9,9 +9,7 @@ from fame.core.module_dispatcher import dispatcher
 from web.views.mixins import UIView
 from web.views.negotiation import render, redirect, validation_error
 from web.views.helpers import requires_permission, get_or_404, clean_users
-
-
-auth_module = import_module('web.auth.{}.views'.format(fame_config.auth))
+from web.auth.user_password.views import create_user
 
 
 class UsersView(FlaskView, UIView):
@@ -104,7 +102,7 @@ class UsersView(FlaskView, UIView):
             'enabled': True
         })
 
-        if not auth_module.create_user(user):
+        if not create_user(user):
             return validation_error()
 
         user.save()

@@ -190,3 +190,18 @@ def comments_enabled():
         comments_enabled = config.get_values()['enable']
 
     return comments_enabled
+
+
+class BeforeAppFirstRequest:
+    funcs = []
+
+    def register(self, func):
+        self.funcs.append(func)
+
+    def execute(self, app):
+        while self.funcs:
+            func = self.funcs.pop()
+            func(app)
+
+
+before_first_request = BeforeAppFirstRequest()

@@ -58,7 +58,7 @@ def acs():
             return redirect(saml_auth.redirect_to(request.form['RelayState']))
 
 
-@auth.route('/login', methods=['GET', 'POST'])
+@auth.route('/saml-login', methods=['GET', 'POST'])
 @prevent_csrf
 def login():
     req = prepare_auth_request(request)
