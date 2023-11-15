@@ -7,7 +7,7 @@ from flask import Blueprint, request, redirect, session, render_template
 from flask_login import logout_user
 
 from fame.core.user import User
-from web.views.helpers import prevent_csrf, before_first_request, user_if_enabled
+from web.views.helpers import prevent_csrf, before_first_request, user_if_enabled, get_fame_url
 from fame.common.config import fame_config
 from web.auth.oidc.user_management import (
     authenticate_user,
@@ -29,7 +29,7 @@ def login():
         data = {
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": fame_config.fame_url + "/oidc-login",
+            "redirect_uri": get_fame_url() + "/oidc-login",
         }
         try:
             token = requests.post(
@@ -54,7 +54,7 @@ def login():
                 session["_flashes"].clear()  # Clear any message asking to log in
 
             redir = request.args.get("next", "/")
-            return redirect(urllib.parse.urljoin(fame_config.fame_url, redir))
+            return redirect(urllib.parse.urljoin(get_fame_url(), redir))
 
         except ClaimMappingError as e:
             return render_template("auth_error.html", error_description=e.msg)
@@ -63,7 +63,7 @@ def login():
             "client_id": fame_config.oidc_client_id,
             "response_type": "code",
             "scope": fame_config.oidc_requested_scopes,
-            "redirect_uri": fame_config.fame_url + "/oidc-login",
+            "redirect_uri": get_fame_url() + "/oidc-login",
             "nonce": uuid.uuid4().hex,
         }
         login_url = (

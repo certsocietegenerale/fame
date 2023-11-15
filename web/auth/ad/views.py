@@ -4,7 +4,7 @@ from flask_login import logout_user
 from fame.common.config import fame_config
 from urllib.parse import urljoin
 
-from web.views.helpers import prevent_csrf, user_has_groups_and_sharing
+from web.views.helpers import prevent_csrf, user_has_groups_and_sharing, get_fame_url
 from web.auth.ad.user_management import (
     authenticate,
     LdapSettingsNotPresentException,
@@ -51,10 +51,10 @@ def login():
             return render_template("login-ad.html")
 
         redir = request.args.get("next", "/")
-        return redirect(urljoin(fame_config.fame_url, redir))
+        return redirect(urljoin(get_fame_url(), redir))
 
 
 @auth.route("/logout")
 def logout():
     logout_user()
-    return redirect(urljoin(fame_config.fame_url, "/ad-login"))
+    return redirect(urljoin(get_fame_url(), "/ad-login"))

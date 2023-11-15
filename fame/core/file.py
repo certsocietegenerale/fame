@@ -12,6 +12,7 @@ from fame.core.module_dispatcher import dispatcher
 from fame.core.config import Config
 
 from fame.common.email_utils import EmailServer
+from web.views.helpers import get_fame_url
 
 notification_body_tpl = """Hi,
 
@@ -143,7 +144,7 @@ class File(MongoDict):
                 recipients.add(recipient['email'])
         if len(recipients):
             config = Config.get(name="email").get_values()
-            analysis_url = "{0}/analyses/{1}".format(fame_config.fame_url, analysis_id)
+            analysis_url = "{0}/analyses/{1}".format(get_fame_url(True), analysis_id)
             body = notification_body_tpl.format(commentator['name'],
                                                 analysis_url,
                                                 comment['comment'])

@@ -192,6 +192,21 @@ def comments_enabled():
     return comments_enabled
 
 
+def get_fame_url(default=False):
+    if not ' ' in fame_config.fame_url.strip():
+        return fame_config.fame_url.strip()
+
+    possible_urls = fame_config.fame_url.strip().split(' ')
+    if default or not request:
+        return possible_urls[0].strip()
+
+    for possible_url in possible_urls:
+        if possible_url.strip() and request.url_root[:-1] == possible_url.strip():
+            return possible_url.strip()
+
+    return possible_urls[0].strip()
+
+
 class BeforeAppFirstRequest:
     funcs = []
 

@@ -9,7 +9,7 @@ from werkzeug.security import check_password_hash
 from fame.common.config import fame_config
 from fame.common.email_utils import EmailServer
 from fame.core.user import User
-from web.views.helpers import prevent_csrf, get_or_404
+from web.views.helpers import prevent_csrf, get_or_404, get_fame_url
 from web.auth.user_password.user_management import authenticate, change_password, password_reset_token, validate_password_reset_token, auth_token
 
 auth = Blueprint('auth', __name__, template_folder='templates')
@@ -23,7 +23,7 @@ def create_user(user):
     user.generate_avatar()
 
     token = password_reset_token(user)
-    reset_url = urljoin(fame_config.fame_url, url_for('auth.user_password.password_reset', token=token))
+    reset_url = urljoin(get_fame_url(), url_for('auth.user_password.password_reset', token=token))
     email_server = EmailServer(TEMPLATES_DIR)
 
     if email_server.is_connected:
@@ -70,18 +70,18 @@ def password_reset_form():
 
                 if user:
                     token = password_reset_token(user)
-                    reset_url = urljoin(fame_config.fame_url, url_for('auth.user_password.password_reset', token=token))
+                    reset_url = urljoin(get_fame_url(), url_for('auth.user_password.password_reset', token=token))
 
                     msg = email_server.new_message_from_template("Reset your FAME account's password.", 'mail_reset_password.html', {'user': user, 'url': reset_url})
                     msg.send([user['email']])
 
                 flash('A password reset link was sent.')
-                return redirect(urljoin(fame_config.fame_url, '/login'))
+                return redirect(urljoin(get_fame_url(), '/login'))
 
         return render_template('password_reset_form.html')
     else:
         flash('Functionnality unavailable. Contact your administrator', 'danger')
-        return redirect(urljoin(fame_config.fame_url, '/login'))
+        return redirect(urljoin(get_fame_url(), '/login'))
 
 
 @auth.route('/password_reset/<token>', methods=['GET', 'POST'])
@@ -91,10 +91,10 @@ def password_reset(token):
         user_id = validate_password_reset_token(token)
     except BadTimeSignature:
         flash('Invalid token', 'danger')
-        return redirect(urljoin(fame_config.fame_url, '/login'))
+        return redirect(urljoin(get_fame_url(), '/login'))
     except SignatureExpired:
         flash('Expired token', 'danger')
-        return redirect(urljoin(fame_config.fame_url, '/login'))
+        return redirect(urljoin(get_fame_url(), '/login'))
 
     if request.method == 'POST':
         password = request.form.get('password', '')
@@ -104,7 +104,7 @@ def password_reset(token):
             user = User(get_or_404(User.get_collection(), _id=user_id.decode('ascii')))
             change_password(user, password)
             flash('Password was successfully changed.', 'success')
-            return redirect(urljoin(fame_config.fame_url, '/login'))
+            return redirect(urljoin(get_fame_url(), '/login'))
 
     return render_template('password_reset.html')
 
@@ -117,7 +117,7 @@ def login():
     else:
         if authenticate(request.form.get('email'), request.form.get('password')):
             redir = request.args.get('next', '/')
-            return redirect(urljoin(fame_config.fame_url, redir))
+            return redirect(urljoin(get_fame_url(), redir))
         else:
             flash("Invalid credentials.", "danger")
             return render_template('login.html')
@@ -128,7 +128,7 @@ def logout():
     if current_user.is_authenticated:
         current_user.update_value('auth_token', auth_token(current_user))
     logout_user()
-    return redirect(urljoin(fame_config.fame_url, '/login'))
+    return redirect(urljoin(get_fame_url(), '/login'))
 
 
 @auth.route('/change_password', methods=['POST'])

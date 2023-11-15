@@ -20,7 +20,7 @@ from web.views.modules import ModulesView
 from web.views.search import SearchView
 from web.views.configs import ConfigsView
 from web.views.users import UsersView
-from web.views.helpers import user_if_enabled, disconnect_if_inactive, before_first_request
+from web.views.helpers import user_if_enabled, disconnect_if_inactive, before_first_request, get_fame_url
 
 try:
     fame_init()
@@ -30,7 +30,7 @@ except:
 app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
 app.secret_key = fame_config.secret_key
 app.config['TEMPLATES_AUTO_RELOAD'] = True
-if 'fame_url' in fame_config and 'https://' in fame_config.fame_url:
+if 'fame_url' in fame_config and 'https://' in get_fame_url():
     app.config['SESSION_COOKIE_SECURE'] = True
 
 # Set two tempalte folders (one is for modules)
@@ -159,7 +159,7 @@ def modify_query(key, value):
 
 @app.route('/')
 def root():
-    return redirect(urljoin(fame_config.fame_url, '/analyses/'))
+    return redirect(urljoin(get_fame_url(), '/analyses/'))
 
 
 FilesView.register(app)
