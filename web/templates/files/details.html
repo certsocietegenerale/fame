@@ -35,7 +35,7 @@
             <div class="content file-name">
                 <div class="row">
                     <div class="col-sm-2 text-right"><strong>Name(s)</strong></div>
-                    <div class="col-sm-10">{{file.names|join(', ')}}</div>
+                    <div class="col-sm-{{'9' if current_user.has_permission('review') else '10'}}">{{file.names|join(', ')}}</div>
                 </div>
                 {% if not file.type == 'url' %}
                 <div class="row">

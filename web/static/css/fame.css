@@ -507,3 +507,15 @@ td.user-actions .btn {
 td > .small {
   word-break: break-word;
 }
+
+#ioc-display td {
+  word-break: break-word;
+}
+
+#results-url_preview .labeled-content {
+  word-break: break-word;
+}
+
+.file-name {
+  word-break: break-word;
+}
