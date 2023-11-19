@@ -124,7 +124,7 @@ def create_admin_user(context):
         default_user_email = os.environ.get("DEFAULT_EMAIL", "admin@changeme.fame")
         default_user_password = os.environ.get("DEFAULT_PASSWORD", '')
         if context['interactive']:
-            default_user_email = user_input("User email address:", default_user_email)
+            default_user_email = user_input("User email address:", default_user_email, email=True)
             if not default_user_password:
                 default_user_password = get_new_password()
 

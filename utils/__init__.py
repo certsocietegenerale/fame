@@ -1,5 +1,6 @@
 import sys
 import getpass
+import re
 
 
 def error(msg, code=1, exit=True):
@@ -9,7 +10,7 @@ def error(msg, code=1, exit=True):
         sys.exit(code)
 
 
-def user_input(prompt, default=None, choices=[]):
+def user_input(prompt, default=None, choices=[], email=False):
     prompt = "[?] {}".format(prompt)
 
     if default:
@@ -22,7 +23,10 @@ def user_input(prompt, default=None, choices=[]):
 
         if value:
             if choices and value not in choices:
-                print(("[!] Invalid choice: {}".format(value)))
+                print("[!] Invalid choice: {}".format(value))
+                continue
+            elif email and not re.match(r'\S+@\S+', value):
+                print("[!] Invalid email: {}".format(value))
                 continue
 
             return value
