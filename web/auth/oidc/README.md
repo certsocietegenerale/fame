@@ -36,6 +36,8 @@ These 3 settings have to be defined in accordance with your OpenID provider (Cla
 
 Finally, you need to set `auth=oidc` in the config file to enable the authentication method. You can set up multiple authentication method, (e.g., `auth=oidc user_password`) if you need to allow a fallback auth.
 
+One note regarding the API: authentications to the FAME API using local FAME tokens will always be working, even if `auth` doesn't contain `user_password` in `fame.conf`.
+
 # Custom CA file
 
 HTTPS requests to the OP are made using `requests`, which check for certificate validity using `certifi`. Thus, if you have a custom or self-signed CA you need to add it to the certifi list.

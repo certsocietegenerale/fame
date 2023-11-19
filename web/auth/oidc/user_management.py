@@ -123,10 +123,18 @@ def authenticate_api(tokeninfo):
         except (ValueError, IndexError, JSONPathError):
             return None
 
-    role = None
+    if isinstance(claim["role"], str):
+        claim["role"] = claim["role"].split(" ")
+
+    role = {}
     for granted_scope in claim["role"]:
-        if not role and granted_scope in ROLE_MAPPING:
-            role = ROLE_MAPPING[granted_scope]
+        if granted_scope in ROLE_MAPPING:
+            for elem in ["permissions", "groups", "default_sharing"]:
+                if elem in ROLE_MAPPING[granted_scope]:
+                    existing_value = role.get(elem, [])
+                    role[elem] = list(
+                        set(existing_value + ROLE_MAPPING[granted_scope][elem])
+                    )
 
     if not role:
         return None
