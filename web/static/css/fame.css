@@ -519,3 +519,10 @@ td > .small {
 .file-name {
   word-break: break-word;
 }
+
+.sidebar .sidebar-wrapper {
+  overflow-y: auto;
+}
+#sidebar-nav {
+  height: auto;
+}
