@@ -40,9 +40,7 @@
                             {% for analysis in data['analyses'] %}
                                 <tr class="{{ 'reviewed' if current_user.has_permission('review') and analysis.reviewed is defined and analysis.reviewed is not none }}">
                                     <td class="list-avatar avatar">
-                                        {% if analysis.analyst %}
-                                            <img class="img-circle" src="{{analysis.analyst._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.analyst.name}}" />
-                                        {% endif %}
+                                        <img class="img-circle" src="{{analysis.analyst|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.analyst|name}}" />
                                     </td>
                                     <td><a href="{{ url_for('AnalysesView:get', id=analysis._id) }}">{{analysis.date|date}}</a></td>
                                     <td>{{analysis.status}}</td>
@@ -56,7 +54,7 @@
                                     {% if current_user.has_permission('review') %}
                                         <td class="list-avatar avatar">
                                             {% if analysis.reviewed %}
-                                                <img class="img-circle" src="{{analysis.reviewed._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.reviewed.name}}" />
+                                                <img class="img-circle" src="{{analysis.reviewed|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.reviewed|name}}" />
                                             {% endif %}
                                         </td>
                                     {% endif %}

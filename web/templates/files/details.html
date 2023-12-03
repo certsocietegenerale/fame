@@ -127,10 +127,8 @@
             <div class="content row comments">
                 {% for comment in file.comments %}
                     <div class="col-md-2 list-avatar avatar text-center">
-                        {% if comment.analyst %}
-                            <img class="img-circle" src="{{comment.analyst._id|avatar}}" />
-                            <span class="comment-analyst-name">{{comment.analyst.name}}</span>
-                        {% endif %}
+                        <img class="img-circle" src="{{comment.analyst|avatar}}" />
+                        <span class="comment-analyst-name">{{comment.analyst|name}}</span>
                     </div>
                     <div class="col-md-8 comment-comment">
                         <pre class="initial">{{comment.comment}}</pre>

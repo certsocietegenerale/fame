@@ -58,6 +58,13 @@ def enrich_comments(obj):
 
     return obj
 
+def enrich_exists_on_fs(f):
+    if f['type'] == 'url' or f['type'] == 'hash':
+        f['exists_on_disk'] = True
+    else:
+        f['exists_on_disk'] = isfile(f['filepath'])
+    return f
+
 
 def clean_files(files):
     files = clean_objects(files, {'': ['filepath']})

@@ -94,7 +94,10 @@ class AnalysesView(FlaskView, UIView):
                 analysis['analyst'] = clean_users(analyst)
             if 'reviewed' in analysis and analysis['reviewed']:
                 reviewer = store.users.find_one({'_id': analysis['reviewed']})
-                analysis['reviewed'] = clean_users(reviewer)
+                if reviewer:
+                    analysis['reviewed'] = clean_users(reviewer)
+                else:
+                    analysis['reviewed'] = {'_id': None, "name": None}
 
         return render(analyses, 'analyses/index.html', ctx={'data': analyses, 'pagination': pagination, "filter": filter_arg})
 

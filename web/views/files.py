@@ -18,6 +18,7 @@ from web.views.helpers import (
     clean_analyses,
     clean_users,
     enrich_comments,
+    enrich_exists_on_fs,
     comments_enabled,
 )
 from web.views.mixins import UIView
@@ -71,7 +72,10 @@ class FilesView(FlaskView, UIView):
         for f in files['files']:
             if 'reviewed' in f and f['reviewed']:
                 reviewer = store.users.find_one({'_id': f['reviewed']})
-                f['reviewed'] = clean_users(reviewer)
+                if reviewer:
+                    f['reviewed'] = clean_users(reviewer)
+                else:
+                    f['reviewed'] = {'_id': None, "name": None}
 
         return render(files, "files/index.html", ctx={"data": files, "pagination": pagination, "filter": filter_arg})
 
@@ -99,7 +103,7 @@ class FilesView(FlaskView, UIView):
         :>json dict antivirus: dict with antivirus names as keys.
         :>json dict reviewed: analyst's ObjectId if review has been performed
         """
-        file = {"file": enrich_comments(clean_files(get_or_404(current_user.files, _id=id)))}
+        file = {"file": enrich_comments(clean_files(enrich_exists_on_fs(get_or_404(current_user.files, _id=id))))}
         return return_file(file)
 
     @route("/hash/<file_hash>", methods=["GET"])
@@ -119,7 +123,7 @@ class FilesView(FlaskView, UIView):
             abort(400)
 
         hash_filter = {hash_type[len(file_hash)]: file_hash.lower()}
-        return return_file({"file": enrich_comments(clean_files(get_or_404(current_user.files, **hash_filter)))})
+        return return_file({"file": enrich_comments(clean_files(enrich_exists_on_fs(get_or_404(current_user.files, **hash_filter))))})
 
     @route("/md5/<md5>", methods=["GET"])
     def get_md5(self, md5):
@@ -131,7 +135,7 @@ class FilesView(FlaskView, UIView):
 
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
-        return return_file({"file": enrich_comments(clean_files(get_or_404(current_user.files, md5=md5.lower())))})
+        return return_file({"file": enrich_comments(clean_files(enrich_exists_on_fs(get_or_404(current_user.files, md5=md5.lower()))))})
 
     @route("/sha1/<sha1>", methods=["GET"])
     def get_sha1(self, sha1):
@@ -143,7 +147,7 @@ class FilesView(FlaskView, UIView):
 
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
-        return return_file({"file": enrich_comments(clean_files(get_or_404(current_user.files, sha1=sha1.lower())))})
+        return return_file({"file": enrich_comments(clean_files(enrich_exists_on_fs(get_or_404(current_user.files, sha1=sha1.lower()))))})
 
     @route("/sha256/<sha256>", methods=["GET"])
     def get_sha256(self, sha256):
@@ -156,7 +160,7 @@ class FilesView(FlaskView, UIView):
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
         return return_file(
-            {"file": enrich_comments(clean_files(get_or_404(current_user.files, sha256=sha256.lower())))}
+            {"file": enrich_comments(clean_files(enrich_exists_on_fs(get_or_404(current_user.files, sha256=sha256.lower()))))}
         )
 
     @requires_permission("worker")

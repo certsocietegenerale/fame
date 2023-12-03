@@ -132,12 +132,18 @@ def unique(l):
 
 
 @app.template_filter()
-def avatar(user_id):
-    if os.path.exists(os.path.join(AVATARS_ROOT, "{}.png".format(user_id))):
-        return url_for('static', filename="img/avatars/{}.png".format(user_id))
+def avatar(user):
+    if user and dict(user).get('_id') and os.path.exists(os.path.join(AVATARS_ROOT, "{}.png".format(dict(user).get('_id')))):
+        return url_for('static', filename="img/avatars/{}.png".format(dict(user).get('_id')))
     else:
         return url_for('static', filename="img/avatars/default.png")
 
+@app.template_filter()
+def name(user):
+    if user and dict(user).get('name'):
+        return dict(user).get('name')
+    else:
+        return "Deleted User"
 
 @app.template_global()
 def delete_query(*new_values):

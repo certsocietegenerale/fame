@@ -43,7 +43,7 @@
                                                         {% if current_user.has_permission('review') %}
                                                             <td class="list-avatar avatar">
                                                                 {% if file.reviewed %}
-                                                                    <img class="img-circle" src="{{file.reviewed._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{file.reviewed.name}}" />
+                                                                    <img class="img-circle" src="{{file.reviewed|avatar}}" data-toggle="tooltip" data-placement="top" title="{{file.reviewed|name}}" />
                                                                 {% endif %}
                                                             </td>
                                                         {% endif %}

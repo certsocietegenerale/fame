@@ -6,34 +6,42 @@
 {% block sidebar %}
     <div class="sidebar-submission">
         <h4>New Analysis</h4>
-        <form action="{{ url_for('AnalysesView:post') }}" method="POST">
-            <input type="hidden" name="file_id" value="{{file._id}}" />
-            <div class="form-group">
-                <input class="form-control" id="modules-autocomplete" name="modules" type="text"
-                    placeholder="Modules / Just do your magic"
-                    data-data="{{url_for('ModulesView:list')}}" />
-            </div>
+        {% if file['exists_on_disk'] %}
+            <h4>New Analysis</h4>
+            <form action="{{ url_for('AnalysesView:post') }}" method="POST">
+                <input type="hidden" name="file_id" value="{{file._id}}" />
+                <div class="form-group">
+                    <input class="form-control" id="modules-autocomplete" name="modules" type="text"
+                        placeholder="Modules / Just do your magic"
+                        data-data="{{url_for('ModulesView:list')}}" />
+                </div>
 
-            <div class="form-group">
-                <label class="checkbox checkbox-inline">
-                    <input type="checkbox" name="options[magic_enabled]" checked data-toggle="checkbox">Enable Magic
-                </label>
-                <a class="help" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Enable Magic"
-                    data-html="true" data-content="When disabled, modules that were not specified will not be executed."
-                    data-placement="top">
-                    <i class="glyphicon glyphicon-question-sign"></i>
-                </a>
-            </div>
+                <div class="form-group">
+                    <label class="checkbox checkbox-inline">
+                        <input type="checkbox" name="options[magic_enabled]" checked data-toggle="checkbox">Enable Magic
+                    </label>
+                    <a class="help" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Enable Magic"
+                        data-html="true" data-content="When disabled, modules that were not specified will not be executed."
+                        data-placement="top">
+                        <i class="glyphicon glyphicon-question-sign"></i>
+                    </a>
+                </div>
 
-            <div class="form-group">
-                <label for="groups">Share with: </label>
-                <input name="groups" class="tags-input" type="text" value="{{ current_user['default_sharing']|join(',') }}" />
-            </div>
+                <div class="form-group">
+                    <label for="groups">Share with: </label>
+                    <input name="groups" class="tags-input" type="text" value="{{ current_user['default_sharing']|join(',') }}" />
+                </div>
 
-            {% include "analyses/_options.html" %}
+                {% include "analyses/_options.html" %}
 
-            <button type="submit" class="btn btn-info btn-fill">Submit</button>
-        </form>
+                <button type="submit" class="btn btn-info btn-fill">Submit</button>
+            </form>
+        {% else %}
+            <span>
+                Not available: The file was deleted from the FAME server.<br/>
+                Past analyses remain available, but you can't launch a new analysis.
+            </span>
+        {% endif %}
     </div>
 
 <script>
@@ -70,9 +78,7 @@
                                 {% for analysis in file.analysis %}
                                     <tr>
                                         <td class="list-avatar avatar">
-                                            {% if analysis.analyst %}
-                                                <img class="img-circle" src="{{analysis.analyst._id|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.analyst.name}}" />
-                                            {% endif %}
+                                            <img class="img-circle" src="{{analysis.analyst|avatar}}" data-toggle="tooltip" data-placement="top" title="{{analysis.analyst|name}}" />
                                         </td>
                                         <td><a href="{{ url_for('AnalysesView:get', id=analysis._id) }}">{{analysis.date|date}}</a></td>
                                         <td>{{analysis.status}}</td>

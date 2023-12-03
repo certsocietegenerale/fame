@@ -32,7 +32,7 @@
                                 {% for user in data['users'] %}
                                     <tr {% if not user.enabled %}class="user-disabled"{% endif %}>
                                             <td class="list-avatar avatar">
-                                                <img class="img-circle" src="{{user._id|avatar}}" />
+                                                <img class="img-circle" src="{{user|avatar}}" />
                                             </td>
                                             <td><a href="{{ url_for('UsersView:get', id=user._id)}}">
                                                 {{user.name}}
