@@ -81,6 +81,7 @@ services:
     volumes:
       - modules:/opt/fame/fame/modules/
       - env:/opt/fame/env/
+      - temp:/opt/fame/temp/
 
   fame_db:
     image: mongo:latest

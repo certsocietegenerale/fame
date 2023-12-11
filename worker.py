@@ -147,6 +147,7 @@ class Worker:
     # Delete files older than 7 days and empty directories
     def clean_temp_dir(self):
         current_time = time()
+        self.last_clean = current_time
 
         for root, dirs, files in os.walk(fame_config.temp_path, topdown=False):
             for f in files:
@@ -176,6 +177,9 @@ class Worker:
 
             while True:
                 updates = Internals.get(name='updates')
+                if time() > (self.last_clean + 3600):
+                    self.clean_temp_dir()
+
                 if updates['last_update'] > self.last_run:
                     # Stop running worker
                     os.kill(self.process.pid, signal.SIGTERM)
