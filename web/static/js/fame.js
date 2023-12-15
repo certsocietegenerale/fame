@@ -246,6 +246,24 @@ function enable_autorefresh_switch() {
   });
 }
 
+function enable_delete_file() {
+  $('#main-content').on('click', 'a#file-delete', function (e) {
+    e.preventDefault();
+
+    if (confirm("This will delete the file and its associated analyses. Do you really want to proceed?")) {
+      url = $(this).attr('href');
+      $.ajax({
+        url: url,
+        method: 'DELETE'
+      }).done(function (data) {
+        window.location.href = '../';
+      }).fail(function (data) {
+        window.location.href = '../';
+      });
+    }
+  });
+}
+
 $(function () {
   $('#file-field').fileinput({
     browseClass: "btn btn-info btn-fill",
@@ -264,5 +282,6 @@ $(function () {
   enable_ioc_submission();
   enable_av_submission();
   enable_confirm_dialogs();
+  enable_delete_file();
   enable_autorefresh_switch();
 });
