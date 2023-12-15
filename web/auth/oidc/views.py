@@ -103,6 +103,7 @@ def override_request_loader(app):
 
             if not "error" in tokeninfo.keys():
                 user = authenticate_api(tokeninfo)
+                user.is_api = True
 
         return user_if_enabled(user)
 
