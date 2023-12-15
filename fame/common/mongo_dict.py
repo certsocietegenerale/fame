@@ -13,12 +13,18 @@ class MongoDict(dict):
         dict.__init__(self, values)
         self.collection = store.db[self.collection_name]
 
+    def __hash__(self):
+        return hash(self['_id'])
+
     @classmethod
     def get_collection(klass):
         return store.db[klass.collection_name]
 
     @classmethod
     def find(klass, *args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], dict):
+            kwargs |= args[0]
+
         objs = klass.get_collection().find(kwargs)
 
         for obj in objs:
@@ -26,6 +32,9 @@ class MongoDict(dict):
 
     @classmethod
     def get(klass, *args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], dict):
+            kwargs |= args[0]
+
         obj = klass.get_collection().find_one(kwargs)
 
         if obj:

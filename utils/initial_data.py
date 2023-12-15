@@ -170,12 +170,63 @@ untrusted-subdomain.www.mycompany.com
 
         safe_domains.save()
 
+def create_remove_old_data():
+    remove_old_data = Config.get(name='remove_old_data')
+    if remove_old_data is None:
+        remove_old_data = Config({
+            "name": "remove_old_data",
+            "description": "Automatically remove old FAME data",
+            "config": [
+                {
+                    "name": "time",
+                    "description": 'Number of days to keep FAME analyses and disabled users. If this field is empty or ≤ 0, old analyses and disabled users will be kept forever.',
+                    "type": "integer",
+                    "default": None,
+                    "value": None,
+                },
+                {
+                    "name": "preserve_db",
+                    "description": "If checked, old analyses and files will still appear on the web interface, but the actual files associated with each analysis will be deleted from disk. This includes both the original file and the ones generated during each analysis.",
+                    "type": "bool",
+                    "default": False,
+                    "value": False,
+                },
+                {
+                    "name": "keep_when_probable_name",
+                    "description": "Do not delete analyses and files automatically when a probable name was defined.",
+                    "type": "bool",
+                    "default": True,
+                    "value": True,
+                },
+                {
+                    "name": "keep_when_comment",
+                    "description": "Do not delete analyses and files automatically when a comment was entered.",
+                    "type": "bool",
+                    "default": True,
+                    "value": True,
+                },
+                {
+                    "name": "types_to_exclude",
+                    "description": "Exclude files and analyses with the following types from automatic deletion.",
+                    "type": "text",
+                    "value": None,
+                    "default": """executable
+iso
+javascript
+etc...
+""",
+                },
+            ],
+        })
+        remove_old_data.save()
+
 def create_initial_data():
     create_types()
     create_internals()
     create_safe_domains()
     create_comment_configuration()
     create_extracted_schedule()
+    create_remove_old_data()
 
 
 if __name__ == '__main__':
