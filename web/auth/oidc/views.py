@@ -53,7 +53,7 @@ def login():
             if session.get("_flashes"):
                 session["_flashes"].clear()  # Clear any message asking to log in
 
-            redir = request.args.get("next", "/")
+            redir = request.args.get("state", "/")
             return redirect(urllib.parse.urljoin(get_fame_url(), redir))
 
         except ClaimMappingError as e:
@@ -65,6 +65,7 @@ def login():
             "scope": fame_config.oidc_requested_scopes,
             "redirect_uri": get_fame_url() + "/oidc-login",
             "nonce": uuid.uuid4().hex,
+            "state": request.args.get("next", "/"),
         }
         login_url = (
             fame_config.oidc_authorize_endpoint + "?" + urllib.parse.urlencode(args)
