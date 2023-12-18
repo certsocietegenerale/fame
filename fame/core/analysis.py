@@ -516,14 +516,13 @@ class Analysis(MongoDict):
         self.log("error", "{}: {}".format(module, message))
         self.append_to('canceled_modules', module)
 
-    def delete(self, force=False):
+    def delete(self, preserve_db=False):
         # Delete support files
         for module in ModuleInfo.find():
             support_files = os.path.join(fame_config.storage_path, "support_files", module['name'], str(self['_id']))
             delete_from_disk(support_files)
 
-        config = Config.get(name="remove_old_data").get_values()
-        if config.preserve_db and not force:
+        if preserve_db:
             return
 
         for file_to_update in File.find({"analysis": self['_id']}):

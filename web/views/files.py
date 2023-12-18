@@ -172,14 +172,14 @@ class FilesView(FlaskView, UIView):
 
     @route("/<id>", methods=["DELETE"])
     @requires_permission("delete")
-    def delete(self, id):
+    def anonymize(self, id):
         f = File(get_or_404(current_user.files, _id=id))
         if f:
-            f.delete(force=True)
-            flash("File {} was deleted.".format(id))
+            flash("File {} and associated analyses were deleted from disk.".format(id))
+            f.delete(preserve_db=True)
             return {"response":"ok"}
 
-        return {"response":"File not found"}, 404
+        return {"response":"File not found"}
 
     def download(self, id):
         """Download the file with `id`.

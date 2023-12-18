@@ -100,8 +100,8 @@
                                 <li><a href="{{ url_for('FilesView:download', id=file._id) }}"><i class="pe-7s-cloud-download"></i> Download</a></li>
                             {% endif %}
 
-                            {% if request.endpoint == 'FilesView:get' and current_user.has_permission('delete') %}
-                                <li><a id="file-delete" href="{{ url_for('FilesView:delete', id=file._id) }}"><i class="pe-7s-trash"></i> Delete</a></li>
+                            {% if request.endpoint == 'FilesView:get' and current_user.has_permission('delete') and file.exists_on_disk %}
+                                <li><a id="file-delete" href="{{ url_for('FilesView:anonymize', id=file._id) }}"><i class="pe-7s-trash"></i> Anonymize</a></li>
                             {% endif %}
                             {% if file.type != 'url' and file.type != 'hash' %}
                                 {% for module in av_modules %}

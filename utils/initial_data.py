@@ -170,26 +170,19 @@ untrusted-subdomain.www.mycompany.com
 
         safe_domains.save()
 
-def create_remove_old_data():
-    remove_old_data = Config.get(name='remove_old_data')
-    if remove_old_data is None:
-        remove_old_data = Config({
-            "name": "remove_old_data",
-            "description": "Automatically remove old FAME data",
+def create_cleaner():
+    cleaner = Config.get(name='cleaner')
+    if cleaner is None:
+        cleaner = Config({
+            "name": "cleaner",
+            "description": "Automatically delete old FAME files and analyses",
             "config": [
                 {
                     "name": "time",
-                    "description": 'Number of days to keep FAME analyses and disabled users. If this field is empty or ≤ 0, old analyses and disabled users will be kept forever.',
+                    "description": 'Number of days to keep FAME files and analyses. If this field is empty or ≤ 0, old files and analyses will be kept forever.',
                     "type": "integer",
                     "default": None,
                     "value": None,
-                },
-                {
-                    "name": "preserve_db",
-                    "description": "If checked, old analyses and files will still appear on the web interface, but the actual files associated with each analysis will be deleted from disk. This includes both the original file and the ones generated during each analysis.",
-                    "type": "bool",
-                    "default": False,
-                    "value": False,
                 },
                 {
                     "name": "keep_when_probable_name",
@@ -207,7 +200,7 @@ def create_remove_old_data():
                 },
                 {
                     "name": "types_to_exclude",
-                    "description": "Exclude files and analyses with the following types from automatic deletion.",
+                    "description": "Exclude files and analyses with the following type from automatic deletion.",
                     "type": "text",
                     "value": None,
                     "default": """executable
@@ -218,7 +211,7 @@ etc...
                 },
             ],
         })
-        remove_old_data.save()
+        cleaner.save()
 
 def create_initial_data():
     create_types()
@@ -226,7 +219,7 @@ def create_initial_data():
     create_safe_domains()
     create_comment_configuration()
     create_extracted_schedule()
-    create_remove_old_data()
+    create_cleaner()
 
 
 if __name__ == '__main__':

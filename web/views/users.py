@@ -2,6 +2,7 @@ from importlib import import_module
 from flask import request, flash, url_for, abort
 from flask_login import current_user
 from flask_classful import FlaskView, route
+from datetime import datetime
 
 from fame.common.config import fame_config
 from fame.core.user import User
@@ -177,6 +178,11 @@ class UsersView(FlaskView, UIView):
         """
         user = User(get_or_404(User.get_collection(), _id=id))
         user.update_value('enabled', False)
+        if user and 'last_activity' in user:
+            deletion_date = datetime.fromtimestamp(user['last_activity'] + 60*60*24*30).strftime("%d %B %Y")
+            flash('User was disabled and will be automatically deleted on {}'.format(deletion_date), 'danger')
+        else:
+            flash('User was disabled and will be automatically deleted within one hour', 'danger')
 
         return redirect({'user': clean_users(user)}, url_for('UsersView:index'))
 

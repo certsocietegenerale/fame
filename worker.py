@@ -178,17 +178,20 @@ class Worker:
                 except:
                     pass
 
-    def remove_old_data(self):
+    def run_cleaner(self):
         analyses, files = get_old_analyses()
         users = get_old_disabled_users()
 
         for analysis in analyses:
+            print('Cleaner: Deleting analysis {}'.format(analysis['_id']))
             analysis.delete()
 
         for f in files:
+            print('Cleaner: Deleting file {}'.format(f['_id']))
             f.delete()
 
         for user in users:
+            print('Cleaner: Deleting user {}'.format(user['_id']))
             user.delete()
 
     def start(self):
@@ -206,7 +209,7 @@ class Worker:
                         self.clean_temp_dir(fame_config.storage_path)
 
                     if 'updates' in self.queues:
-                        self.remove_old_data()
+                        self.run_cleaner()
 
                 if updates['last_update'] > self.last_run:
                     # Stop running worker

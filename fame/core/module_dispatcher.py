@@ -46,7 +46,7 @@ class ModuleDispatcher(object):
             ('add_probable_name', "Allows user to set an object's probable name"),
             ('see_logs', 'Allows user to access the log section of anlyses. This could reveal information on the underlying system.'),
             ('review', 'Allows user to review analyses. This is reserved to users analyzing submissions.'),
-            ('delete', 'Allows user to delete files and associated analyses.'),
+            ('delete', 'Allows user to anonymize (soft-delete) files and associated analyses.'),
         ])
 
         self.load_all_modules()

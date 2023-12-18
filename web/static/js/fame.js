@@ -250,15 +250,14 @@ function enable_delete_file() {
   $('#main-content').on('click', 'a#file-delete', function (e) {
     e.preventDefault();
 
-    if (confirm("This will delete the file and its associated analyses. Do you really want to proceed?")) {
-      url = $(this).attr('href');
+    url = $(this).attr('href');
+    warn = "This will delete the actual file and analyses support files (images, etc..) from disk, but the FAME analyses/file will remain in the web interface. Do you really want to proceed?";
+    if (confirm(warn)) {
       $.ajax({
         url: url,
         method: 'DELETE'
       }).done(function (data) {
-        window.location.href = '../';
-      }).fail(function (data) {
-        window.location.href = '../';
+        window.location.reload();
       });
     }
   });

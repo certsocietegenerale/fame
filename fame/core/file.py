@@ -333,17 +333,16 @@ class File(MongoDict):
                     stream.seek(0, 0)
                     break
 
-    def delete(self, force=False):
+    def delete(self, preserve_db=False):
         delete_from_disk(os.path.join(fame_config.storage_path, self['sha256']))
-
-        config = Config.get(name="remove_old_data").get_values()
-        if config.preserve_db and not force:
-            return
 
         for objectid in self['analysis']:
             analysis = Analysis.get(_id=objectid)
             if analysis:
-                analysis.delete(force)
+                analysis.delete(preserve_db)
+
+        if preserve_db:
+            return
 
         for analysis_to_update in Analysis.find({"extracted_files": self['_id']}):
             if analysis_to_update:
