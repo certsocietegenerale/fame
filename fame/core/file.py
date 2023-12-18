@@ -215,9 +215,14 @@ class File(MongoDict):
 
         # Update previous analysis
         for analysis_id in self['analysis']:
-            analysis = Analysis(store.analysis.find_one({'_id': ObjectId(analysis_id)}))
-            analysis['reviewed'] = self['reviewed']
-            analysis.save()
+            analysis = Analysis.get(_id=analysis_id)
+            if analysis:
+                analysis['reviewed'] = self['reviewed']
+                analysis.save()
+                for extracted_file_id in analysis['extracted_files']:
+                    extracted_file = File.get(_id=extracted_file_id)
+                    if extracted_file:
+                        extracted_file.review(analyst)
 
     # Update existing record
     def _add_to_previous(self, existing_record, name):
