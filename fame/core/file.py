@@ -331,6 +331,8 @@ class File(MongoDict):
         # Save file contents
         with open(self['filepath'], "wb") as fd:
             while True:
+                if stream is None:
+                    break
                 data = stream.read(4096)
                 if data:
                     fd.write(data)
@@ -339,7 +341,8 @@ class File(MongoDict):
                     break
 
     def delete(self, preserve_db=False):
-        delete_from_disk(os.path.join(fame_config.storage_path, self['sha256']))
+        if 'sha256' in self:
+            delete_from_disk(os.path.join(fame_config.storage_path, self['sha256']))
 
         for objectid in self['analysis']:
             analysis = Analysis.get(_id=objectid)
