@@ -122,7 +122,7 @@ def with_timeout(func, timeout, step):
     return None
 
 def sanitize_filename(filename, alternative_name):
-    sanitized_filename = secure_filename(filename)
+    sanitized_filename = secure_filename(str(filename))
     if not sanitized_filename or len(sanitized_filename) > 200:
         sanitized_filename = alternative_name
     sanitized_filename = sanitized_filename.replace('-', '_')
