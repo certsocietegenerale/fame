@@ -170,12 +170,56 @@ untrusted-subdomain.www.mycompany.com
 
         safe_domains.save()
 
+def create_cleaner():
+    cleaner = Config.get(name='cleaner')
+    if cleaner is None:
+        cleaner = Config({
+            "name": "cleaner",
+            "description": "Automatically delete old FAME files and analyses",
+            "config": [
+                {
+                    "name": "time",
+                    "description": 'Number of days to keep FAME files and analyses. If this field is empty or ≤ 0, old files and analyses will be kept forever.',
+                    "type": "integer",
+                    "default": None,
+                    "value": None,
+                },
+                {
+                    "name": "keep_when_probable_name",
+                    "description": "Do not delete analyses and files automatically when a probable name was defined.",
+                    "type": "bool",
+                    "default": True,
+                    "value": True,
+                },
+                {
+                    "name": "keep_when_comment",
+                    "description": "Do not delete analyses and files automatically when a comment was entered.",
+                    "type": "bool",
+                    "default": True,
+                    "value": True,
+                },
+                {
+                    "name": "types_to_exclude",
+                    "description": "Exclude files and analyses with the following type from automatic deletion.",
+                    "type": "text",
+                    "value": None,
+                    "default": """executable
+iso
+javascript
+etc...
+""",
+                },
+            ],
+        })
+        cleaner.save()
+
 def create_initial_data():
     create_types()
     create_internals()
     create_safe_domains()
     create_comment_configuration()
     create_extracted_schedule()
+    create_cleaner()
 
 
 if __name__ == '__main__':

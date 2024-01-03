@@ -9,12 +9,13 @@ from bson.json_util import loads as bson_loads
 from json import dumps
 
 from fame.common.config import fame_config
-from fame.common.utils import iterify, u, send_file_to_remote
+from fame.common.utils import iterify, u, send_file_to_remote, delete_from_disk
 from fame.common.mongo_dict import MongoDict
 from fame.core.store import store
 from fame.core.celeryctl import celery
 from fame.core.module_dispatcher import dispatcher, DispatchingException
 from fame.core.config import Config
+from fame.core.module import ModuleInfo
 
 
 # Celery task to retrieve analysis object and run specific module on it
@@ -515,6 +516,24 @@ class Analysis(MongoDict):
         self.log("error", "{}: {}".format(module, message))
         self.append_to('canceled_modules', module)
 
+    def delete(self, preserve_db=False):
+        # Delete support files
+        for module in ModuleInfo.find():
+            support_files = os.path.join(fame_config.storage_path, "support_files", module['name'], str(self['_id']))
+            delete_from_disk(support_files)
+
+        if preserve_db:
+            return
+
+        for file_to_update in File.find({"analysis": self['_id']}):
+            if file_to_update:
+                file_to_update.remove_from('analysis', self['_id'])
+
+        for file_to_update in File.find({"parent_analyses": self['_id']}):
+            if file_to_update:
+                file_to_update.remove_from('parent_analyses', self['_id'])
+
+        super().delete()
 
 # For cyclic imports
 from fame.core.file import File

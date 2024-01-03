@@ -127,3 +127,24 @@ def sanitize_filename(filename, alternative_name):
         sanitized_filename = alternative_name
     sanitized_filename = sanitized_filename.replace('-', '_')
     return sanitized_filename
+
+def delete_from_disk(top):
+    fame_path = os.path.normpath(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+    )
+    if not fame_path in top:
+        print(
+            "WARNING: refusing to delete '{}' because it is outside of '{}'.".format(
+                top, fame_path
+            )
+        )
+        return
+    for root, dirs, files in os.walk(top, topdown=False):
+        for name in files:
+            os.remove(os.path.join(root, name))
+        for name in dirs:
+            os.rmdir(os.path.join(root, name))
+    if os.path.isdir(top):
+        os.rmdir(top)
+    elif os.path.isfile(top):
+        os.remove(top)

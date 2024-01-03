@@ -3,6 +3,7 @@ import requests
 from base64 import b64encode
 
 from fame.core.store import store
+from fame.common.utils import delete_from_disk
 from fame.common.constants import AVATARS_ROOT
 from fame.common.mongo_dict import MongoDict
 
@@ -64,6 +65,10 @@ class User(MongoDict):
                 f.write(response.content)
         except:
             print(("Could not generate avatar for {}".format(self['email'])))
+
+    def delete(self):
+        delete_from_disk(os.path.join(AVATARS_ROOT, "{}.png".format(self['_id'])))
+        super().delete()
 
     @staticmethod
     def generate_api_key():

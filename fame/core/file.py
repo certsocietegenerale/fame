@@ -6,7 +6,7 @@ import datetime
 
 from fame.core.store import store
 from fame.common.config import ConfigObject, fame_config
-from fame.common.utils import sanitize_filename
+from fame.common.utils import sanitize_filename, delete_from_disk
 from fame.common.mongo_dict import MongoDict
 from fame.core.module_dispatcher import dispatcher
 from fame.core.config import Config
@@ -337,6 +337,23 @@ class File(MongoDict):
                 else:
                     stream.seek(0, 0)
                     break
+
+    def delete(self, preserve_db=False):
+        delete_from_disk(os.path.join(fame_config.storage_path, self['sha256']))
+
+        for objectid in self['analysis']:
+            analysis = Analysis.get(_id=objectid)
+            if analysis:
+                analysis.delete(preserve_db)
+
+        if preserve_db:
+            return
+
+        for analysis_to_update in Analysis.find({"extracted_files": self['_id']}):
+            if analysis_to_update:
+                analysis_to_update.remove_from('extracted_files', self['_id'])
+
+        super().delete()
 
 # For cyclic imports
 from fame.core.analysis import Analysis

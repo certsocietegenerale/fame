@@ -246,6 +246,23 @@ function enable_autorefresh_switch() {
   });
 }
 
+function enable_delete_file() {
+  $('#main-content').on('click', 'a#file-delete', function (e) {
+    e.preventDefault();
+
+    url = $(this).attr('href');
+    warn = "This will delete the actual file and analyses support files (images, etc..) from disk, but the FAME analyses/file will remain in the web interface. Do you really want to proceed?";
+    if (confirm(warn)) {
+      $.ajax({
+        url: url,
+        method: 'DELETE'
+      }).done(function (data) {
+        window.location.reload();
+      });
+    }
+  });
+}
+
 $(function () {
   $('#file-field').fileinput({
     browseClass: "btn btn-info btn-fill",
@@ -264,5 +281,6 @@ $(function () {
   enable_ioc_submission();
   enable_av_submission();
   enable_confirm_dialogs();
+  enable_delete_file();
   enable_autorefresh_switch();
 });

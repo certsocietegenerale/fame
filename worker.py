@@ -18,6 +18,7 @@ from fame.core.internals import Internals
 from fame.common.config import fame_config
 from fame.common.constants import MODULES_ROOT
 from fame.common.pip import pip_install
+from fame.common.cleaner import get_old_analyses, get_old_disabled_users
 
 
 UNIX_INSTALL_SCRIPTS = {
@@ -145,11 +146,20 @@ class Worker:
         return results
 
     # Delete files older than 7 days and empty directories
-    def clean_temp_dir(self):
+    def clean_temp_dir(self, base):
         current_time = time()
         self.last_clean = current_time
 
-        for root, dirs, files in os.walk(fame_config.temp_path, topdown=False):
+        fame_path = os.path.dirname(os.path.abspath(__file__))
+        if not fame_path in base:
+            print(
+                "WARNING: refusing to delete '{}' because it is outside of '{}'.".format(
+                    base, fame_path
+                )
+            )
+            return
+
+        for root, dirs, files in os.walk(base, topdown=False):
             for f in files:
                 filepath = os.path.join(root, f)
                 file_mtime = os.path.getmtime(filepath)
@@ -168,17 +178,38 @@ class Worker:
                 except:
                     pass
 
+    def run_cleaner(self):
+        analyses, files = get_old_analyses()
+        users = get_old_disabled_users()
+
+        for analysis in analyses:
+            print('Cleaner: Deleting analysis {}'.format(analysis['_id']))
+            analysis.delete()
+
+        for f in files:
+            print('Cleaner: Deleting file {}'.format(f['_id']))
+            f.delete()
+
+        for user in users:
+            print('Cleaner: Deleting user {}'.format(user['_id']))
+            user.delete()
+
     def start(self):
         try:
             self.last_run = time()
-            self.clean_temp_dir()
+            self.clean_temp_dir(fame_config.temp_path)
             self.update_modules()
             self.process = self._new_celery_worker()
 
             while True:
                 updates = Internals.get(name='updates')
                 if time() > (self.last_clean + 3600):
-                    self.clean_temp_dir()
+                    self.clean_temp_dir(fame_config.temp_path)
+                    if fame_config.remote:
+                        self.clean_temp_dir(fame_config.storage_path)
+
+                    if 'updates' in self.queues:
+                        self.run_cleaner()
 
                 if updates['last_update'] > self.last_run:
                     # Stop running worker

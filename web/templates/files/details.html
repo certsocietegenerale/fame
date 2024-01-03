@@ -98,7 +98,12 @@
                             {% if file.type != 'url' and file.type != 'hash' %}
 
                                 <li><a href="{{ url_for('FilesView:download', id=file._id) }}"><i class="pe-7s-cloud-download"></i> Download</a></li>
+                            {% endif %}
 
+                            {% if request.endpoint == 'FilesView:get' and current_user.has_permission('delete') and file.exists_on_disk %}
+                                <li><a id="file-delete" href="{{ url_for('FilesView:anonymize', id=file._id) }}"><i class="pe-7s-trash"></i> Anonymize</a></li>
+                            {% endif %}
+                            {% if file.type != 'url' and file.type != 'hash' %}
                                 {% for module in av_modules %}
                                 <li id="av-sent-{{module}}" {% if not file.antivirus[module] %}class="hidden"{% endif %} {% if file.antivirus[module] is string %}data-toggle="tooltip" data-placement="top" title="{{file.antivirus[module]}}"{% endif %}>
                                     <i class="fa fa-check text-success"></i> {{module}}

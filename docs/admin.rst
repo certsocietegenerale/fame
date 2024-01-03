@@ -145,7 +145,7 @@ You are first presented with a list of existing users:
 
 On a fresh install, you will have only your administrator account created, an optionally an account named "FAME Worker" ``(1)``. This account is needed when using remote workers, so you should not delete or disable it.
 
-From the list of users, you can disable ``(2)`` or enable ``(3)`` a user. A disabled user cannot log in to your FAME instance. User accounts cannot be deleted because they are linked to previous analyses.
+From the list of users, you can disable ``(2)`` or enable ``(3)`` a user. A disabled user cannot log in to your FAME instance. Disabled user accounts are automatically deleted after 30 days, based on their last activity.
 
 Clicking on the name of a user will let you :ref:`admin-user-edit`.
 
