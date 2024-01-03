@@ -45,7 +45,7 @@ def get_old_analyses():
                 continue
 
             # if the file has parent analyses: keep extracted files if any analysis doesn't meet the threshold
-            if any([Analysis.get(_id=a)["date"] > since for a in f["parent_analyses"]]):
+            if any([Analysis.get(_id=a) is not None and Analysis.get(_id=a)["date"] > since for a in f["parent_analyses"]]):
                 continue
 
             old_files.add(f)
