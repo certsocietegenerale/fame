@@ -1,4 +1,5 @@
 import collections.abc
+import json
 
 from fame.common.utils import iterify
 from fame.core.store import store
@@ -14,7 +15,10 @@ class MongoDict(dict):
         self.collection = store.db[self.collection_name]
 
     def __hash__(self):
-        return hash(self['_id'])
+        if '_id' in self:
+            return hash(self['_id'])
+        else:
+            return hash(json.dumps(self, sort_keys=True))
 
     @classmethod
     def get_collection(klass):

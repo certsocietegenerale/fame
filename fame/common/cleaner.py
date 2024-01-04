@@ -8,11 +8,11 @@ from datetime import datetime, timedelta
 
 
 def ignore_file(f, config):
-    if f["type"] in config.types_to_exclude:
+    if 'type' in f and f["type"] in config.types_to_exclude:
         return True
-    if f["comments"] and config.keep_when_comment:
+    if 'comments' in f and f["comments"] and config.keep_when_comment:
         return True
-    if f["probable_names"] and config.keep_when_probable_name:
+    if 'probable_names' in f and f["probable_names"] and config.keep_when_probable_name:
         return True
     return False
 
@@ -45,7 +45,7 @@ def get_old_analyses():
                 continue
 
             # if the file has parent analyses: keep extracted files if any analysis doesn't meet the threshold
-            if any([Analysis.get(_id=a) is not None and Analysis.get(_id=a)["date"] > since for a in f["parent_analyses"]]):
+            if 'parent_analyses' in f and any([Analysis.get(_id=a) is not None and Analysis.get(_id=a)["date"] > since for a in f["parent_analyses"]]):
                 continue
 
             old_files.add(f)

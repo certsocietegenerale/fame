@@ -96,14 +96,17 @@ class File(MongoDict):
         # If the file already exists in the database, update it
         self.existing = False
         existing_file = (
-            self.collection.find_one({'sha256': self['sha256']}) or
-            self.collection.find_one({'sha1': self['sha1']}) or
-            self.collection.find_one({'md5': self['md5']})
+            'sha256' in self and self.collection.find_one({'sha256': self['sha256']}) or
+            'sha1' in self and self.collection.find_one({'sha1': self['sha1']}) or
+            'md5' in self and self.collection.find_one({'md5': self['md5']})
         )
 
         if existing_file:
             self._add_to_previous(existing_file, filename)
             self.existing = True
+
+        if not 'type' in self or not 'filepath' in self:
+            return
 
         # If the file doesn't exist, or exists as a hash submission, compute default properties and save
         if create and ((existing_file is None) or (self['type'] == 'hash') or not os.path.isfile(self['filepath'])):
