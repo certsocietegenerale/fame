@@ -23,8 +23,8 @@
       var $el = this.$element
         , $parent = $el.closest('.checkbox');
 
-        $el.prop('disabled') && $parent.addClass('disabled');
-        $el.prop('checked') && $parent.addClass('checked');
+        $el.prop('disabled') ? $parent.addClass('disabled') : $parent.removeClass('disabled');
+        $el.prop('checked') ? $parent.addClass('checked') : $parent.removeClass('checked');
     }
 
   , toggle: function () {
@@ -35,7 +35,7 @@
         , e = $.Event('toggle')
 
       if ($el.prop('disabled') == false) {
-        $parent.toggleClass(ch) && checked ? $el.removeAttr(ch) : $el.prop(ch, ch);
+        $parent.toggleClass(ch) && checked ? $el.prop(ch, false) : $el.prop(ch, ch);
         $el.trigger(e).trigger('change');
       }
     }
