@@ -223,6 +223,7 @@ Create the file `/etc/nginx/sites-available/fame` with the following contents::
         location / {
           proxy_pass http://127.0.0.1:4200;
           proxy_set_header X-Forwarded-For $remote_addr;
+          proxy_set_header Host $http_host;
         }
 
         location /static/ {
