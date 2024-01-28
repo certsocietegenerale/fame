@@ -175,7 +175,7 @@ def csrf_protect():
     if request.method not in ('GET', 'HEAD', 'OPTIONS', 'TRACE'):
         referer = request.headers.get('Referer')
 
-        if referer is None or different_origin(referer, get_fame_url):
+        if referer is None or different_origin(referer, get_fame_url()):
             raise Forbidden(description="Referer check failed.")
 
 
