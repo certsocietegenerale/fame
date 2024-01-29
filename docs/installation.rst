@@ -337,3 +337,24 @@ Then, do not forget to restart the webserver and worker for changes to be effect
 
     $ sudo systemctl restart fame_web
     $ sudo systemctl restart fame_worker
+
+
+Changing authentication methods
+===============================
+
+On a fresh installation, FAME is being configured to authenticate users against a local user database. As a FAME administrator, you may want to use external sources for authenticating users.
+
+This can be done by changing one setting (``auth=``) in the FAME config file (``fame.conf``) on the web server. Currently supported authentication methods are:
+
+- `Local user database <https://github.com/certsocietegenerale/fame/tree/master/web/auth/user_password>`_. This is the default authentication method on a fresh install.
+- `OpenID Connect <https://github.com/certsocietegenerale/fame/tree/master/web/auth/oidc>`_.
+- `Active Directory <https://github.com/certsocietegenerale/fame/tree/master/web/auth/ad>`_ via LDAP.
+- `SAML <https://github.com/certsocietegenerale/fame/tree/master/web/auth/saml>`_ (Partially supported).
+
+
+You can enable multiple authentication methods at the same time by setting multiple values in ``fame.conf`` (eg, ``auth=oidc user_password``).
+
+.. note::
+    Some authentication methods may require additional configurations. The `README.md` associated with each method does provide additional details on what needs to be configured.
+
+It is also possible to completely `disable authentication <https://github.com/certsocietegenerale/fame/tree/master/web/auth/single_user>`_ to the FAME interface, by setting ``auth=single_user`` in ``fame.conf``. This will also disable the user management page.

@@ -19,7 +19,7 @@ In order to use this module, you need to define several settings in the FAME con
 
 When creating a client ID on the OP, you may be asked if you want to create a Confidential Client or a Public client. FAME requires a Confidential Client ID.
 
-Also, you may be asked to provide a redirect URI. The redirect URI of FAME is `{fame_root}/login-oidc`.
+Also, you may be asked to provide a redirect URI. The redirect URI of FAME is `{fame_root}/login-oidc`, with `{fame_root}` being the URL of FAME.
 
 
 Then, you need to copy `web/auth/oidc/config/custom_mappings.py.sample` to `web/auth/oidc/config/custom_mappings.py`, and modify the file accordingly. 

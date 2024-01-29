@@ -2,8 +2,8 @@ Flask==2.2.5
 Werkzeug==3.0.1
 Flask-Classful==0.16.0
 flask-paginate~=0.7.0
-Sphinx~=3.2.1
-sphinx_rtd_theme~=0.5.0
+Sphinx~=7.2.6
+sphinx_rtd_theme~=2.0.0
 sphinxcontrib-httpdomain>=1.8.1
 celery~=5.2.7
 pymongo~=3.11.0

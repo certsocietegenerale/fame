@@ -30,7 +30,8 @@ The first panel on this page is the 'Configurations' panel. It groups configurat
 
 .. image:: /images/admin_configurations.png
 
-Only 3 configurations are directly used by FAME: types, email and virustotal.
+
+Each configuration option have their own menus. Most options are self-explanatory and can be tuned based on your preferences. However, one specific configuration menu is directly used by FAME: types.
 
 types
 ^^^^^
@@ -48,19 +49,6 @@ If no match was found, FAME will use the mime type.
 .. note::
     When installing and enabling modules, be sure to correctly read displayed instructions. Some modules might need additional type mappings to work properly, in which case you will have to alter this configuration.
 
-email
-^^^^^
-
-This configuration is used directly by FAME in order to send password reset links. When not configured, the password reset functionality will not be available.
-
-This configuration can also be used by modules that need to send emails.
-
-virustotal
-^^^^^^^^^^
-
-.. image:: /images/admin_virustotal.png
-
-If you have a VirusTotal Intelligence account and add your API key, you will be able to directly submit hashes to FAME, that will automatically download files from VirusTotal.
 
 Module Repositories
 -------------------
@@ -134,12 +122,13 @@ These settings are all applied globally, except when the `option` checkbox ``(5)
 
 .. _admin-users:
 
-Managing Users
-==============
+Managing Local Users
+====================
 
 This section lets you manage users that have access to FAME.
 
-You are first presented with a list of existing users:
+
+When using the local authentication method, you are presented with a list of existing users:
 
 .. image:: /images/admin_users.png
 
@@ -167,8 +156,10 @@ You can also assign permissions ``(4)`` to the user. Permissions are used to giv
 
 When you have finished creating the user by clicking on the `Create` button, an email will be sent to the user with a link to define his password.
 
+If this feature is disabled (because email is not correctly configured), a link will be displayed with the password reset link, that you should send to the user.
+
 .. note::
-    If this feature is disabled (because email is not correctly configured), a link will be displayed with the password reset link, that you should send to the user.
+    If external authentication methods are enabled (LDAP, OIDC, etc...), users will be created automatically during their first successful connection attempt.
 
 .. _admin-user-edit:
 
@@ -178,3 +169,6 @@ Edit a user account
 When clicking on the full name of a user, you will be able to edit his account.
 
 The first half of this page is similar to the one used to :ref:`admin-user-create`. The other half is similar to the :ref:`user-account`.
+
+.. warning::
+  If external authentication methods are enabled (LDAP, OIDC, etc...), editing users directly is pointless as the edited data will be overridden by the external source during next user connection attempt.

@@ -4,7 +4,7 @@ USER_CLAIM_MAPPING = {
   "name": "",
   "role": "",
 }
-# Mapping for which claim will be used by FAME for retrieving API account details (email, name, etc) from the /oauth2/tokeninfo endpoint
+# Mapping for which claim will be used by FAME for retrieving API account details (email, name, etc) from the /oauth2/introspect endpoint
 API_CLAIM_MAPPING = {
   "email": "",
   "name": "",

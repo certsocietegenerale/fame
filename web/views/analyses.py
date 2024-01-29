@@ -308,6 +308,14 @@ class AnalysesView(FlaskView, UIView):
 
     @route('/is_safe_url', methods=["POST"])
     def is_safe_url(self):
+        """Check if an URL is considered safe
+
+        .. :quickref: Analysis; Check if a provided URL is considered internal or fully trusted.
+
+        :form string url: URL to check.
+
+        :>json bool is_safe: True if the URL is considered safe, False otherwise.
+        """
         safe = False
         url = request.form.get('url', '').strip().strip('/')
         config = Config.get(name="safe_domains")
