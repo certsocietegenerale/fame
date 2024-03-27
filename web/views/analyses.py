@@ -341,7 +341,7 @@ class AnalysesView(FlaskView, UIView):
                             safe = True
                     except ValueError:
                         if domain.startswith('*.'):
-                           if parsed_url.endswith(domain[2:]):
+                           if parsed_url.endswith(domain[1:]) or parsed_url == domain[2:]:
                                safe = True
                         else:
                            if parsed_url == domain:
@@ -355,7 +355,7 @@ class AnalysesView(FlaskView, UIView):
                             safe = False
                     except ValueError:
                         if domain.startswith('*.'):
-                           if parsed_url.endswith(domain[2:]):
+                           if parsed_url.endswith(domain[1:]) or parsed_url == domain[2:]:
                                safe = False
                         else:
                            if parsed_url == domain:
