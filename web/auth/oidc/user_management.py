@@ -64,7 +64,17 @@ def authenticate_user(oidc_token):
     claim = {}
     for elem in ["email", "name", "role"]:
         try:
-            claim[elem] = parse(USER_CLAIM_MAPPING[elem]).find(userinfo)[0].value
+            if elem == "role":
+                claim["role"] = []
+                for found_role in parse(USER_CLAIM_MAPPING[elem]).find(userinfo):
+                    if isinstance(found_role.value, str):
+                        claim["role"] += found_role.value.split(" ")
+                    elif isinstance(found_role.value, list):
+                        claim["role"] += found_role.value
+                    else:
+                        claim["role"].append(found_role.value)
+            else:
+                claim[elem] = parse(USER_CLAIM_MAPPING[elem]).find(userinfo)[0].value
         except (ValueError, IndexError):
             if elem == "role":
                 # If user has no role: disable it
@@ -82,9 +92,6 @@ def authenticate_user(oidc_token):
                 f"JSON path of claim '%s' is invalid: '%s'. If you are a FAME administrator, please check the claim path in FAME config files."
                 % (elem, e.args[0])
             )
-
-    if isinstance(claim["role"], str):
-        claim["role"] = claim["role"].split(" ")
 
     role = {}
     for granted_scope in claim["role"]:
@@ -119,12 +126,19 @@ def authenticate_api(tokeninfo):
     claim = {}
     for elem in ["email", "name", "role"]:
         try:
-            claim[elem] = parse(API_CLAIM_MAPPING[elem]).find(tokeninfo)[0].value
+            if elem == "role":
+                claim["role"] = []
+                for found_role in parse(API_CLAIM_MAPPING[elem]).find(tokeninfo):
+                    if isinstance(found_role.value, str):
+                        claim["role"] += found_role.value.split(" ")
+                    elif isinstance(found_role.value, list):
+                        claim["role"] += found_role.value
+                    else:
+                        claim["role"].append(found_role.value)
+            else:
+                claim[elem] = parse(API_CLAIM_MAPPING[elem]).find(tokeninfo)[0].value
         except (ValueError, IndexError, JSONPathError):
             return None
-
-    if isinstance(claim["role"], str):
-        claim["role"] = claim["role"].split(" ")
 
     role = {}
     for granted_scope in claim["role"]:
