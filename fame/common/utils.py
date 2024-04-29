@@ -122,7 +122,12 @@ def with_timeout(func, timeout, step):
     return None
 
 def sanitize_filename(filename, alternative_name):
-    sanitized_filename = secure_filename(str(filename))
+    if not filename or len(filename) > 1024:
+        # CVE-2023-46695: avoid using secure_filename() when the name is too long
+        sanitized_filename = alternative_name
+    else:
+        sanitized_filename = secure_filename(str(filename))
+
     if not sanitized_filename or len(sanitized_filename) > 200:
         sanitized_filename = alternative_name
     sanitized_filename = sanitized_filename.replace('-', '_')
