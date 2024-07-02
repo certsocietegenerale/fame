@@ -117,10 +117,10 @@ class Analysis(MongoDict):
 
         if not f.existing or f['type'] == 'hash':
             if fame_config.remote:
-                response = send_file_to_remote(filepath, '/files/', filename)
+                response = send_file_to_remote(filepath, '/files/', filename, via=self._file['submitted_via'])
                 f = File(bson_loads(dumps(response.json()['file'])))
             else:
-                f = File(filename=filename, stream=fd)
+                f = File(filename=filename, stream=fd, submitted_via=self._file['submitted_via'])
 
             # Automatically analyze extracted file if magic is enabled and module did not disable it
             if self.magic_enabled() and automatic_analysis:

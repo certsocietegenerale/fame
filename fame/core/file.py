@@ -38,7 +38,7 @@ class File(MongoDict):
     collection_name = 'files'
 
     def __init__(self, values=None, filename=None, stream=None, create=True,
-                 hash=""):
+                 hash="", submitted_via=None):
         # When only passing a dict
         if isinstance(values, dict):
             self['comments'] = []
@@ -53,11 +53,14 @@ class File(MongoDict):
             self['comments'] = []
             self['analysis'] = []
             self['reviewed'] = None
+            self['submitted_via'] = []
 
             if hash:
                 self._init_with_hash(hash)
             else:
                 self._init_with_file(filename, stream, create)
+            if create:
+                self._set_submitted_via(submitted_via)
 
     def _init_with_hash(self, hash):
         md5, sha1, sha256 = _hash_by_length(hash)
@@ -315,6 +318,12 @@ class File(MongoDict):
                     break
             except:
                 pass
+
+    def _set_submitted_via(self, submitted_via=None):
+        if submitted_via is not None:
+           self['submitted_via'].append(submitted_via)
+           self['submitted_via'] = list(set(self['submitted_via']))
+           self.save()
 
     def _store_file(self, filename, stream):
         filename = sanitize_filename(filename, self['sha256'])

@@ -64,7 +64,7 @@ def ordered_list_value(list_of_values):
     return result
 
 
-def send_file_to_remote(file, url, filename=''):
+def send_file_to_remote(file, url, filename='', via=None):
     if isinstance(file, str):
         file = open(file, 'rb')
 
@@ -72,7 +72,7 @@ def send_file_to_remote(file, url, filename=''):
         file = (filename, file)
 
     url = urljoin(fame_config.remote, url)
-    response = requests.post(url, files={'file': file}, headers={'X-API-KEY': fame_config.api_key})
+    response = requests.post(url, files={'file': file}, data={'via': via}, headers={'X-API-KEY': fame_config.api_key})
     response.raise_for_status()
 
     if filename:
