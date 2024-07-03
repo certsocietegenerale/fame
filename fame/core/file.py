@@ -320,10 +320,13 @@ class File(MongoDict):
                 pass
 
     def _set_submitted_via(self, submitted_via=None):
-        if submitted_via is not None:
-           self['submitted_via'].append(submitted_via)
-           self['submitted_via'] = list(set(self['submitted_via']))
-           self.save()
+        if submitted_via is not None and submitted_via:
+            if isinstance(submitted_via, str):
+                self['submitted_via'].append(submitted_via)
+            elif isinstance(submitted_via, list):
+                self['submitted_via'].extend(submitted_via)
+            self['submitted_via'] = list(set(self['submitted_via']))
+            self.save()
 
     def _store_file(self, filename, stream):
         filename = sanitize_filename(filename, self['sha256'])
