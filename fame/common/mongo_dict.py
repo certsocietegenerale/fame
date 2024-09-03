@@ -47,7 +47,7 @@ class MongoDict(dict):
         return obj
 
     def delete(self):
-        self.collection.remove(self["_id"])
+        self.collection.delete_one(self["_id"])
         del self['_id']
 
     def save(self):
