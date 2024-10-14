@@ -22,6 +22,7 @@ def create_types():
                     'value': """[types]
 
 application/x-dosexec = executable
+application/vnd.microsoft.portable-executable = executable
 application/vnd.openxmlformats-officedocument.wordprocessingml.document = word
 application/vnd.openxmlformats-officedocument.spreadsheetml.sheet = excel
 application/msword = word
