@@ -1,10 +1,11 @@
-# Mapping for which claim will be used by FAME for retrieving user details (email, name, etc) from the /oauth2/userinfo endpoint
+# Mapping for which claim will be used by FAME for retrieving user details (email, name, etc)
+# The claims are retrievd from the /oauth2/userinfo endpoint, as well as from JWT access_token and id_token
 USER_CLAIM_MAPPING = {
   "email": "",
   "name": "",
   "role": "",
 }
-# Mapping for which claim will be used by FAME for retrieving API account details (email, name, etc) from the /oauth2/introspect endpoint
+# Mapping for which claim will be used by FAME for retrieving API account details (email, name, etc) from the content of a provided access_token
 API_CLAIM_MAPPING = {
   "email": "",
   "name": "",

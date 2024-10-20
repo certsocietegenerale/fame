@@ -7,11 +7,17 @@ from flask import Blueprint, request, redirect, session, render_template
 from flask_login import logout_user
 
 from fame.core.user import User
-from web.views.helpers import prevent_csrf, before_first_request, user_if_enabled, get_fame_url
+from web.views.helpers import (
+    prevent_csrf,
+    before_first_request,
+    user_if_enabled,
+    get_fame_url,
+)
 from fame.common.config import fame_config
 from web.auth.oidc.user_management import (
     authenticate_user,
     authenticate_api,
+    verify_jwt,
     check_oidc_settings_present,
     ClaimMappingError,
 )
@@ -49,7 +55,7 @@ def login():
                 "auth_error.html", error_description=error_description
             )
         try:
-            authenticate_user(token["access_token"])
+            authenticate_user(token)
             if session.get("_flashes"):
                 session["_flashes"].clear()  # Clear any message asking to log in
 
@@ -86,26 +92,13 @@ def override_request_loader(app):
         oidc_token = request.headers.get("Autorization")
         user = User.get(api_key=api_key)
 
+        if not user and oidc_token and oidc_token.lower().startswith("bearer "):
+            jwt_content = verify_jwt(oidc_token[7:])
+            if jwt_content:
+                user = authenticate_api(jwt_content)
+
         if user:
             user.is_api = True
-        elif oidc_token and oidc_token.lower().startswith("bearer "):
-            args = {"access_token": oidc_token[7:]}
-            tokeninfo_url = (
-                fame_config.oidc_tokeninfo_endpoint + "?" + urllib.parse.urlencode(args)
-            )
-            try:
-                tokeninfo = requests.get(tokeninfo_url).json()
-            except requests.exceptions.RequestException as e:
-                print(
-                    "WARNING: Unable to contact the OIDC server: %s. Please check the value of oidc_tokeninfo_endpoint"
-                    % e.args[0]
-                )
-                return False
-
-            if not "error" in tokeninfo.keys():
-                user = authenticate_api(tokeninfo)
-                user.is_api = True
-
         return user_if_enabled(user)
 
     app.login_manager.request_loader(api_auth)
