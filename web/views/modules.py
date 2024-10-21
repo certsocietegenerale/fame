@@ -27,7 +27,23 @@ def get_name(module):
     return module["name"]
 
 
+def is_docker():
+    init_proc_name = os.path.join(os.sep, "proc", "1", "comm")
+
+    try:
+        with open(init_proc_name) as fd:
+            if fd.read().strip() == "sh":
+                return True
+    except:
+        pass
+
+    return False
+
+
 def get_deploy_key():
+    if is_docker():
+        return os.environ.get("FAME_GIT_SSH_KEY", None)
+
     keyfile = os.path.join(FAME_ROOT, "conf", "id_rsa.pub")
 
     key = None
@@ -489,6 +505,7 @@ class ModulesView(FlaskView, UIView):
         :form private: boolean specifying if the repository is private. See
             Administration Guide for more details on private repositories.
         """
+        docker = is_docker()
         deploy_key = get_deploy_key()
         repository = Repository()
 
@@ -539,7 +556,7 @@ class ModulesView(FlaskView, UIView):
             )
 
         return render(
-            {"repository": repository, "deploy_key": deploy_key},
+            {"repository": repository, "deploy_key": deploy_key, "is_docker": docker},
             "modules/repository_new.html",
         )
 

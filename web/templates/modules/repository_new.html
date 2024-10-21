@@ -50,7 +50,7 @@
                             {% if data.deploy_key %}
                                 <p class="help-block">Specify if the repository is private.</p>
                             {% else %}
-                                <p class="help-block"><i class="fa fa-exclamation-triangle text-danger"></i> Private repositories are disabled because of a problem with your installation (you do not have a deploy key in 'conf/id_rsa.pub')</p>
+                                <p class="help-block"><i class="fa fa-exclamation-triangle text-danger"></i> Private repositories are disabled because of a problem with your installation ({% if data.is_docker %}environment variable 'FAME_GIT_SSH_KEY' is not set{% else %}you do not have a deploy key in 'conf/id_rsa.pub'{% endif %})</p>
                             {% endif %}
                         </div>
                         <div class="col-sm-2"></div>
