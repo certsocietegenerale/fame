@@ -87,6 +87,8 @@ def authenticate_user(oidc_token):
                         claim["role"] += found_role.value
                     else:
                         claim["role"].append(found_role.value)
+                if not claim["role"]:
+                    raise IndexError
             else:
                 claim[elem] = parse(USER_CLAIM_MAPPING[elem]).find(userinfo)[0].value
         except (ValueError, IndexError):
