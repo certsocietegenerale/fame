@@ -484,9 +484,9 @@ td.user-actions .btn {
 
 @media(min-width:768px) {
      .review-btn {
-        position: absolute;
-        right: 2em;
-        top: 3.5em;
+        position: fixed;
+        left: 6em;
+        top: 30em;
         z-index: 1;
     }
 }
