@@ -7,7 +7,6 @@
     <div class="sidebar-submission">
         <h4>New Analysis</h4>
         {% if file['exists_on_disk'] %}
-            <h4>New Analysis</h4>
             <form action="{{ url_for('AnalysesView:post') }}" method="POST">
                 <input type="hidden" name="file_id" value="{{file._id}}" />
                 <div class="form-group">
@@ -35,6 +34,15 @@
                 {% include "analyses/_options.html" %}
 
                 <button type="submit" class="btn btn-info btn-fill">Submit</button>
+                {% if current_user.has_permission('review') %}
+                {% set not_reviewed = 'True' if(file.reviewed is not defined or file.reviewed is none or file.reviewed == False) else '' %}
+                <span class="review-btn">
+                    <form method="POST" action="{{url_for('FilesView:review', id=file._id)}}">
+                        <input type="hidden" name="reviewed" value="{{ not_reviewed }}" />
+                        <input type="submit" class="btn btn-fill {{ 'btn-success' if not_reviewed == 'True' else 'btn-danger' }}" value="{{'Review' if not_reviewed == 'True' else 'Unreview'}}">
+                    </form>
+                </span>
+                {% endif %}
             </form>
         {% else %}
             <span>
