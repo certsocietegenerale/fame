@@ -529,9 +529,10 @@ td > .small {
   padding-top: 40px;
 }
 
-.navbar-form {
-    height: 30px;
-    width: 900px;
+@media(min-width:1637px) {
+ .navbar-search-form {
+   width: 900px;
+ }
 }
 
 .navbar-form .input-group {
