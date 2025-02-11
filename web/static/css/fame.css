@@ -208,6 +208,7 @@ a.help {
 .sidebar-submission {
     padding-left: 20px;
     padding-right: 20px;
+    padding-top: 40px;
 }
 
 .sidebar-submission label {
@@ -485,23 +486,24 @@ td.user-actions .btn {
 @media(min-width:768px) {
      .review-btn {
         position: fixed;
-        left: 6em;
+        left: 6.5em;
+        top: 5.5em;
         z-index: 1;
     }
 }
 
-/*@media(max-width:768px) {
+@media(max-width:768px) {
     .review-btn {
-       position: relative;
-       float: right;
-       right: 13px;
-       top: 4px;
+        position: fixed;
+        right: 2em;
+        top: 5.5em;
+        z-index: 1;
     }
 
     .file-name {
        clear: both;
     }
-}*/
+}
 
 td > .small {
   word-break: break-word;
@@ -524,4 +526,5 @@ td > .small {
 }
 #sidebar-nav {
   height: auto;
+  padding-top: 40px;
 }
