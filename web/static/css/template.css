@@ -1609,7 +1609,8 @@ body > .navbar-collapse[data-color="purple"]:after {
   border: 0;
   padding: 0;
   background-color: transparent;
-  height: 22px;
+  height: 30px;
+  width: 900px;
   font-size: 16px;
   line-height: 1.5;
   color: #E3E3E3;

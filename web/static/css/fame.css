@@ -483,16 +483,16 @@ td.user-actions .btn {
     opacity: 0.3;
 }
 
-@media(min-width:768px) {
+@media(min-width:991px) {
      .review-btn {
         position: fixed;
-        left: 6.5em;
+        left: 6em;
         top: 5.5em;
         z-index: 1;
     }
 }
 
-@media(max-width:768px) {
+@media(max-width:991px) {
     .review-btn {
         position: fixed;
         right: 2em;
@@ -527,4 +527,18 @@ td > .small {
 #sidebar-nav {
   height: auto;
   padding-top: 40px;
+}
+
+.navbar-form {
+    height: 30px;
+    width: 900px;
+}
+
+.navbar-form .input-group {
+    width: 100%;
+    height: 100%;
+}
+
+  .sidebar .logo .simple-text {
+    font-size: 30px;
 }
