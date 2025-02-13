@@ -208,6 +208,7 @@ a.help {
 .sidebar-submission {
     padding-left: 20px;
     padding-right: 20px;
+    padding-top: 40px;
 }
 
 .sidebar-submission label {
@@ -482,21 +483,21 @@ td.user-actions .btn {
     opacity: 0.3;
 }
 
-@media(min-width:768px) {
+@media(min-width:991px) {
      .review-btn {
-        position: absolute;
-        right: 2em;
-        top: 3.5em;
+        position: fixed;
+        left: 6em;
+        top: 5.5em;
         z-index: 1;
     }
 }
 
-@media(max-width:768px) {
+@media(max-width:991px) {
     .review-btn {
-       position: relative;
-       float: right;
-       right: 13px;
-       top: 4px;
+        position: fixed;
+        right: 2em;
+        top: 5.5em;
+        z-index: 1;
     }
 
     .file-name {
@@ -525,4 +526,20 @@ td > .small {
 }
 #sidebar-nav {
   height: auto;
+  padding-top: 40px;
+}
+
+@media(min-width:1637px) {
+ .navbar-search-form {
+   width: 900px;
+ }
+}
+
+.navbar-form .input-group {
+    width: 100%;
+    height: 100%;
+}
+
+  .sidebar .logo .simple-text {
+    font-size: 30px;
 }

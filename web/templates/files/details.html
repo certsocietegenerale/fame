@@ -2,6 +2,16 @@
     <h4 class="probable-names">Probable Name(s): {{file.probable_names|join(', ')}}</h4>
 {% endif %}
 
+{% if current_user.has_permission('review') %}
+{% set not_reviewed = 'True' if(file.reviewed is not defined or file.reviewed is none or file.reviewed == False) else '' %}
+<span class="review-btn">
+    <form method="POST" action="{{url_for('FilesView:review', id=file._id)}}">
+        <input type="hidden" name="reviewed" value="{{ not_reviewed }}" />
+        <input type="submit" class="btn btn-fill {{ 'btn-success' if not_reviewed == 'True' else 'btn-danger' }}" value="{{'Review' if not_reviewed == 'True' else 'Unreview'}}">
+    </form>
+</span>
+{% endif %}
+
 <div class="row" id="file-details">
     <div class="col-md-12">
         <div class="card">
@@ -23,15 +33,6 @@
                 </div>
                 <h4 class="title">Object Details</h4>
             </div>
-            {% if current_user.has_permission('review') %}
-                {% set not_reviewed = 'True' if(file.reviewed is not defined or file.reviewed is none or file.reviewed == False) else '' %}
-                <span class="review-btn">
-                    <form method="POST" action="{{url_for('FilesView:review', id=file._id)}}">
-                        <input type="hidden" name="reviewed" value="{{ not_reviewed }}" />
-                        <input type="submit" class="btn btn-fill {{ 'btn-success' if not_reviewed == 'True' else 'btn-danger' }}" value="{{'Review' if not_reviewed == 'True' else 'Unreview'}}">
-                    </form>
-                </span>
-            {% endif %}
             <div class="content file-name">
                 <div class="row">
                     <div class="col-sm-2 text-right"><strong>Name(s)</strong></div>
