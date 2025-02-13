@@ -294,8 +294,9 @@ class FilesView(FlaskView, UIView):
                 # If there is an analysis ID, make sure it is accessible
                 if analysis_id:
                     get_or_404(current_user.analyses, _id=analysis_id)
+                is_reviewer = current_user.has_permission('review')
 
-                f.add_comment(current_user["_id"], comment, analysis_id, probable_name, notify)
+                f.add_comment(current_user["_id"], comment, analysis_id, probable_name, notify, is_reviewer)
             else:
                 flash("Comment should not be empty", "danger")
 

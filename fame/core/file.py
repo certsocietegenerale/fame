@@ -9,6 +9,7 @@ from fame.common.config import ConfigObject, fame_config
 from fame.common.utils import sanitize_filename, delete_from_disk
 from fame.common.mongo_dict import MongoDict
 from fame.core.module_dispatcher import dispatcher
+from fame.core.user import User
 from fame.core.config import Config
 
 from fame.common.email_utils import EmailServer
@@ -117,7 +118,7 @@ class File(MongoDict):
             self._compute_default_properties(filename=filename)
             self.save()
 
-    def add_comment(self, analyst_id, comment, analysis_id=None, probable_name=None, notify=None):
+    def add_comment(self, analyst_id, comment, analysis_id=None, probable_name=None, notify=None, is_reviewer=False):
         if probable_name:
             self.add_probable_name(probable_name)
 
@@ -130,6 +131,10 @@ class File(MongoDict):
         })
         if notify is not None and analysis_id is not None:
             self.notify_new_comment(analysis_id, analyst_id, comment)
+                
+        if not is_reviewer:
+            self.review(None)
+
 
     def notify_new_comment(self, analysis_id, commentator_id, comment):
         commentator = store.users.find_one({'_id': commentator_id})
