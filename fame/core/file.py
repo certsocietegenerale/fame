@@ -9,7 +9,6 @@ from fame.common.config import ConfigObject, fame_config
 from fame.common.utils import sanitize_filename, delete_from_disk
 from fame.common.mongo_dict import MongoDict
 from fame.core.module_dispatcher import dispatcher
-from fame.core.user import User
 from fame.core.config import Config
 
 from fame.common.email_utils import EmailServer
