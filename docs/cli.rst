@@ -164,3 +164,14 @@ Some fields require more explanation:
 * `Groups`: comma-separated list of groups the user belongs to. There is no need for the groups to be created first.
 * `Default Sharing Groups`: comma-separated list of groups with which this user's submission will be shared by default. The user will have the possibility of changing this setting globally and on a per-analysis basis.
 * `Permissions`: comma-separated list of permissions the user has.
+
+.. _update:
+
+update.py
+--------------
+
+If you bring some customization to the core of Fame, you should update it through this utility. Go to fame folder and :
+
+    $ utils/run.sh utils/update.py
+
+and then restart the corresponding service via systemctl. 
