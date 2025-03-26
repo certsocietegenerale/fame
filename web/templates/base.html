@@ -147,6 +147,11 @@
                     </form>
 
                     <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="https://fame.readthedocs.io/en/latest/user.html">
+                                Documentation
+                            </a>
+                        </li>
                         {% if current_user.has_permission('configs') %}
                         <li>
                            <a href="{{ url_for('ConfigsView:index') }}">
