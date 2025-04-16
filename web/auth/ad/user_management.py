@@ -3,6 +3,7 @@ import ldap3
 import json
 from flask_login import login_user
 from datetime import datetime
+from ldap3.utils.conv import escape_filter_chars
 
 from fame.core.user import User
 from fame.common.config import fame_config
@@ -48,7 +49,7 @@ def _ldap_get_con():
 def _find_user_by_email(con, email):
     con.search(
         fame_config.ldap_filter_dn,
-        fame_config.ldap_filter_email.format(email),
+        fame_config.ldap_filter_email.format(escape_filter_chars(email)),
         search_scope=ldap3.SUBTREE,
         size_limit=1,
         attributes=["*"],
