@@ -2,7 +2,6 @@ import os
 import requests
 import datetime
 import traceback
-import random
 from shutil import copy
 from hashlib import md5
 from urllib.parse import urljoin
@@ -406,8 +405,8 @@ class Analysis(MongoDict):
                         f.write(chunk)
                     f.close()
                 except FileExistsError:
-                    retry_read(local_path)
-                except :
+                    retry_read(local_path, response)
+                except:
                     self.log("error", "File '{0}' is unreachable, unable to analyze it.".format(pathhash))
                     pass
 

@@ -1,6 +1,7 @@
 import os
 import requests
 import collections.abc
+import random
 from time import sleep
 from uuid import uuid4
 from urllib.parse import urljoin
@@ -154,7 +155,7 @@ def delete_from_disk(top):
     elif os.path.isfile(top):
         os.remove(top)
 
-def retry_read(local_path):
+def retry_read(local_path, response):
     retries = 7 # We might want to include in a different way as a argument to be more flexible
     for attempt in range(retries):
         delay = 2 ** attempt + random.uniform(0, 1)
@@ -165,5 +166,5 @@ def retry_read(local_path):
             f.close()
         except FileExistsError:
             self.log(f"Attempt {attempt + 1}/{retries} failed. Retrying in {delay:.2f} seconds...")
-            time.sleep(delay)
+            sleep(delay)
     raise Exception("All read attempts have failed.")
