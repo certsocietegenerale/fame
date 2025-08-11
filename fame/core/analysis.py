@@ -2,6 +2,7 @@ import os
 import requests
 import datetime
 import traceback
+import random
 from shutil import copy
 from hashlib import md5
 from urllib.parse import urljoin
@@ -9,7 +10,7 @@ from bson.json_util import loads as bson_loads
 from json import dumps
 
 from fame.common.config import fame_config
-from fame.common.utils import iterify, u, send_file_to_remote, delete_from_disk
+from fame.common.utils import iterify, u, send_file_to_remote, delete_from_disk, retry_read
 from fame.common.mongo_dict import MongoDict
 from fame.core.store import store
 from fame.core.celeryctl import celery
@@ -398,14 +399,17 @@ class Analysis(MongoDict):
                 except requests.exceptions.HTTPError:
                     self.log("error", "File '{0}' not found on disk, unable to analyze it.".format(pathhash))
                     return False
-                else:
-                    try:
-                        f = open(local_path, 'xb')
-                        for chunk in response.iter_content(1024):
-                            f.write(chunk)
-                        f.close()
-                    except FileExistsError:
-                        pass
+            else:
+                try:
+                    f = open(local_path, 'xb')
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                    f.close()
+                except FileExistsError:
+                    retry_read(local_path)
+                except :
+                    self.log("error", "File '{0}' is unreachable, unable to analyze it.".format(pathhash))
+                    pass
 
 
             return local_path

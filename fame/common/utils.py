@@ -153,3 +153,17 @@ def delete_from_disk(top):
         os.rmdir(top)
     elif os.path.isfile(top):
         os.remove(top)
+
+def retry_read(local_path):
+    retries = 7 # We might want to include in a different way as a argument to be more flexible
+    for attempt in range(retries):
+        delay = 2 ** attempt + random.uniform(0, 1)
+        try:
+            f = open(local_path, 'xb')
+            for chunk in response.iter_content(1024):
+                f.write(chunk)
+            f.close()
+        except FileExistsError:
+            self.log(f"Attempt {attempt + 1}/{retries} failed. Retrying in {delay:.2f} seconds...")
+            time.sleep(delay)
+    raise Exception("All read attempts have failed.")
