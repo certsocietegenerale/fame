@@ -9,7 +9,7 @@ from fame.common.objects import Dictionary
 class ConfigObject:
 
     def __init__(self, filename=None, from_string=''):
-        config = configparser.SafeConfigParser({'root': FAME_ROOT}, allow_no_value=True)
+        config = configparser.ConfigParser({'root': FAME_ROOT}, allow_no_value=True)
 
         if filename:
             config.read(os.path.join(FAME_ROOT, "conf", "%s.conf" % filename))

@@ -24,12 +24,12 @@ RUN apt update && \
   libvirt-dev \
   sudo \
   unzip \
-  software-properties-common \
+  lsb-release \
   protobuf-compiler
 
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
-    echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" >> /etc/apt/sources.list.d/docker.list && \
-    apt update && apt install -y \
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && \
+    echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(lsb_release -cs) stable" >> /etc/apt/sources.list.d/docker.list && \
+    apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
     docker-ce \
     docker-ce-cli \
     containerd.io \
