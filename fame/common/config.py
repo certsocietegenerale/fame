@@ -15,7 +15,7 @@ class ConfigObject:
             config.read(os.path.join(FAME_ROOT, "conf", "%s.conf" % filename))
         else:
             from_string = StringIO(from_string)
-            config.readfp(from_string)
+            config.read_file(from_string)
             from_string.close()
 
         for section in config.sections():
