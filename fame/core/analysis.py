@@ -2,6 +2,7 @@ import os
 import requests
 import datetime
 import traceback
+import portalocker
 from shutil import copy
 from hashlib import md5
 from urllib.parse import urljoin
@@ -399,14 +400,16 @@ class Analysis(MongoDict):
                     self.log("error", "File '{0}' not found on disk, unable to analyze it.".format(pathhash))
                     return False
                 else:
-                    try:
-                        f = open(local_path, 'xb')
-                        for chunk in response.iter_content(1024):
-                            f.write(chunk)
+                    with open(local_path, "ab+") as f:
+                        portalocker.lock(f, portalocker.LOCK_EX)
+                        f.seek(0, os.SEEK_END)
+                        if f.tell() == 0:
+                            f.seek(0, 0)
+                            for chunk in response.iter_content(1024):
+                                f.write(chunk)
+                            f.flush()
+                        portalocker.unlock(f)
                         f.close()
-                    except FileExistsError:
-                        pass
-
 
             return local_path
         else:

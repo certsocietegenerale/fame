@@ -20,3 +20,4 @@ jsonpath-ng>=1.6.0
 ldap3>=2.9.1
 josepy>=1.14.0
 setuptools>=80.9.0
+portalocker>=3.2.0
