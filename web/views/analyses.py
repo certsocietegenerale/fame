@@ -41,6 +41,8 @@ def get_options():
             value = request.form.get("options[{}]".format(option))
 
             if value is None:
+                if dispatcher.options[option_type][option]['default'] is not None:
+                    continue
                 flash('Missing option: {}'.format(option), 'danger')
                 return None
 
@@ -55,6 +57,9 @@ def get_options():
 
     for option in list(dispatcher.options['bool'].keys()) + ['magic_enabled']:
         value = request.form.get("options[{}]".format(option))
+        if value is None and option != 'magic_enabled':
+            if dispatcher.options['bool'][option]['default'] is not None:
+                continue
         options[option] = (value is not None) and (value not in ['0', 'False'])
 
     return options
