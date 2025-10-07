@@ -134,6 +134,16 @@ def create_admin_user(context):
         create_user("Admin", default_user_email, ['*', 'cert'], ["cert"], ['*'], default_user_password)
 
 
+def define_authentication(context):
+    context['ldap_uri'] = os.getenv("LDAP_URI", "")
+    context['ldap_user'] = os.getenv("LDAP_USER", "")
+    context['ldap_password'] = os.getenv("LDAP_PASSWORD", "")
+    context['ldap_filter_email'] = os.getenv("LDAP_FILTER_EMAIL", "")
+    context['ldap_filter_dn'] = os.getenv("LDAP_FILTER_DN", "")
+
+    context['auth'] = os.getenv("FAME_AUTHENTICATION_TYPE", "user_password")
+
+
 def add_community_repository():
     from fame.core.repository import Repository
 
@@ -162,6 +172,7 @@ def perform_local_installation(context):
         context['fame_url'] = user_input("FAME's URL for worker", context['fame_url'])
     print("[+] Creating configuration file ...")
     context['secret_key'] = os.urandom(64).hex()
+    define_authentication(context)
     templates.save_to(os.path.join(FAME_ROOT, 'conf', 'fame.conf'), 'local_fame.conf', context)
 
     generate_ssh_key()
