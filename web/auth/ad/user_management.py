@@ -95,7 +95,7 @@ def get_mapping(collection, name):
     result = set()
     for source_group in collection:
         for mapping in ROLE_MAPPING.get(source_group, {}).get(name, []):
-            result.update(mapping)
+            result.add(mapping)
     return list(result)
 
 
