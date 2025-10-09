@@ -141,6 +141,14 @@ def define_authentication(context):
     context['ldap_filter_email'] = os.getenv("LDAP_FILTER_EMAIL", "")
     context['ldap_filter_dn'] = os.getenv("LDAP_FILTER_DN", "")
 
+    context['oidc_authorize_endpoint'] = os.getenv("OIDC_AUTHORIZE_ENDPOINT", "")
+    context['oidc_token_endpoint'] = os.getenv("OIDC_TOKEN_ENDPOINT", "")
+    context['oidc_userinfo_endpoint'] = os.getenv("OIDC_USERINFO_ENDPOINT", "")
+    context['oidc_jwk_uri_endpoint'] = os.getenv("OIDC_JWK_URI_ENDPOINT", "")
+    context['oidc_requested_scopes'] = os.getenv("OIDC_REQUESTED_SCOPES", "")
+    context['oidc_client_id'] = os.getenv("OIDC_CLIENT_ID", "")
+    context['oidc_client_secret'] = os.getenv("OIDC_CLIENT_SECRET", "")
+
     context['auth'] = os.getenv("FAME_AUTHENTICATION_TYPE", "user_password")
 
 
