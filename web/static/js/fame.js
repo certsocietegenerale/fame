@@ -252,7 +252,7 @@ function enable_autorefresh_switch() {
 }
 
 function enable_delete_file() {
-  $('#main-content').on('click', 'a#file-delete', function (e) {
+  $('#main-content').on('click', 'a#file-delete-from-disk', function (e) {
     e.preventDefault();
 
     url = $(this).attr('href');
@@ -263,6 +263,21 @@ function enable_delete_file() {
         method: 'DELETE'
       }).done(function (data) {
         window.location.reload();
+      });
+    }
+  });
+
+  $('#main-content').on('click', 'a#file-delete-entirely', function (e) {
+    e.preventDefault();
+
+    url = $(this).attr('href');
+    warn = "This will delete all information/analyses for this file from FAME. Do you really want to proceed?";
+    if (confirm(warn)) {
+      $.ajax({
+        url: url,
+        method: 'DELETE'
+      }).done(function (data) {
+        window.location.href = "../../files/";
       });
     }
   });

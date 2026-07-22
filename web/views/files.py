@@ -192,6 +192,25 @@ class FilesView(FlaskView, UIView):
 
         return {"response": "File not found"}
 
+    @route("/<id>/delete", methods=["DELETE"])
+    @requires_permission("delete")
+    def delete(self, id):
+        """Completely deletes a file from FAME, including all analyses.
+
+        .. :quickref: File; Delete an object.
+
+        :param id: id of the file to delete.
+
+        :>json string response: Contain information on the deletion status.
+        """
+        f = File(get_or_404(current_user.files, _id=id))
+        if f:
+            flash("File {} and associated analyses were deleted.".format(id))
+            f.delete(preserve_db=False)
+            return {"response": "ok"}
+
+        return {"response": "File not found"}
+
     def download(self, id):
         """Download the file with `id`.
 
