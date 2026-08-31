@@ -101,7 +101,11 @@
                             {% endif %}
 
                             {% if request.endpoint == 'FilesView:get' and current_user.has_permission('delete') and file.exists_on_disk %}
-                                <li><a id="file-delete" href="{{ url_for('FilesView:anonymize', id=file._id) }}"><i class="pe-7s-trash"></i> Anonymize</a></li>
+                                {% if files_removal_method == 'delete' %}
+                                    <li><a id="file-delete" href="{{ url_for('FilesView:anonymize', id=file._id) }}" data-warn="This will delete all information/analyses for this file from FAME. Do you really want to proceed?" data-redirect-to="{{ url_for('AnalysesView:index') }}"><i class="pe-7s-trash"></i> Delete</a></li>
+                                {% else %}
+                                    <li><a id="file-delete" href="{{ url_for('FilesView:anonymize', id=file._id) }}" data-warn="This will delete the actual file and analyses support files (images, etc..) from disk, but the FAME analyses/file will remain in the web interface. Do you really want to proceed?"><i class="pe-7s-trash"></i> Anonymize</a></li>
+                                {% endif %}
                             {% endif %}
                             {% if file.type != 'url' and file.type != 'hash' %}
                                 {% for module in av_modules %}

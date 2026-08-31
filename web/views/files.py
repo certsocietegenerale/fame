@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 from fame.core.store import store
 from fame.core.file import File
 from fame.core.module_dispatcher import dispatcher
+from fame.common.config import fame_config
 from web.views.negotiation import render, render_json
 from web.views.constants import PER_PAGE
 from web.views.helpers import (
@@ -25,7 +26,9 @@ from web.views.mixins import UIView
 
 
 def return_file(file):
-    analyses = list(current_user.analyses.find({"_id": {"$in": file["file"]["analysis"]}}))
+    analyses = list(
+        current_user.analyses.find({"_id": {"$in": file["file"]["analysis"]}})
+    )
     file["av_modules"] = [m.name for m in dispatcher.get_antivirus_modules()]
 
     for analysis in analyses:
@@ -37,7 +40,12 @@ def return_file(file):
     return render(
         file,
         "files/show.html",
-        ctx={"data": file, "options": dispatcher.options, "comments_enabled": comments_enabled()},
+        ctx={
+            "data": file,
+            "options": dispatcher.options,
+            "comments_enabled": comments_enabled(),
+            "files_removal_method": fame_config.get("files_removal_method", ""),
+        },
     )
 
 
@@ -57,27 +65,41 @@ class FilesView(FlaskView, UIView):
         :>json list files: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
         page = int(request.args.get("page", 1))
-        filter_arg = request.args.get('filter')
+        filter_arg = request.args.get("filter")
         filter_query = {}
-        if current_user.has_permission('review'):
-            if filter_arg == 'reviewed':
-                filter_query = {"reviewed": { "$exists": True, "$nin": [None, False] } }
-            elif filter_arg == 'to_review':
-                filter_query = { "reviewed": { "$exists": True, "$eq": None } }
+        if current_user.has_permission("review"):
+            if filter_arg == "reviewed":
+                filter_query = {"reviewed": {"$exists": True, "$nin": [None, False]}}
+            elif filter_arg == "to_review":
+                filter_query = {"reviewed": {"$exists": True, "$eq": None}}
 
-        files = current_user.files.find(filter_query).sort("_id", DESCENDING).limit(PER_PAGE).skip((page - 1) * PER_PAGE)
-        pagination = Pagination(page=page, per_page=PER_PAGE, total=current_user.files.count_documents(filter_query), css_framework="bootstrap5")
+        files = (
+            current_user.files.find(filter_query)
+            .sort("_id", DESCENDING)
+            .limit(PER_PAGE)
+            .skip((page - 1) * PER_PAGE)
+        )
+        pagination = Pagination(
+            page=page,
+            per_page=PER_PAGE,
+            total=current_user.files.count_documents(filter_query),
+            css_framework="bootstrap5",
+        )
         files = {"files": clean_files(list(files))}
 
-        for f in files['files']:
-            if 'reviewed' in f and f['reviewed']:
-                reviewer = store.users.find_one({'_id': f['reviewed']})
+        for f in files["files"]:
+            if "reviewed" in f and f["reviewed"]:
+                reviewer = store.users.find_one({"_id": f["reviewed"]})
                 if reviewer:
-                    f['reviewed'] = clean_users(reviewer)
+                    f["reviewed"] = clean_users(reviewer)
                 else:
-                    f['reviewed'] = {'_id': None, "name": None}
+                    f["reviewed"] = {"_id": None, "name": None}
 
-        return render(files, "files/index.html", ctx={"data": files, "pagination": pagination, "filter": filter_arg})
+        return render(
+            files,
+            "files/index.html",
+            ctx={"data": files, "pagination": pagination, "filter": filter_arg},
+        )
 
     def get(self, id):
         """Get the object with `id`.
@@ -104,7 +126,11 @@ class FilesView(FlaskView, UIView):
         :>json user reviewed: analyst's ObjectId if review has been performed
         :>json bool exists_on_disk: True if the file still exists on disk, False otherwise
         """
-        file = {"file": enrich_comments(clean_files(enrich_exists_on_fs(get_or_404(current_user.files, _id=id))))}
+        file = {
+            "file": enrich_comments(
+                clean_files(enrich_exists_on_fs(get_or_404(current_user.files, _id=id)))
+            )
+        }
         return return_file(file)
 
     @route("/hash/<file_hash>", methods=["GET"])
@@ -124,7 +150,17 @@ class FilesView(FlaskView, UIView):
             abort(400)
 
         hash_filter = {hash_type[len(file_hash)]: file_hash.lower()}
-        return return_file({"file": enrich_comments(clean_files(enrich_exists_on_fs(get_or_404(current_user.files, **hash_filter))))})
+        return return_file(
+            {
+                "file": enrich_comments(
+                    clean_files(
+                        enrich_exists_on_fs(
+                            get_or_404(current_user.files, **hash_filter)
+                        )
+                    )
+                )
+            }
+        )
 
     @route("/md5/<md5>", methods=["GET"])
     def get_md5(self, md5):
@@ -136,7 +172,17 @@ class FilesView(FlaskView, UIView):
 
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
-        return return_file({"file": enrich_comments(clean_files(enrich_exists_on_fs(get_or_404(current_user.files, md5=md5.lower()))))})
+        return return_file(
+            {
+                "file": enrich_comments(
+                    clean_files(
+                        enrich_exists_on_fs(
+                            get_or_404(current_user.files, md5=md5.lower())
+                        )
+                    )
+                )
+            }
+        )
 
     @route("/sha1/<sha1>", methods=["GET"])
     def get_sha1(self, sha1):
@@ -148,7 +194,17 @@ class FilesView(FlaskView, UIView):
 
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
-        return return_file({"file": enrich_comments(clean_files(enrich_exists_on_fs(get_or_404(current_user.files, sha1=sha1.lower()))))})
+        return return_file(
+            {
+                "file": enrich_comments(
+                    clean_files(
+                        enrich_exists_on_fs(
+                            get_or_404(current_user.files, sha1=sha1.lower())
+                        )
+                    )
+                )
+            }
+        )
 
     @route("/sha256/<sha256>", methods=["GET"])
     def get_sha256(self, sha256):
@@ -161,13 +217,21 @@ class FilesView(FlaskView, UIView):
         :>json file file: list of files (see :http:get:`/files/(id)` for details on the format of a file).
         """
         return return_file(
-            {"file": enrich_comments(clean_files(enrich_exists_on_fs(get_or_404(current_user.files, sha256=sha256.lower()))))}
+            {
+                "file": enrich_comments(
+                    clean_files(
+                        enrich_exists_on_fs(
+                            get_or_404(current_user.files, sha256=sha256.lower())
+                        )
+                    )
+                )
+            }
         )
 
     @requires_permission("worker")
     def post(self):
         file = request.files["file"]
-        via = request.form.get('via')
+        via = request.form.get("via")
 
         f = File(filename=file.filename, stream=file.stream, submitted_via=via)
 
@@ -176,18 +240,21 @@ class FilesView(FlaskView, UIView):
     @route("/<id>", methods=["DELETE"])
     @requires_permission("delete")
     def anonymize(self, id):
-        """Anonymize (soft delete) a file from FAME disk. Support files from associated analyses are also removed, if any.
+        """Delete or anonymize (soft delete) a file from FAME disk. Support files from associated analyses are also removed, if any.
 
-        .. :quickref: File; Anonymize (soft delete) an object.
+        .. :quickref: File; Delete or anonymize (soft delete) an object.
 
-        :param id: id of the file to anonymize.
+        :param id: id of the file to delete or anonymize.
 
         :>json string response: Contain information on the deletion status.
         """
         f = File(get_or_404(current_user.files, _id=id))
         if f:
             flash("File {} and associated analyses were deleted from disk.".format(id))
-            f.delete(preserve_db=True)
+            if fame_config.get("files_removal_method", "") == "delete":
+                f.delete(preserve_db=False)
+            else:
+                f.delete(preserve_db=True)
             return {"response": "ok"}
 
         return {"response": "File not found"}
@@ -222,7 +289,9 @@ class FilesView(FlaskView, UIView):
                 f.update_value(["antivirus", module], True)
                 break
         else:
-            return make_response("antivirus module '{}' not present / enabled.".format(module))
+            return make_response(
+                "antivirus module '{}' not present / enabled.".format(module)
+            )
 
         return make_response("ok")
 
@@ -233,7 +302,10 @@ class FilesView(FlaskView, UIView):
         group = request.form.get("group")
 
         if group in f["owners"]:
-            flash("This group submitted this file themselves. You cannot neuralize them.", "danger")
+            flash(
+                "This group submitted this file themselves. You cannot neuralize them.",
+                "danger",
+            )
         else:
             f.remove_group(group)
 
@@ -249,7 +321,7 @@ class FilesView(FlaskView, UIView):
         return redirect(request.referrer)
 
     @requires_permission("review")
-    @route('/<id>/review', methods=["POST"])
+    @route("/<id>/review", methods=["POST"])
     def review(self, id):
         """Set review value state of a file
 
@@ -259,9 +331,9 @@ class FilesView(FlaskView, UIView):
         :form bool reviewed: if the file has been reviewed or not
         """
         f = File(get_or_404(current_user.files, _id=id))
-        reviewed = request.form.get('reviewed')
+        reviewed = request.form.get("reviewed")
         if reviewed:
-            f.review(current_user['_id'])
+            f.review(current_user["_id"])
         else:
             f.review(None)
 
@@ -294,9 +366,16 @@ class FilesView(FlaskView, UIView):
                 # If there is an analysis ID, make sure it is accessible
                 if analysis_id:
                     get_or_404(current_user.analyses, _id=analysis_id)
-                is_reviewer = current_user.has_permission('review')
+                is_reviewer = current_user.has_permission("review")
 
-                f.add_comment(current_user["_id"], comment, analysis_id, probable_name, notify, is_reviewer)
+                f.add_comment(
+                    current_user["_id"],
+                    comment,
+                    analysis_id,
+                    probable_name,
+                    notify,
+                    is_reviewer,
+                )
             else:
                 flash("Comment should not be empty", "danger")
 
