@@ -102,7 +102,7 @@ def logout():
 def override_request_loader(app):
     def api_auth(request):
         api_key = request.headers.get("X-API-KEY")
-        oidc_token = request.headers.get("Autorization")
+        oidc_token = request.headers.get("Authorization")
         user = User.get(api_key=api_key)
 
         if not user and oidc_token and oidc_token.lower().startswith("bearer "):

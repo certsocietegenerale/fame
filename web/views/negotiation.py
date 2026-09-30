@@ -10,8 +10,8 @@ from fame.common.config import fame_config
 def should_render_as_html():
     best_accept = request.accept_mimetypes.best_match(["text/html", "application/json"])
     api_key = bool(request.headers.get("X-API-KEY"))
-    token = bool(request.headers.get("Autorization")) and request.headers.get(
-        "Autorization"
+    token = bool(request.headers.get("Authorization")) and request.headers.get(
+        "Authorization"
     ).lower().startswith("bearer ")
 
     return best_accept == "text/html" and not api_key and not token

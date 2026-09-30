@@ -55,6 +55,13 @@ for auth_type in fame_config.auth.split(' '):
                 login_manager.login_view = rule.rule
 
 
+@app.before_request
+def run_before_first_request():
+    if not getattr(app, '_fame_initialized', False):
+        app._fame_initialized = True
+        before_first_request.execute(app)
+
+
 @login_manager.user_loader
 def load_user(token):
     return disconnect_if_inactive(user_if_enabled(User.get(auth_token=token)))
@@ -176,5 +183,4 @@ ConfigsView.register(app)
 UsersView.register(app)
 
 if __name__ == '__main__':
-    before_first_request.execute(app)
     app.run(debug=True, port=4200, host="0.0.0.0")
