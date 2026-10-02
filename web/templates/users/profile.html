@@ -1,10 +1,51 @@
 {% extends "base.html" %}
 
 {% set user = data['user'] %}
+{% set quota = data['quota'] %}
 
 {% block body %}
 {% if current_user.has_permission('manage_users') %}
 {% include "users/_form.html" %}
+{% endif %}
+
+{% if quota.limit is not none or current_user.has_permission('manage_users') %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Daily submissions</h4>
+                <p class="category">Resets in {{ quota.reset_in_hours }} hour{% if quota.reset_in_hours > 1 %}s{% endif %}</p>
+            </div>
+            <div class="content admin-form">
+                <div>
+                    Submitted today: <strong>{{ quota.count }}</strong>{% if quota.limit is not none %} / {{ quota.limit }}{% endif %}
+                </div>
+
+                {% if current_user.has_permission('manage_users') %}
+                <form method="post" action="{{ url_for('UsersView:submission_limit', id=user._id) }}">
+                    <div class="row mb-3">
+                        <label for="max_submissions_per_day" class="col-sm-2 col-form-label">Daily submission
+                            limit</label>
+                        <div class="col-sm-8">
+                            <input type="number" min="0" class="form-control" name="max_submissions_per_day"
+                                value="{% if user.max_submissions_per_day is defined and user.max_submissions_per_day is not none %}{{user.max_submissions_per_day}}{% endif %}"
+                                placeholder="Unlimited">
+                            <div class="form-text">Maximum number of analyses this user can submit per day. Leave empty
+                                to apply the global limit defined in fame.conf, or set to 0 to prevent any submission.
+                                When set, this value replaces the global limit for this user.</div>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-info btn-fill"><i class="fa fa-save"></i> Save
+                            Changes</button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
 
 <div class="row">

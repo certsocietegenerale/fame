@@ -7,6 +7,7 @@ from datetime import datetime
 from fame.common.config import fame_config
 from fame.core.user import User
 from fame.core.module_dispatcher import dispatcher
+from fame.core import submission_quota
 from web.views.mixins import UIView
 from web.views.negotiation import render, redirect, validation_error
 from web.views.helpers import requires_permission, get_or_404, clean_users
@@ -69,6 +70,33 @@ class UsersView(FlaskView, UIView):
 
         return list(current_permissions)
 
+    def get_submission_limit(self, default=None):
+        """Read the daily submission limit from the form.
+
+        Returns a ``(valid, value)`` tuple, where a value of ``None`` means
+        that no per-user limit applies.
+        """
+        value = request.form.get("max_submissions_per_day")
+
+        if value is None:
+            return True, default
+
+        value = value.strip()
+        if value == "":
+            return True, None
+
+        try:
+            value = int(value)
+        except ValueError:
+            flash("Daily submission limit must be a number.", "danger")
+            return False, default
+
+        if value < 0:
+            flash("Daily submission limit cannot be negative.", "danger")
+            return False, default
+
+        return True, value
+
     @requires_permission("manage_users")
     @route("/create", methods=["POST"])
     def create(self):
@@ -94,6 +122,10 @@ class UsersView(FlaskView, UIView):
         if not self._valid_form(name, email, groups):
             return validation_error()
 
+        valid_limit, max_submissions_per_day = self.get_submission_limit()
+        if not valid_limit:
+            return validation_error()
+
         user = User(
             {
                 "name": name,
@@ -101,6 +133,7 @@ class UsersView(FlaskView, UIView):
                 "groups": groups,
                 "default_sharing": groups,
                 "permissions": self.get_permissions(),
+                "max_submissions_per_day": max_submissions_per_day,
                 "enabled": True,
             }
         )
@@ -139,10 +172,17 @@ class UsersView(FlaskView, UIView):
         if not self._valid_form(name, email, groups, user["email"]):
             return validation_error()
 
+        valid_limit, max_submissions_per_day = self.get_submission_limit(
+            user.get("max_submissions_per_day")
+        )
+        if not valid_limit:
+            return validation_error()
+
         user["name"] = name
         user["email"] = email
         user["groups"] = groups
         user["permissions"] = self.get_permissions(user["permissions"])
+        user["max_submissions_per_day"] = max_submissions_per_day
         user.save()
 
         return redirect(
@@ -227,9 +267,14 @@ class UsersView(FlaskView, UIView):
         """
         self.ensure_permission(id)
         user = User(get_or_404(User.get_collection(), _id=id))
+        quota = submission_quota.status(user)
 
         return render(
-            {"user": clean_users(user), "permissions": dispatcher.permissions},
+            {
+                "user": clean_users(user),
+                "permissions": dispatcher.permissions,
+                "quota": quota,
+            },
             "users/profile.html",
         )
 
@@ -258,6 +303,35 @@ class UsersView(FlaskView, UIView):
             return redirect({}, request.referrer)
 
         user.update_value("default_sharing", groups)
+
+        return redirect({"user": clean_users(user)}, request.referrer)
+
+    @requires_permission("manage_users")
+    @route("/<id>/submission_limit", methods=["POST"])
+    def submission_limit(self, id):
+        """Change a user's daily submission limit.
+
+        .. :quickref: User; Change daily submission limit
+
+        Requires the `manage_users` permission.
+
+        :param id: user id.
+
+        :form max_submissions_per_day: maximum number of analyses the user can
+            submit every day. An empty value means that the global limit of the
+            instance applies instead.
+
+        :>json User user: modified user.
+        """
+        user = User(get_or_404(User.get_collection(), _id=id))
+
+        valid_limit, max_submissions_per_day = self.get_submission_limit(
+            user.get("max_submissions_per_day")
+        )
+        if not valid_limit:
+            return validation_error(request.referrer)
+
+        user.update_value("max_submissions_per_day", max_submissions_per_day)
 
         return redirect({"user": clean_users(user)}, request.referrer)
 

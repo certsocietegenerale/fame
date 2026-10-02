@@ -51,6 +51,9 @@ Finally, you have a list of analysis options ``(6)``. These settings are defined
 
 Submit your analysis by clicking on the "Submit" button ``(8)``. This will redirect you the :ref:`user-analysis-details`.
 
+.. note::
+    Your administrator may have defined a maximum number of analyses that can be submitted every day. When this limit is reached, an error message is displayed and you will have to wait until the next day to submit again. You can check your current usage on your :ref:`user-account` page.
+
 .. _user-analyses:
 
 Analyses
@@ -284,6 +287,8 @@ Clicking on your avatar on the top right corner will let you logout, or access y
 .. image:: /images/user-avatar-menu.png
 
 Your profile page has the following panels.
+
+The `Daily submissions` panel shows the number of analyses submitted today, and the maximum number of submissions allowed per day when your administrator defined one. It also indicates in how many hours this count starts over.
 
 .. image:: /images/user-profile-sharing.png
 

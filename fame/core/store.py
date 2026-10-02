@@ -10,18 +10,22 @@ class Store:
     def init(self):
         # Connection
         if fame_config.mongo_user and fame_config.mongo_password:
-            self._con = MongoClient(host=fame_config.mongo_host,
+            self._con = MongoClient(
+                host=fame_config.mongo_host,
                 port=int(fame_config.mongo_port),
                 serverSelectionTimeoutMS=10000,
                 username=fame_config.mongo_user,
                 password=fame_config.mongo_password,
                 authSource=fame_config.mongo_db,
-                unicode_decode_error_handler='replace')
+                unicode_decode_error_handler="replace",
+            )
         else:
-            self._con = MongoClient(host=fame_config.mongo_host,
+            self._con = MongoClient(
+                host=fame_config.mongo_host,
                 port=int(fame_config.mongo_port),
                 serverSelectionTimeoutMS=10000,
-                unicode_decode_error_handler='replace')
+                unicode_decode_error_handler="replace",
+            )
         self.db = self._con[fame_config.mongo_db]
 
         # Collections
@@ -48,6 +52,7 @@ class Store:
         self.files.create_index("sha256")
         self.files.create_index([("$**", TEXT)], background=True)
         self.analysis.create_index("date")
+        self.analysis.create_index([("submission", 1), ("date", 1), ("analyst", 1)])
         self.analysis.create_index([("$**", TEXT)], background=True)
 
     def collection(self, name):

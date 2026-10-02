@@ -223,6 +223,7 @@ def perform_local_installation(context):
     context["files_removal_method"] = os.environ.get(
         "FILES_REMOVAL_METHOD", "anonymize"
     )
+    context["max_submissions_per_day"] = os.environ.get("MAX_SUBMISSIONS_PER_DAY", "")
     define_authentication(context)
     templates.save_to(
         os.path.join(FAME_ROOT, "conf", "fame.conf"), "local_fame.conf", context

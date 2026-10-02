@@ -359,3 +359,14 @@ You can enable multiple authentication methods at the same time by setting multi
     Some authentication methods may require additional configurations. The `README.md` associated with each method does provide additional details on what needs to be configured.
 
 It is also possible to completely `disable authentication <https://github.com/certsocietegenerale/fame/tree/master/web/auth/single_user>`_ to the FAME interface, by setting ``auth=single_user`` in ``fame.conf``. This will also disable the user management page.
+
+
+Limiting the number of submissions
+==================================
+
+You can limit the number of analyses submitted every day, for the whole instance, with the ``max_submissions_per_day`` setting in ``fame.conf``::
+
+    [fame]
+    max_submissions_per_day = 500
+
+Leave this setting empty (the default) to disable the global limit. Administrators can also define a limit for a specific user, which then replaces this global limit for that account. See :ref:`admin-submission-limits` for the complete behaviour.

@@ -17,6 +17,7 @@ The API can return the following HTTP codes:
 * ``302``: this means that you are not properly authenticated.
 * ``403``: this means that your permissions are not sufficient.
 * ``404``: this means that you tried to access an object that could not be found.
+* ``429``: this means that you reached a daily submission limit (see :ref:`admin-submission-limits`). The ``errors`` field of the response contains the details.
 
 Reference
 =========

@@ -15,6 +15,7 @@ Log in using the email address and password defined during installation. At the 
 1. :ref:`user-account`
 2. :ref:`admin-configuration`
 3. :ref:`admin-users`
+4. :ref:`admin-submission-limits`
 
 Click on 'Configuration' to configure your instance.
 
@@ -151,6 +152,8 @@ When creating a new user, you have to specify the user's full name ``(1)``, his 
 
 You can also assign permissions ``(4)`` to the user. Permissions are used to give access to certain FAME features. Modules have the possibility to define their own permissions. The special ``*`` permission grants all present and future permissions.
 
+You can optionally restrict how many analyses this user is allowed to submit every day. This is done from the user's profile page, once the account is created. See :ref:`admin-submission-limits` for details.
+
 .. warning::
     Granting the `MANAGE_USERS` permission to a user is almost the same as giving him all permissions, since he will be able to define his own permissions.
 
@@ -172,3 +175,37 @@ The first half of this page is similar to the one used to :ref:`admin-user-creat
 
 .. warning::
   If external authentication methods are enabled (LDAP, OIDC, etc...), editing users directly is pointless as the edited data will be overridden by the external source during next user connection attempt.
+
+.. _admin-submission-limits:
+
+Limiting the number of submissions
+==================================
+
+FAME can limit the number of analyses that can be submitted every day. Two limits can be defined:
+
+* a **global** limit, for the whole instance, defined with the ``max_submissions_per_day`` setting in ``fame.conf``::
+
+    [fame]
+    max_submissions_per_day = 500
+
+* a **per-user** limit, defined with the `Daily submission limit` field of the `Daily submissions` panel, on the user's profile page (see :ref:`admin-user-edit`). This field is only visible to users having the `MANAGE_USERS` permission.
+
+The per-user limit **replaces** the global one: when a user has their own limit, only that limit is enforced for them, and the global limit is ignored - even when the per-user limit is higher. Users without a personal limit are subject to the global limit.
+
+Leaving a limit empty means that it is not enforced, while a value of ``0`` prevents any submission.
+
+Usage is computed by counting the analyses created since midnight (server time), and the current usage is displayed on the :ref:`user-account` page. Only analyses explicitly submitted through the web interface or the API are counted:
+
+* submissions that do not actually start an analysis - for instance when the submitted object already exists - are not counted;
+* analyses that FAME starts on its own, such as the ones created for files extracted during an analysis, are not counted either.
+
+.. note::
+    The profile page only displays the limit that is actually enforced, without telling the user whether it comes from their own account or from the instance. When the global limit applies, the number displayed is the number of submissions made on the whole instance, not the user's own submissions. The error message returned when a limit is reached is identical in both cases, for the same reason.
+
+When a limit is reached, the web interface displays an error message, and the API returns a ``429`` status code, with the details in the ``errors`` field.
+
+.. note::
+    Changing ``max_submissions_per_day`` in ``fame.conf`` requires a restart of the webserver to be effective. Per-user limits are applied immediately.
+
+.. note::
+    Analyses created before this feature was introduced are never counted, so enabling a limit on an existing instance will not retroactively block users.
