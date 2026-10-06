@@ -7,7 +7,7 @@ from datetime import datetime
 from fame.common.config import fame_config
 from fame.core.user import User
 from fame.core.module_dispatcher import dispatcher
-from fame.core import submission_quota
+from fame.common import submission_quota
 from web.views.mixins import UIView
 from web.views.negotiation import render, redirect, validation_error
 from web.views.helpers import requires_permission, get_or_404, clean_users
@@ -70,12 +70,8 @@ class UsersView(FlaskView, UIView):
 
         return list(current_permissions)
 
-    def get_submission_limit(self, default=None):
-        """Read the daily submission limit from the form.
-
-        Returns a ``(valid, value)`` tuple, where a value of ``None`` means
-        that no per-user limit applies.
-        """
+    def _submission_limit_from_form(self, default=None):
+        """Read ``max_submissions_per_day`` from the form as a ``(valid, value)`` tuple; ``None`` means no per-user limit."""
         value = request.form.get("max_submissions_per_day")
 
         if value is None:
@@ -122,7 +118,7 @@ class UsersView(FlaskView, UIView):
         if not self._valid_form(name, email, groups):
             return validation_error()
 
-        valid_limit, max_submissions_per_day = self.get_submission_limit()
+        valid_limit, max_submissions_per_day = self._submission_limit_from_form()
         if not valid_limit:
             return validation_error()
 
@@ -172,8 +168,8 @@ class UsersView(FlaskView, UIView):
         if not self._valid_form(name, email, groups, user["email"]):
             return validation_error()
 
-        valid_limit, max_submissions_per_day = self.get_submission_limit(
-            user.get("max_submissions_per_day")
+        valid_limit, max_submissions_per_day = self._submission_limit_from_form(
+            submission_quota.stored_user_limit(user)
         )
         if not valid_limit:
             return validation_error()
@@ -325,8 +321,8 @@ class UsersView(FlaskView, UIView):
         """
         user = User(get_or_404(User.get_collection(), _id=id))
 
-        valid_limit, max_submissions_per_day = self.get_submission_limit(
-            user.get("max_submissions_per_day")
+        valid_limit, max_submissions_per_day = self._submission_limit_from_form(
+            submission_quota.stored_user_limit(user)
         )
         if not valid_limit:
             return validation_error(request.referrer)

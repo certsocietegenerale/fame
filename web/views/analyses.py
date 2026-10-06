@@ -26,7 +26,7 @@ from fame.core.file import File
 from fame.core.config import Config
 from fame.core.analysis import Analysis
 from fame.core.module import ModuleInfo
-from fame.core import submission_quota
+from fame.common import submission_quota
 from web.views.negotiation import (
     render,
     redirect,
