@@ -343,7 +343,8 @@ h4.probable-names {
   margin-bottom: 10px;
 }
 
-.spinner {
+.spinner::before {
+  display: inline-block;
   -animation: spin .7s infinite linear;
   -webkit-animation: spin2 .7s infinite linear;
 }
