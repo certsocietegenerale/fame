@@ -1442,7 +1442,6 @@ body > .navbar-collapse[data-color="purple"]:after {
 .navbar .navbar-brand,
 .navbar-light .navbar-brand {
   font-weight: 400;
-  margin: 5px 0px;
   padding: 15px 15px;
   font-size: 20px;
   color: #333;
